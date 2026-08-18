@@ -139,10 +139,13 @@ object UpdateManager {
      * 请求 GitHub Releases API（支持多镜像备用通道）
      */
     private fun fetchLatestRelease(repo: String): ReleaseInfo? {
+        System.setProperty("java.net.preferIPv4Stack", "true")
+        System.setProperty("java.net.preferIPv6Addresses", "false")
+
         val apiUrls = listOf(
             "https://api.github.com/repos/$repo/releases/latest",
             "https://ghfast.top/https://api.github.com/repos/$repo/releases/latest",
-            "https://ghproxy.net/https://api.github.com/repos/$repo/releases/latest"
+            "https://mirror.ghproxy.com/https://api.github.com/repos/$repo/releases/latest"
         )
 
         var lastException: Exception? = null
@@ -153,10 +156,10 @@ object UpdateManager {
                 val url = URL(apiUrl)
                 val conn = (url.openConnection() as HttpURLConnection).apply {
                     requestMethod = "GET"
-                    connectTimeout = 8000
-                    readTimeout = 8000
+                    connectTimeout = 4000
+                    readTimeout = 4000
                     setRequestProperty("Accept", "application/vnd.github.v3+json")
-                    setRequestProperty("User-Agent", "Mozilla/5.0 DiaperTracker")
+                    setRequestProperty("User-Agent", "Mozilla/5.0 (Android; Mobile) CollecterApp")
                 }
 
                 val code = conn.responseCode
@@ -278,11 +281,11 @@ object UpdateManager {
         val saveDir = activity.getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS) ?: activity.cacheDir
         val apkFile = File(saveDir, "Collecter_${release.versionName}.apk")
 
-        // 尝试直接下载，若失败可使用 ghproxy 镜像加速
+        // 尝试直接下载，若失败可使用国内镜像加速
         val urlsToTry = listOf(
             release.apkDownloadUrl,
             "https://ghfast.top/${release.apkDownloadUrl}",
-            "https://ghproxy.net/${release.apkDownloadUrl}"
+            "https://mirror.ghproxy.com/${release.apkDownloadUrl}"
         )
 
         downloadThread = Thread {
