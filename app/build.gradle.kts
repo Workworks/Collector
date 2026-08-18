@@ -11,8 +11,8 @@ android {
         applicationId = "com.kfaino.diapertracker"
         minSdk = 26
         targetSdk = 34
-        versionCode = 8
-        versionName = "2.2.5"
+        versionCode = 9
+        versionName = "2.2.6"
     }
 
     buildTypes {

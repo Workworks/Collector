@@ -58,7 +58,7 @@ class HistoryAdapter(
 
         if (entry.notes.isNotBlank()) {
             b.notesText.visibility = View.VISIBLE
-            b.notesText.text = "备注: ${entry.notes}"
+            b.notesText.text = "💬 备注: ${entry.notes}"
         } else {
             b.notesText.visibility = View.GONE
         }

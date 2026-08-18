@@ -5,9 +5,9 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:layout_marginHorizontal="16dp"
-    android:layout_marginBottom="8dp"
-    app:cardCornerRadius="14dp"
-    app:cardElevation="0.5dp"
+    android:layout_marginBottom="10dp"
+    app:cardCornerRadius="16dp"
+    app:cardElevation="1dp"
     app:cardBackgroundColor="@color/card"
     app:strokeColor="@color/card_border"
     app:strokeWidth="1dp">
@@ -17,36 +17,39 @@
         android:layout_height="wrap_content"
         android:orientation="vertical"
         android:paddingHorizontal="14dp"
-        android:paddingVertical="12dp">
+        android:paddingVertical="14dp">
 
+        <!-- 顶部主信息栏 (徽章 + 物品与时间 + 金额与操作) -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="horizontal"
             android:gravity="center_vertical">
 
-            <!-- + / - 徽章 -->
+            <!-- + / - 状态圆形徽章 -->
             <TextView
                 android:id="@+id/badge"
-                android:layout_width="34dp"
-                android:layout_height="34dp"
+                android:layout_width="38dp"
+                android:layout_height="38dp"
                 android:gravity="center"
                 android:text="+"
                 android:textColor="#FFFFFF"
-                android:textSize="17sp"
+                android:textSize="18sp"
                 android:textStyle="bold"
                 android:background="@drawable/bg_avatar" />
 
+            <!-- 中间信息区 (占满剩余可用空间，自适应扩展，绝不发生文字竖向挤压) -->
             <LinearLayout
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
                 android:orientation="vertical"
-                android:layout_marginStart="12dp">
+                android:layout_marginStart="12dp"
+                android:layout_marginEnd="10dp">
 
-                <!-- 品牌与分类 -->
+                <!-- 品牌与分类标签行 -->
                 <LinearLayout
-                    android:layout_width="wrap_content"
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="horizontal"
                     android:gravity="center_vertical">
@@ -55,7 +58,7 @@
                         android:id="@+id/category_tag"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="NB"
+                        android:text="分类"
                         android:textSize="11sp"
                         android:textStyle="bold"
                         android:textColor="@color/primary"
@@ -66,92 +69,114 @@
 
                     <TextView
                         android:id="@+id/brand"
-                        android:layout_width="wrap_content"
+                        android:layout_width="0dp"
                         android:layout_height="wrap_content"
-                        android:text="好奇小森林"
+                        android:layout_weight="1"
+                        android:text="物品名称"
                         android:textSize="15sp"
                         android:textStyle="bold"
                         android:textColor="@color/text_primary"
-                        android:fontFamily="sans-serif-medium" />
+                        android:fontFamily="sans-serif-medium"
+                        android:maxLines="1"
+                        android:ellipsize="end" />
                 </LinearLayout>
 
-                <!-- 时间 -->
-                <TextView
-                    android:id="@+id/time"
-                    android:layout_width="wrap_content"
+                <!-- 数量、单价与记录时间副标题 -->
+                <LinearLayout
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="08-18 14:20"
-                    android:textSize="12sp"
-                    android:textColor="@color/text_tertiary"
-                    android:layout_marginTop="3dp" />
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical"
+                    android:layout_marginTop="4dp">
+
+                    <TextView
+                        android:id="@+id/qtyInfo"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="50片 · ¥1.30/片"
+                        android:textSize="12sp"
+                        android:textColor="@color/text_secondary" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text=" · "
+                        android:textSize="11sp"
+                        android:textColor="@color/text_tertiary" />
+
+                    <TextView
+                        android:id="@+id/time"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="08-18 22:34"
+                        android:textSize="12sp"
+                        android:textColor="@color/text_tertiary" />
+                </LinearLayout>
             </LinearLayout>
 
+            <!-- 右侧：金额与快捷操作按钮组 -->
             <LinearLayout
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:orientation="vertical"
-                android:gravity="end"
-                android:layout_marginStart="8dp">
+                android:gravity="end">
 
-                <!-- 金额或件数 -->
+                <!-- 金额或出库件数展示 -->
                 <TextView
                     android:id="@+id/amount"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="+ ¥24.00"
-                    android:textSize="15sp"
+                    android:text="+ ¥65.00"
+                    android:textSize="16sp"
                     android:textStyle="bold"
                     android:textColor="@color/primary"
                     android:fontFamily="sans-serif-medium" />
 
-                <!-- 数量单价明细 -->
-                <TextView
-                    android:id="@+id/qtyInfo"
+                <!-- 操作按钮行 (编辑与删除) -->
+                <LinearLayout
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="16件 × ¥1.50"
-                    android:textSize="11sp"
-                    android:textColor="@color/text_secondary"
-                    android:layout_marginTop="2dp" />
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical"
+                    android:layout_marginTop="4dp">
+
+                    <ImageView
+                        android:id="@+id/editBtn"
+                        android:layout_width="28dp"
+                        android:layout_height="28dp"
+                        android:src="@drawable/ic_edit"
+                        app:tint="@color/primary"
+                        android:background="?attr/selectableItemBackgroundBorderless"
+                        android:contentDescription="编辑"
+                        android:padding="4dp" />
+
+                    <ImageView
+                        android:id="@+id/deleteBtn"
+                        android:layout_width="28dp"
+                        android:layout_height="28dp"
+                        android:layout_marginStart="4dp"
+                        android:src="@drawable/ic_delete"
+                        app:tint="@color/text_hint"
+                        android:background="?attr/selectableItemBackgroundBorderless"
+                        android:contentDescription="删除"
+                        android:padding="4dp" />
+                </LinearLayout>
             </LinearLayout>
 
-            <!-- 编辑按钮 -->
-            <ImageView
-                android:id="@+id/editBtn"
-                android:layout_width="32dp"
-                android:layout_height="32dp"
-                android:layout_marginStart="8dp"
-                android:src="@drawable/ic_edit"
-                app:tint="@color/primary"
-                android:background="?attr/selectableItemBackgroundBorderless"
-                android:contentDescription="编辑记录"
-                android:padding="6dp" />
-
-            <!-- 删除按钮 -->
-            <ImageView
-                android:id="@+id/deleteBtn"
-                android:layout_width="32dp"
-                android:layout_height="32dp"
-                android:layout_marginStart="4dp"
-                android:src="@drawable/ic_delete"
-                app:tint="@color/text_hint"
-                android:background="?attr/selectableItemBackgroundBorderless"
-                android:contentDescription="@string/delete_entry"
-                android:padding="6dp" />
         </LinearLayout>
 
-        <!-- 备注信息 (若有) -->
+        <!-- 备注信息卡片 (若有) -->
         <TextView
             android:id="@+id/notes_text"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="备注: 618京东自营购入"
+            android:text="💬 备注: 618京东自营购入"
             android:textSize="12sp"
             android:textColor="@color/text_secondary"
             android:background="@drawable/bg_qty"
-            android:paddingHorizontal="8dp"
-            android:paddingVertical="4dp"
-            android:layout_marginTop="8dp"
+            android:paddingHorizontal="10dp"
+            android:paddingVertical="5dp"
+            android:layout_marginTop="10dp"
             android:visibility="gone" />
 
     </LinearLayout>
