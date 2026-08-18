@@ -115,12 +115,24 @@
                     android:layout_marginTop="2dp" />
             </LinearLayout>
 
+            <!-- 编辑按钮 -->
+            <ImageView
+                android:id="@+id/editBtn"
+                android:layout_width="32dp"
+                android:layout_height="32dp"
+                android:layout_marginStart="8dp"
+                android:src="@drawable/ic_edit"
+                app:tint="@color/primary"
+                android:background="?attr/selectableItemBackgroundBorderless"
+                android:contentDescription="编辑记录"
+                android:padding="6dp" />
+
             <!-- 删除按钮 -->
             <ImageView
                 android:id="@+id/deleteBtn"
                 android:layout_width="32dp"
                 android:layout_height="32dp"
-                android:layout_marginStart="8dp"
+                android:layout_marginStart="4dp"
                 android:src="@drawable/ic_delete"
                 app:tint="@color/text_hint"
                 android:background="?attr/selectableItemBackgroundBorderless"

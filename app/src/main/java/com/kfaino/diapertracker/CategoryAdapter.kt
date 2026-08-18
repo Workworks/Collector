@@ -23,22 +23,19 @@ class CategoryAdapter(
         const val TYPE_BRAND = 1
     }
 
-    /** 展平后的列表项：Header 或 Brand */
     sealed class ListItem {
-        data class Header(val category: String, val totalCount: Int, val totalAmount: Double) : ListItem()
+        data class Header(val category: String, val totalCount: Int, val totalAmount: Double, val unit: String = "片") : ListItem()
         data class Brand(val brand: BrandSummary, val category: String) : ListItem()
     }
 
     private var items: List<ListItem> = emptyList()
-
-    /** 每个分类下品牌数量的最大值，用于进度条归一化 */
     private val maxPerCategory = HashMap<String, Int>()
 
     fun submit(groups: List<CategoryGroup>) {
         val flat = mutableListOf<ListItem>()
         maxPerCategory.clear()
         for (g in groups) {
-            flat.add(ListItem.Header(g.name, g.totalCount, g.totalAmount))
+            flat.add(ListItem.Header(g.name, g.totalCount, g.totalAmount, g.unit))
             val maxCount = g.brands.maxOfOrNull { it.count } ?: 0
             maxPerCategory[g.name] = maxCount.coerceAtLeast(1)
             for (b in g.brands) {
@@ -70,16 +67,17 @@ class CategoryAdapter(
             is ListItem.Header -> {
                 val vh = holder as HeaderVH
                 vh.binding.catName.text = item.category
-                vh.binding.catTotal.text = "共 ${item.totalCount} 件 · ¥${String.format(Locale.getDefault(), "%.2f", item.totalAmount)}"
+                vh.binding.catTotal.text = "共 ${item.totalCount} ${item.unit} · ¥${String.format(Locale.getDefault(), "%.2f", item.totalAmount)}"
             }
             is ListItem.Brand -> {
                 val vh = holder as BrandVH
                 val brand = item.brand
                 val b = vh.binding
+                val u = brand.unit.ifEmpty { "片" }
 
                 b.brandName.text = brand.name
                 b.itemAvgPrice.text = if (brand.avgPrice > 0)
-                    "均价 ¥${String.format(Locale.getDefault(), "%.2f", brand.avgPrice)}/件"
+                    "均价 ¥${String.format(Locale.getDefault(), "%.2f", brand.avgPrice)}/$u"
                 else
                     "未设单价"
 
@@ -88,26 +86,26 @@ class CategoryAdapter(
                 b.avatar.text = brand.name.take(1)
                 b.avatar.backgroundTintList = ColorStateList.valueOf(colorFor(brand.name))
 
-                // 库存标签与颜色状态
+                // 库存状态与标签
                 when {
                     brand.count > 10 -> {
                         b.stockBadgeLayout.setBackgroundResource(R.drawable.bg_stock_healthy)
                         b.itemCount.setTextColor(ContextCompat.getColor(ctx, R.color.stock_healthy_text))
-                        b.itemCount.text = "${brand.count} 件"
+                        b.itemCount.text = "${brand.count} $u"
                     }
                     brand.count in 1..10 -> {
                         b.stockBadgeLayout.setBackgroundResource(R.drawable.bg_stock_low)
                         b.itemCount.setTextColor(ContextCompat.getColor(ctx, R.color.stock_low_text))
-                        b.itemCount.text = "${brand.count} 件 (紧张)"
+                        b.itemCount.text = "${brand.count} $u (紧张)"
                     }
                     else -> {
                         b.stockBadgeLayout.setBackgroundResource(R.drawable.bg_stock_empty)
                         b.itemCount.setTextColor(ContextCompat.getColor(ctx, R.color.stock_empty_text))
-                        b.itemCount.text = "缺货 (${brand.count})"
+                        b.itemCount.text = "缺货 (${brand.count} $u)"
                     }
                 }
 
-                // 进度条（品牌数量在该分类中的占比）
+                // 进度条
                 val max = maxPerCategory[item.category] ?: 1
                 val progressVal = (brand.count * 100 / max).coerceIn(0, 100)
                 b.shareBar.progress = progressVal
@@ -117,7 +115,6 @@ class CategoryAdapter(
         }
     }
 
-    /** 根据品牌名返回稳重现代的调色 */
     private fun colorFor(name: String): Int {
         val palette = intArrayOf(
             Color.parseColor("#059669"),

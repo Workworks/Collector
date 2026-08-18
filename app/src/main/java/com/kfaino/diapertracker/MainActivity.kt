@@ -35,7 +35,6 @@ class MainActivity : AppCompatActivity() {
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        // 加载数据
         entries.clear()
         entries.addAll(store.loadAll())
 
@@ -100,14 +99,33 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    // ---------- 记一笔对话框 (极致跟手与触控体验) ----------
+    // ---------- 记一笔 / 编辑记录对话框 ----------
 
-    private fun showAddDialog(prefillBrand: String? = null, prefillCategory: String? = null) {
+    fun showAddDialog(
+        prefillBrand: String? = null,
+        prefillCategory: String? = null,
+        editEntry: Entry? = null,
+        editPosition: Int? = null
+    ) {
+        val isEditMode = (editEntry != null && editPosition != null)
         val dialogBinding = DialogAddEntryBinding.inflate(layoutInflater)
         val categories = store.getCategories().toMutableList()
-        var selectedCategory = prefillCategory ?: if (categories.isNotEmpty()) categories[0] else "S"
 
-        // 渲染尺码选择横向药丸
+        var selectedCategory = editEntry?.category ?: prefillCategory ?: if (categories.isNotEmpty()) categories[0] else "数码"
+        var selectedUnit = editEntry?.unit ?: store.getLastUsedUnit()
+
+        // 默认按总金额记账模式 (true=按实付总额输入, false=按单件价格输入)
+        var isTotalPriceMode = true
+
+        // 1. 设置入库/出库模式 (默认增加/入库)
+        val defaultIsIn = editEntry?.isIn ?: true
+        if (defaultIsIn) {
+            dialogBinding.modeGroup.check(dialogBinding.modeBuy.id)
+        } else {
+            dialogBinding.modeGroup.check(dialogBinding.modeUse.id)
+        }
+
+        // 2. 渲染分类横向药丸
         fun renderCategoryChips() {
             dialogBinding.dialogCategoryChips.removeAllViews()
             for (cat in categories) {
@@ -144,7 +162,7 @@ class MainActivity : AppCompatActivity() {
                 dialogBinding.dialogCategoryChips.addView(chip)
             }
 
-            // + 自定义尺码药丸
+            // + 自定义分类药丸
             val addChip = TextView(this).apply {
                 text = "+ 自定义"
                 textSize = 13f
@@ -169,40 +187,124 @@ class MainActivity : AppCompatActivity() {
 
         renderCategoryChips()
 
-        // 品牌联想
+        // 3. 品牌/物品名称联想
         if (!prefillBrand.isNullOrEmpty()) {
             dialogBinding.brandInput.setText(prefillBrand)
+        } else if (editEntry != null) {
+            dialogBinding.brandInput.setText(editEntry.brand)
         }
-        val brandNames = entries.map { it.brand }.distinct().sorted()
+        val brandNames = store.loadAll().map { it.brand }.distinct().sorted()
         val brandAdapter = ArrayAdapter(this, android.R.layout.simple_dropdown_item_1line, brandNames)
         dialogBinding.brandInput.setAdapter(brandAdapter)
 
-        // 数量步进器
+        // 数量步进器辅助函数
+        if (editEntry != null) {
+            dialogBinding.qtyInput.setText(editEntry.qty.toString())
+        }
         fun curQty(): Int = dialogBinding.qtyInput.text.toString().toIntOrNull() ?: 1
         fun setQty(v: Int) { dialogBinding.qtyInput.setText(v.coerceIn(1, 99999).toString()) }
+
+        // 实时计算预览函数
+        fun updatePreview() {
+            val q = dialogBinding.qtyInput.text.toString().toIntOrNull() ?: 0
+            val inputVal = dialogBinding.priceInput.text.toString().toDoubleOrNull() ?: 0.0
+            val isBuy = dialogBinding.modeGroup.checkedButtonId == dialogBinding.modeBuy.id
+            val u = selectedUnit.ifEmpty { "片" }
+
+            if (isBuy) {
+                dialogBinding.priceSectionContainer.alpha = 1.0f
+                if (inputVal > 0 && q > 0) {
+                    if (isTotalPriceMode) {
+                        val totalAmount = inputVal
+                        val unitPrice = totalAmount / q
+                        dialogBinding.amountPreview.text = "本次实付：¥${String.format(Locale.getDefault(), "%.2f", totalAmount)} (折合 ¥${String.format(Locale.getDefault(), "%.2f", unitPrice)} / $u)"
+                    } else {
+                        val unitPrice = inputVal
+                        val totalAmount = unitPrice * q
+                        dialogBinding.amountPreview.text = "本次实付：¥${String.format(Locale.getDefault(), "%.2f", totalAmount)} ($q $u × ¥${String.format(Locale.getDefault(), "%.2f", unitPrice)})"
+                    }
+                } else {
+                    dialogBinding.amountPreview.text = "本次入库：+ $q $u"
+                }
+            } else {
+                dialogBinding.priceSectionContainer.alpha = 0.6f
+                dialogBinding.amountPreview.text = "本次消耗出库：- $q $u"
+            }
+        }
+
+        // 4. 单位下拉选择与自定义
+        val unitList = DataStore.COMMON_UNITS.toMutableList()
+        if (!unitList.contains(selectedUnit)) {
+            unitList.add(0, selectedUnit)
+        }
+        val unitAdapter = ArrayAdapter(this, android.R.layout.simple_dropdown_item_1line, unitList)
+        dialogBinding.unitDropdown.setAdapter(unitAdapter)
+        dialogBinding.unitDropdown.setText(selectedUnit, false)
+
+        dialogBinding.unitDropdown.setOnItemClickListener { _, _, position, _ ->
+            selectedUnit = unitAdapter.getItem(position) ?: "片"
+            store.setLastUsedUnit(selectedUnit)
+            updatePreview()
+        }
+
+        dialogBinding.unitDropdown.addTextChangedListener(object : TextWatcher {
+            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
+            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {}
+            override fun afterTextChanged(s: Editable?) {
+                val inputUnit = s?.toString()?.trim().orEmpty()
+                if (inputUnit.isNotEmpty()) {
+                    selectedUnit = inputUnit
+                    store.setLastUsedUnit(selectedUnit)
+                    updatePreview()
+                }
+            }
+        })
+
+        // 5. 步进器按钮绑定
         dialogBinding.minusBtn.setOnClickListener { setQty(curQty() - 1) }
         dialogBinding.plusBtn.setOnClickListener { setQty(curQty() + 1) }
         dialogBinding.quick1.setOnClickListener { setQty(1) }
-        dialogBinding.quick2.setOnClickListener { setQty(2) }
-        dialogBinding.quick4.setOnClickListener { setQty(4) }
-        dialogBinding.quick8.setOnClickListener { setQty(8) }
         dialogBinding.quick10.setOnClickListener { setQty(10) }
         dialogBinding.quick20.setOnClickListener { setQty(20) }
         dialogBinding.quick50.setOnClickListener { setQty(50) }
+        dialogBinding.quick100.setOnClickListener { setQty(100) }
 
-        // 实时金额预览
-        fun updatePreview() {
-            val q = dialogBinding.qtyInput.text.toString().toIntOrNull() ?: 0
-            val p = dialogBinding.priceInput.text.toString().toDoubleOrNull() ?: 0.0
-            val isBuy = dialogBinding.modeGroup.checkedButtonId == dialogBinding.modeBuy.id
-            if (isBuy) {
-                if (p > 0) {
-                    dialogBinding.amountPreview.text = "本次金额：¥${String.format(Locale.getDefault(), "%.2f", q * p)} ($q 件 × ¥${String.format(Locale.getDefault(), "%.2f", p)})"
-                } else {
-                    dialogBinding.amountPreview.text = "本次入库：+ $q 件"
-                }
+        // 6. 价格与金额输入模式切换
+        fun refreshPriceModeUI() {
+            if (isTotalPriceMode) {
+                dialogBinding.priceModeLabel.text = "实付总金额（元，可选）"
+                dialogBinding.priceInput.hint = "输入实付总额，如 120.00"
+                dialogBinding.btnTogglePriceMode.text = "🔄 切换为按单价输入"
             } else {
-                dialogBinding.amountPreview.text = "本次出库消耗：- $q 件"
+                dialogBinding.priceModeLabel.text = "单件价格（元/$selectedUnit，可选）"
+                dialogBinding.priceInput.hint = "输入单价，如 1.20"
+                dialogBinding.btnTogglePriceMode.text = "🔄 切换为按总金额输入"
+            }
+            updatePreview()
+        }
+
+        dialogBinding.btnTogglePriceMode.setOnClickListener {
+            val curVal = dialogBinding.priceInput.text.toString().toDoubleOrNull() ?: 0.0
+            val q = curQty()
+            isTotalPriceMode = !isTotalPriceMode
+
+            if (curVal > 0 && q > 0) {
+                if (isTotalPriceMode) {
+                    dialogBinding.priceInput.setText(String.format(Locale.getDefault(), "%.2f", curVal * q))
+                } else {
+                    dialogBinding.priceInput.setText(String.format(Locale.getDefault(), "%.2f", curVal / q))
+                }
+            }
+            refreshPriceModeUI()
+        }
+
+        if (editEntry != null) {
+            val totalAmt = editEntry.qty * editEntry.price
+            if (totalAmt > 0) {
+                dialogBinding.priceInput.setText(String.format(Locale.getDefault(), "%.2f", totalAmt))
+            }
+            if (editEntry.notes.isNotEmpty()) {
+                dialogBinding.notesInput.setText(editEntry.notes)
             }
         }
 
@@ -217,11 +319,14 @@ class MainActivity : AppCompatActivity() {
         dialogBinding.priceInput.addTextChangedListener(watcher)
         updatePreview()
 
+        val titleRes = if (isEditMode) "编辑记录" else "记一笔"
+        val confirmBtnText = if (isEditMode) "保存修改" else "确认添加"
+
         val dialog = MaterialAlertDialogBuilder(this)
-            .setTitle(R.string.add_entry)
+            .setTitle(titleRes)
             .setView(dialogBinding.root)
             .setNegativeButton(R.string.cancel, null)
-            .setPositiveButton(R.string.confirm, null)
+            .setPositiveButton(confirmBtnText, null)
             .create()
 
         dialog.setOnShowListener {
@@ -231,25 +336,48 @@ class MainActivity : AppCompatActivity() {
                     val brand = dialogBinding.brandInput.text?.toString()?.trim().orEmpty()
                     val isIn = dialogBinding.modeGroup.checkedButtonId == dialogBinding.modeBuy.id
                     val qty = dialogBinding.qtyInput.text.toString().toIntOrNull()
-                    val price = dialogBinding.priceInput.text.toString().toDoubleOrNull() ?: 0.0
+                    val inputPriceVal = dialogBinding.priceInput.text.toString().toDoubleOrNull() ?: 0.0
                     val notes = dialogBinding.notesInput.text?.toString()?.trim().orEmpty()
+                    val unit = selectedUnit.ifEmpty { "片" }
+
+                    val calculatedUnitPrice = if (isIn && qty != null && qty > 0) {
+                        if (isTotalPriceMode) {
+                            inputPriceVal / qty // 实付总额 ÷ 数量 = 单价
+                        } else {
+                            inputPriceVal // 按单价输入
+                        }
+                    } else {
+                        0.0
+                    }
 
                     when {
-                        brand.isEmpty() -> toast(R.string.err_brand_empty)
-                        qty == null || qty < 1 -> toast(R.string.err_qty)
+                        brand.isEmpty() -> Toast.makeText(this, "请输入物品或品牌名称", Toast.LENGTH_SHORT).show()
+                        qty == null || qty < 1 -> Toast.makeText(this, "数量至少为 1", Toast.LENGTH_SHORT).show()
                         else -> {
-                            entries.add(Entry(category, brand, qty, price, System.currentTimeMillis(), isIn, notes))
-                            store.saveAll(entries)
-                            dialog.dismiss()
-                            Toast.makeText(this, "记录已成功添加", Toast.LENGTH_SHORT).show()
+                            val targetTs = editEntry?.ts ?: System.currentTimeMillis()
+                            val newEntry = Entry(
+                                category = category,
+                                brand = brand,
+                                qty = qty,
+                                price = calculatedUnitPrice,
+                                ts = targetTs,
+                                isIn = isIn,
+                                notes = notes,
+                                unit = unit
+                            )
 
-                            // 刷新当前 fragment
-                            val current = supportFragmentManager.findFragmentById(R.id.fragment_container)
-                            when (current) {
-                                is HomeFragment -> current.onResume()
-                                is TimelineFragment -> current.onResume()
-                                is ReportFragment -> current.onResume()
+                            if (isEditMode && editPosition != null) {
+                                store.updateEntry(editPosition, newEntry)
+                                Toast.makeText(this, "记录已成功修改", Toast.LENGTH_SHORT).show()
+                            } else {
+                                val currentList = store.loadAll().toMutableList()
+                                currentList.add(newEntry)
+                                store.saveAll(currentList)
+                                Toast.makeText(this, "记录已成功添加", Toast.LENGTH_SHORT).show()
                             }
+
+                            dialog.dismiss()
+                            refreshCurrentFragment()
                         }
                     }
                 }
@@ -257,11 +385,18 @@ class MainActivity : AppCompatActivity() {
         dialog.show()
     }
 
-    private fun dpToPx(dp: Int): Int {
-        return (dp * resources.displayMetrics.density + 0.5f).toInt()
+    fun refreshCurrentFragment() {
+        entries.clear()
+        entries.addAll(store.loadAll())
+        val current = supportFragmentManager.findFragmentById(R.id.fragment_container)
+        when (current) {
+            is HomeFragment -> current.onResume()
+            is TimelineFragment -> current.refresh()
+            is ReportFragment -> current.onResume()
+        }
     }
 
-    private fun toast(resId: Int) {
-        Toast.makeText(this, resId, Toast.LENGTH_SHORT).show()
+    private fun dpToPx(dp: Int): Int {
+        return (dp * resources.displayMetrics.density + 0.5f).toInt()
     }
 }

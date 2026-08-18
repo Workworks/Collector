@@ -12,7 +12,8 @@ import java.util.Date
 import java.util.Locale
 
 class HistoryAdapter(
-    private val onDelete: ((Entry) -> Unit)? = null
+    private val onEdit: ((Entry, Int) -> Unit)? = null,
+    private val onDelete: ((Entry, Int) -> Unit)? = null
 ) : RecyclerView.Adapter<HistoryAdapter.VH>() {
 
     private var items: List<Entry> = emptyList()
@@ -31,6 +32,7 @@ class HistoryAdapter(
         val entry = items[position]
         val b = holder.binding
         val ctx = holder.itemView.context
+        val unit = entry.unit.ifEmpty { "片" }
 
         b.categoryTag.text = entry.category
         b.brand.text = entry.brand
@@ -39,16 +41,17 @@ class HistoryAdapter(
         if (entry.isIn) {
             b.badge.text = "+"
             b.badge.backgroundTintList = ColorStateList.valueOf(ContextCompat.getColor(ctx, R.color.primary))
-            b.amount.text = "+ ¥${String.format(Locale.getDefault(), "%.2f", entry.qty * entry.price)}"
+            val totalAmount = entry.qty * entry.price
+            b.amount.text = "+ ¥${String.format(Locale.getDefault(), "%.2f", totalAmount)}"
             b.amount.setTextColor(ContextCompat.getColor(ctx, R.color.primary))
             b.qtyInfo.text = if (entry.price > 0)
-                "${entry.qty} 件 · 单价 ¥${String.format(Locale.getDefault(), "%.2f", entry.price)}"
+                "${entry.qty}$unit · 单价 ¥${String.format(Locale.getDefault(), "%.2f", entry.price)}/$unit"
             else
-                "${entry.qty} 件入库"
+                "${entry.qty}$unit 入库"
         } else {
             b.badge.text = "-"
             b.badge.backgroundTintList = ColorStateList.valueOf(ContextCompat.getColor(ctx, R.color.danger))
-            b.amount.text = "- ${entry.qty} 件"
+            b.amount.text = "- ${entry.qty}$unit"
             b.amount.setTextColor(ContextCompat.getColor(ctx, R.color.danger))
             b.qtyInfo.text = "出库消耗"
         }
@@ -60,7 +63,12 @@ class HistoryAdapter(
             b.notesText.visibility = View.GONE
         }
 
-        b.deleteBtn.setOnClickListener { onDelete?.invoke(entry) }
+        // 点击编辑
+        holder.itemView.setOnClickListener { onEdit?.invoke(entry, position) }
+        b.editBtn.setOnClickListener { onEdit?.invoke(entry, position) }
+
+        // 点击删除
+        b.deleteBtn.setOnClickListener { onDelete?.invoke(entry, position) }
     }
 
     class VH(val binding: RowHistoryBinding) : RecyclerView.ViewHolder(binding.root)

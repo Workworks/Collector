@@ -17,6 +17,9 @@ class DataStore(ctx: Context) {
         // 通用默认分类（数码、日用品、零食、耗材）
         val DEFAULT_CATEGORIES = listOf("数码", "日用品", "零食", "耗材")
 
+        // 常用快捷数量单位
+        val COMMON_UNITS = listOf("片", "件", "包", "个", "箱", "瓶", "盒", "本")
+
         const val THEME_SYSTEM = 0
         const val THEME_LIGHT = 1
         const val THEME_DARK = 2
@@ -50,13 +53,45 @@ class DataStore(ctx: Context) {
                     .put("ts", e.ts)
                     .put("in", e.isIn)
                     .put("notes", e.notes)
+                    .put("unit", e.unit)
             )
         }
         prefs.edit().putString(keyEntries, arr.toString()).apply()
     }
 
+    fun updateEntry(index: Int, newEntry: Entry): Boolean {
+        val list = loadAll().toMutableList()
+        if (index in 0 until list.size) {
+            list[index] = newEntry
+            saveAll(list)
+            return true
+        }
+        return false
+    }
+
+    fun deleteEntryAt(index: Int): Boolean {
+        val list = loadAll().toMutableList()
+        if (index in 0 until list.size) {
+            list.removeAt(index)
+            saveAll(list)
+            return true
+        }
+        return false
+    }
+
     fun clearAllData() {
         prefs.edit().remove(keyEntries).apply()
+    }
+
+    fun getLastUsedUnit(): String {
+        return prefs.getString("last_used_unit", "片") ?: "片"
+    }
+
+    fun setLastUsedUnit(unit: String) {
+        val trimmed = unit.trim()
+        if (trimmed.isNotEmpty()) {
+            prefs.edit().putString("last_used_unit", trimmed).apply()
+        }
     }
 
     /** 导出全部数据为 JSON 字符串 */
@@ -82,6 +117,7 @@ class DataStore(ctx: Context) {
                     .put("ts", e.ts)
                     .put("in", e.isIn)
                     .put("notes", e.notes)
+                    .put("unit", e.unit)
             )
         }
         root.put("entries", entryArr)
@@ -119,7 +155,8 @@ class DataStore(ctx: Context) {
                             price = o.optDouble("price", 0.0),
                             ts = o.optLong("ts", System.currentTimeMillis()),
                             isIn = o.optBoolean("in", true),
-                            notes = o.optString("notes", "")
+                            notes = o.optString("notes", ""),
+                            unit = o.optString("unit", "片")
                         )
                     )
                 }
@@ -147,7 +184,8 @@ class DataStore(ctx: Context) {
                         price = o.optDouble("price", 0.0),
                         ts = o.optLong("ts", 0L),
                         isIn = o.optBoolean("in", true),
-                        notes = o.optString("notes", "")
+                        notes = o.optString("notes", ""),
+                        unit = o.optString("unit", "片")
                     )
                 )
             }
@@ -173,7 +211,8 @@ class DataStore(ctx: Context) {
                         price = o.optDouble("price", 0.0),
                         ts = o.optLong("ts", 0L),
                         isIn = o.optBoolean("in", true),
-                        notes = o.optString("notes", "")
+                        notes = o.optString("notes", ""),
+                        unit = o.optString("unit", "片")
                     )
                 )
             }
@@ -186,7 +225,6 @@ class DataStore(ctx: Context) {
 
     // ==================== 通用分类分组管理 ====================
 
-    /** 获取所有分类（按保存的顺序，并自动合并已存在记录中的分类） */
     fun getCategories(): List<String> {
         val raw = prefs.getString(keyCategories, null)
         val list = mutableListOf<String>()
@@ -206,7 +244,6 @@ class DataStore(ctx: Context) {
             list.addAll(DEFAULT_CATEGORIES)
         }
 
-        // 自动合并记录中可能存在但未在列表中的分类
         val existingEntries = loadAll()
         for (entry in existingEntries) {
             val cat = entry.category.trim()
@@ -218,7 +255,6 @@ class DataStore(ctx: Context) {
         return list
     }
 
-    /** 保存分类列表（保证自定义顺序） */
     fun saveCategories(categories: List<String>) {
         val arr = JSONArray()
         for (c in categories) {
@@ -230,7 +266,6 @@ class DataStore(ctx: Context) {
         prefs.edit().putString(keyCategories, arr.toString()).apply()
     }
 
-    /** 新增分类，若已存在则返回 false */
     fun addCategory(category: String): Boolean {
         val trimmed = category.trim()
         if (trimmed.isEmpty()) return false
@@ -243,7 +278,6 @@ class DataStore(ctx: Context) {
         return true
     }
 
-    /** 删除分类 */
     fun deleteCategory(category: String): Boolean {
         val current = getCategories().toMutableList()
         val removed = current.remove(category)
@@ -253,7 +287,6 @@ class DataStore(ctx: Context) {
         return removed
     }
 
-    /** 恢复默认预设通用分类 */
     fun resetCategories(): List<String> {
         val defaults = DEFAULT_CATEGORIES.toMutableList()
         for (entry in loadAll()) {
@@ -266,7 +299,6 @@ class DataStore(ctx: Context) {
         return defaults
     }
 
-    /** 判断是否为默认推荐分类 */
     fun isPresetCategory(category: String): Boolean {
         return DEFAULT_CATEGORIES.contains(category)
     }

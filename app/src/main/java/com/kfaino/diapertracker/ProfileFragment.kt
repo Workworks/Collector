@@ -230,9 +230,10 @@ class ProfileFragment : Fragment() {
     }
 
     private fun showAboutDialog() {
+        val ver = UpdateManager.getAppVersionName(requireContext())
         MaterialAlertDialogBuilder(requireContext())
             .setTitle("关于 Collecter")
-            .setMessage("Collecter 智能物品收纳与资产追踪助手\n\n版本：v2.2 (Build 3)\n构建版本号：2.2.0:260818\n开源仓库：https://github.com/${store.getGithubRepo()}\n\n感谢您的使用与支持！")
+            .setMessage("Collecter 智能物品收纳与资产追踪助手\n\n版本：v$ver\n构建版本号：$ver:260818\n开源仓库：https://github.com/${store.getGithubRepo()}\n\n感谢您的使用与支持！")
             .setPositiveButton("确定", null)
             .show()
     }

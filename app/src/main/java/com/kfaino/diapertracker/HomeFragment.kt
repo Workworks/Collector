@@ -52,7 +52,7 @@ class HomeFragment : Fragment() {
 
         adapter = CategoryAdapter(
             onBrandClick = { brand, category ->
-                showBrandQuickAction(brand, category)
+                showBrandActionSheet(brand, category)
             }
         )
         binding.categoryList.layoutManager = LinearLayoutManager(requireContext())
@@ -180,6 +180,7 @@ class HomeFragment : Fragment() {
             val brands = data[cat]!!
             if (!brands.containsKey(e.brand)) brands[e.brand] = BrandData()
             val bd = brands[e.brand]!!
+            bd.unit = e.unit.ifEmpty { "片" }
             if (e.isIn) {
                 bd.addCount += e.qty
                 bd.addAmount += e.qty * e.price
@@ -194,7 +195,7 @@ class HomeFragment : Fragment() {
             val brandList = brands.entries.map { (name, bd) ->
                 val stock = bd.addCount - bd.reduceCount
                 val avg = if (bd.addCount > 0) bd.addAmount / bd.addCount else 0.0
-                BrandSummary(name, stock, bd.addAmount, avg)
+                BrandSummary(name, stock, bd.addAmount, avg, bd.unit)
             }.sortedWith(when (sortMode) {
                 1 -> compareByDescending<BrandSummary> { it.count }
                 2 -> compareBy<BrandSummary> { it.count }
@@ -206,7 +207,8 @@ class HomeFragment : Fragment() {
             if (brandList.isNotEmpty()) {
                 val total = brandList.sumOf { it.count }
                 val amount = brandList.sumOf { it.amount }
-                result.add(CategoryGroup(cat, brandList, total, amount))
+                val u = brandList.firstOrNull()?.unit ?: "片"
+                result.add(CategoryGroup(cat, brandList, total, amount, u))
             }
         }
 
@@ -249,20 +251,19 @@ class HomeFragment : Fragment() {
         adapter.submit(groups)
     }
 
-    /** 品牌卡片跟手快捷操作：极速补货 / 极速消耗 / 详情 */
-    private fun showBrandQuickAction(brand: BrandSummary, category: String) {
+    /** 品牌快捷操作弹窗 */
+    private fun showBrandActionSheet(brand: BrandSummary, category: String) {
+        val u = brand.unit.ifEmpty { "片" }
         val options = arrayOf(
-            "➕ 极速补货 (+1 件)",
-            "➖ 极速消耗 (-1 件)",
-            "📝 自定义记一笔"
+            "➕ 极速补货 (+1 $u)",
+            "➖ 极速消耗 (-1 $u)",
+            "📝 自定义数量记一笔"
         )
-
         MaterialAlertDialogBuilder(requireContext())
-            .setTitle("【$category】${brand.name} (库存: ${brand.count}件)")
+            .setTitle("【$category】${brand.name} (当前: ${brand.count} $u)")
             .setItems(options) { _, which ->
                 when (which) {
                     0 -> {
-                        // 快捷加1
                         val newEntry = Entry(
                             category = category,
                             brand = brand.name,
@@ -270,15 +271,15 @@ class HomeFragment : Fragment() {
                             price = brand.avgPrice,
                             ts = System.currentTimeMillis(),
                             isIn = true,
-                            notes = "快捷补货"
+                            notes = "快捷补货",
+                            unit = u
                         )
                         entries.add(newEntry)
                         store.saveAll(entries)
                         refresh()
-                        Toast.makeText(requireContext(), "已为【${brand.name}】补货 +1 件", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(requireContext(), "已为【${brand.name}】补货 +1 $u", Toast.LENGTH_SHORT).show()
                     }
                     1 -> {
-                        // 快捷减1
                         val newEntry = Entry(
                             category = category,
                             brand = brand.name,
@@ -286,18 +287,19 @@ class HomeFragment : Fragment() {
                             price = 0.0,
                             ts = System.currentTimeMillis(),
                             isIn = false,
-                            notes = "快捷消耗"
+                            notes = "快捷消耗",
+                            unit = u
                         )
                         entries.add(newEntry)
                         store.saveAll(entries)
                         refresh()
-                        Toast.makeText(requireContext(), "已记录【${brand.name}】消耗 -1 件", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(requireContext(), "已记录【${brand.name}】消耗 -1 $u", Toast.LENGTH_SHORT).show()
                     }
                     2 -> {
-                        // 打开主界面的记账弹窗
-                        val act = activity as? MainActivity
-                        // (MainActivity 也会更新)
-                        Toast.makeText(requireContext(), "可点击底部 + 记一笔", Toast.LENGTH_SHORT).show()
+                        (activity as? MainActivity)?.showAddDialog(
+                            prefillBrand = brand.name,
+                            prefillCategory = category
+                        )
                     }
                 }
             }
@@ -317,6 +319,7 @@ class HomeFragment : Fragment() {
     private data class BrandData(
         var addCount: Int = 0,
         var addAmount: Double = 0.0,
-        var reduceCount: Int = 0
+        var reduceCount: Int = 0,
+        var unit: String = "片"
     )
 }

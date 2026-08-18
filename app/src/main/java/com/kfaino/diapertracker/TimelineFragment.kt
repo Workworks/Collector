@@ -10,7 +10,7 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.kfaino.diapertracker.databinding.FragmentTimelineBinding
 
-/** 生活流：按时间倒序展示所有记录 */
+/** 生活流：按时间倒序展示所有记录，支持修改与删除 */
 class TimelineFragment : Fragment() {
 
     private var _binding: FragmentTimelineBinding? = null
@@ -31,7 +31,21 @@ class TimelineFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        adapter = HistoryAdapter(onDelete = { entry -> confirmDelete(entry) })
+        adapter = HistoryAdapter(
+            onEdit = { entry, pos ->
+                val allEntries = store.loadAll()
+                val realIndex = allEntries.indexOf(entry)
+                if (realIndex != -1) {
+                    (activity as? MainActivity)?.showAddDialog(
+                        prefillBrand = entry.brand,
+                        prefillCategory = entry.category,
+                        editEntry = entry,
+                        editPosition = realIndex
+                    )
+                }
+            },
+            onDelete = { entry, _ -> confirmDelete(entry) }
+        )
         binding.historyList.layoutManager = LinearLayoutManager(requireContext())
         binding.historyList.adapter = adapter
 
@@ -43,7 +57,7 @@ class TimelineFragment : Fragment() {
         refresh()
     }
 
-    private fun refresh() {
+    fun refresh() {
         if (_binding == null) return
         val entries = store.loadAll()
         binding.timelineCountBadge.text = "共 ${entries.size} 条记录"
