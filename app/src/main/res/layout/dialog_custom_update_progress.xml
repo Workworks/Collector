@@ -1,0 +1,115 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:background="@drawable/bg_dialog_card"
+    android:padding="22dp">
+
+    <!-- 头部图标与下载标题 -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:layout_marginBottom="18dp">
+
+        <FrameLayout
+            android:layout_width="52dp"
+            android:layout_height="52dp"
+            android:background="@drawable/bg_icon_circle">
+
+            <ProgressBar
+                android:layout_width="32dp"
+                android:layout_height="32dp"
+                android:layout_gravity="center"
+                android:indeterminate="true"
+                android:indeterminateTint="#FFFFFFFF" />
+        </FrameLayout>
+
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:orientation="vertical"
+            android:layout_marginStart="14dp">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="正在极速下载更新"
+                android:textSize="19sp"
+                android:textStyle="bold"
+                android:textColor="@color/text_primary"
+                android:fontFamily="sans-serif-medium" />
+
+            <TextView
+                android:id="@+id/custom_progress_status"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="正在下载更新包..."
+                android:textSize="12sp"
+                android:textColor="@color/text_secondary"
+                android:layout_marginTop="3dp" />
+        </LinearLayout>
+    </LinearLayout>
+
+    <!-- 进度百分比与已下载大小 -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="bottom"
+        android:layout_marginBottom="8dp">
+
+        <TextView
+            android:id="@+id/custom_progress_percent"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="0%"
+            android:textSize="26sp"
+            android:textStyle="bold"
+            android:textColor="@color/primary"
+            android:fontFamily="sans-serif-medium" />
+
+        <View
+            android:layout_width="0dp"
+            android:layout_height="1dp"
+            android:layout_weight="1" />
+
+        <TextView
+            android:id="@+id/custom_progress_size"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="0.0 MB / 0.0 MB"
+            android:textSize="13sp"
+            android:textColor="@color/text_secondary"
+            android:layout_marginBottom="4dp" />
+    </LinearLayout>
+
+    <!-- 现代平滑圆角进度条 -->
+    <com.google.android.material.progressindicator.LinearProgressIndicator
+        android:id="@+id/custom_download_progress_bar"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:indeterminate="false"
+        app:indicatorColor="@color/primary"
+        app:trackColor="@color/input_bg"
+        app:trackCornerRadius="5dp"
+        app:trackThickness="10dp"
+        android:layout_marginBottom="20dp" />
+
+    <!-- 底部取消操作 -->
+    <Button
+        android:id="@+id/custom_btn_cancel_download"
+        android:layout_width="match_parent"
+        android:layout_height="48dp"
+        android:text="取消下载"
+        android:textSize="14sp"
+        android:textColor="@color/text_secondary"
+        android:background="@drawable/bg_btn_secondary"
+        style="?android:attr/borderlessButtonStyle" />
+
+</LinearLayout>

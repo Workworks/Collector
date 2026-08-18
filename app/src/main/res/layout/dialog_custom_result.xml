@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:gravity="center_horizontal"
+    android:background="@drawable/bg_dialog_card"
+    android:padding="24dp">
+
+    <FrameLayout
+        android:id="@+id/result_icon_container"
+        android:layout_width="56dp"
+        android:layout_height="56dp"
+        android:background="@drawable/bg_icon_circle"
+        android:layout_marginBottom="16dp">
+
+        <ImageView
+            android:id="@+id/result_icon"
+            android:layout_width="28dp"
+            android:layout_height="28dp"
+            android:layout_gravity="center"
+            android:src="@drawable/ic_download"
+            app:tint="#FFFFFFFF"
+            android:contentDescription="状态" />
+    </FrameLayout>
+
+    <TextView
+        android:id="@+id/result_title"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="当前已是最新版本"
+        android:textSize="18sp"
+        android:textStyle="bold"
+        android:textColor="@color/text_primary"
+        android:fontFamily="sans-serif-medium" />
+
+    <TextView
+        android:id="@+id/result_message"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="版本详情说明"
+        android:textSize="13sp"
+        android:textColor="@color/text_secondary"
+        android:gravity="center"
+        android:lineSpacingExtra="3dp"
+        android:layout_marginTop="8dp"
+        android:layout_marginBottom="20dp" />
+
+    <Button
+        android:id="@+id/result_btn_confirm"
+        android:layout_width="match_parent"
+        android:layout_height="48dp"
+        android:text="知道了"
+        android:textSize="14sp"
+        android:textStyle="bold"
+        android:textColor="#FFFFFFFF"
+        android:background="@drawable/bg_btn_primary"
+        style="?android:attr/borderlessButtonStyle" />
+
+</LinearLayout>

@@ -3,6 +3,8 @@ package com.kfaino.diapertracker
 import android.app.Activity
 import android.content.Context
 import android.content.Intent
+import android.graphics.Color
+import android.graphics.drawable.ColorDrawable
 import android.net.Uri
 import android.os.Build
 import android.os.Environment
@@ -15,8 +17,10 @@ import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
 import androidx.core.content.FileProvider
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
-import com.kfaino.diapertracker.databinding.DialogUpdateFoundBinding
-import com.kfaino.diapertracker.databinding.DialogUpdateProgressBinding
+import com.kfaino.diapertracker.databinding.DialogCustomCheckingBinding
+import com.kfaino.diapertracker.databinding.DialogCustomResultBinding
+import com.kfaino.diapertracker.databinding.DialogCustomUpdateAvailableBinding
+import com.kfaino.diapertracker.databinding.DialogCustomUpdateProgressBinding
 import org.json.JSONObject
 import java.io.File
 import java.io.FileOutputStream
@@ -28,8 +32,7 @@ import java.util.TimeZone
 import java.util.concurrent.Executors
 
 /**
- * GitHub Releases 在线热更新管理器
- * 支持从 GitHub 仓库自动检测最新 Release 版本、下载 APK 并通过 FileProvider 调用系统安装程序完成升级
+ * 现代轻量化 GitHub Releases 在线热更新引擎
  */
 object UpdateManager {
 
@@ -47,30 +50,25 @@ object UpdateManager {
         val htmlUrl: String
     )
 
-    /**
-     * 获取当前 App 版本名称 (如 "2.1")
-     */
+    /** 获取当前已安装应用 versionName */
     fun getAppVersionName(context: Context): String {
         return try {
             val pInfo = context.packageManager.getPackageInfo(context.packageName, 0)
-            pInfo.versionName ?: "1.0"
+            pInfo.versionName ?: "1.0.0"
         } catch (_: Exception) {
-            "1.0"
+            "1.0.0"
         }
     }
 
-    /**
-     * 版本号比较：如果 remoteVersion 大于 currentVersion 则返回 true
-     */
+    /** 比较远端版本与当前本地版本 */
     fun isNewerVersion(remoteVersion: String, currentVersion: String): Boolean {
         try {
-            val remoteParts = remoteVersion.removePrefix("v").removePrefix("V").split(".")
-            val currentParts = currentVersion.removePrefix("v").removePrefix("V").split(".")
-
-            val maxLength = maxOf(remoteParts.size, currentParts.size)
-            for (i in 0 until maxLength) {
-                val rNum = remoteParts.getOrNull(i)?.filter { it.isDigit() }?.toIntOrNull() ?: 0
-                val cNum = currentParts.getOrNull(i)?.filter { it.isDigit() }?.toIntOrNull() ?: 0
+            val rParts = remoteVersion.trim().removePrefix("v").removePrefix("V").split(".")
+            val cParts = currentVersion.trim().removePrefix("v").removePrefix("V").split(".")
+            val len = maxOf(rParts.size, cParts.size)
+            for (i in 0 until len) {
+                val rNum = rParts.getOrNull(i)?.toIntOrNull() ?: 0
+                val cNum = cParts.getOrNull(i)?.toIntOrNull() ?: 0
                 if (rNum > cNum) return true
                 if (rNum < cNum) return false
             }
@@ -80,10 +78,20 @@ object UpdateManager {
         }
     }
 
+    /** 创建无原生黑灰底边框的高定现代弹窗 */
+    private fun createCustomDialog(activity: Activity, view: View, cancelable: Boolean = false): AlertDialog {
+        val dialog = MaterialAlertDialogBuilder(activity)
+            .setView(view)
+            .setCancelable(cancelable)
+            .create()
+        dialog.window?.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
+        return dialog
+    }
+
     /**
      * 检查更新
      * @param activity 当前 Activity
-     * @param isManual true 表示用户手动点击（需要展示“正在检查”及“当前已是最新”等提示）；false 表示自动静默检测
+     * @param isManual true 表示用户手动点击；false 表示自动静默检测
      */
     fun checkUpdate(activity: Activity, isManual: Boolean = true) {
         val store = DataStore(activity)
@@ -92,11 +100,9 @@ object UpdateManager {
 
         var checkingDialog: AlertDialog? = null
         if (isManual) {
-            checkingDialog = MaterialAlertDialogBuilder(activity)
-                .setTitle("检查更新")
-                .setMessage("正在连接 GitHub 检测最新版本...")
-                .setCancelable(false)
-                .show()
+            val checkingBinding = DialogCustomCheckingBinding.inflate(LayoutInflater.from(activity))
+            checkingDialog = createCustomDialog(activity, checkingBinding.root, cancelable = false)
+            checkingDialog.show()
         }
 
         executor.execute {
@@ -119,11 +125,7 @@ object UpdateManager {
                         showUpdateAvailableDialog(activity, releaseInfo, currentVer)
                     } else {
                         if (isManual) {
-                            Toast.makeText(
-                                activity,
-                                "当前已是最新版本 (v$currentVer)",
-                                Toast.LENGTH_SHORT
-                            ).show()
+                            showUpToDateDialog(activity, currentVer)
                         }
                     }
                 } else {
@@ -136,7 +138,7 @@ object UpdateManager {
     }
 
     /**
-     * 请求 GitHub Releases API（支持多镜像备用通道）
+     * 请求 GitHub Releases API（多镜像备用与直连通道）
      */
     private fun fetchLatestRelease(repo: String): ReleaseInfo? {
         System.setProperty("java.net.preferIPv4Stack", "true")
@@ -176,7 +178,7 @@ object UpdateManager {
         }
 
         if (jsonText.isEmpty()) {
-            throw lastException ?: Exception("连接 GitHub 失败，请检查网络")
+            throw lastException ?: Exception("连接 GitHub 失败，请检查网络连接")
         }
 
         val json = JSONObject(jsonText)
@@ -188,7 +190,6 @@ object UpdateManager {
         val publishedAt = formatIsoDate(json.optString("published_at", ""))
         val htmlUrl = json.optString("html_url", "https://github.com/$repo/releases")
 
-        // 查找资产中的 .apk 文件
         var apkUrl = ""
         var apkSize = 0L
         val assets = json.optJSONArray("assets")
@@ -221,67 +222,59 @@ object UpdateManager {
     }
 
     /**
-     * 发现新版本弹窗
+     * 定制现代发现新版本弹窗
      */
     private fun showUpdateAvailableDialog(
         activity: Activity,
         release: ReleaseInfo,
         currentVer: String
     ) {
-        val binding = DialogUpdateFoundBinding.inflate(LayoutInflater.from(activity))
-        binding.updateVersionBadge.text = "${release.tagName} (当前 v$currentVer)"
-        binding.updateSize.text = if (release.apkSize > 0) formatFileSize(release.apkSize) else ""
-        binding.updateDate.text = release.publishedAt
-        binding.updateChangelog.text = release.changelog.ifEmpty { "优化部分体验与修复已知问题。" }
+        val binding = DialogCustomUpdateAvailableBinding.inflate(LayoutInflater.from(activity))
+        val dialog = createCustomDialog(activity, binding.root, cancelable = true)
 
-        MaterialAlertDialogBuilder(activity)
-            .setTitle("发现新版本 (${release.tagName})")
-            .setView(binding.root)
-            .setCancelable(false)
-            .setPositiveButton("立即下载更新") { _, _ ->
-                startDownloadAndInstall(activity, release)
-            }
-            .setNeutralButton("浏览器下载") { _, _ ->
-                try {
-                    val browserIntent = Intent(Intent.ACTION_VIEW, Uri.parse(release.htmlUrl))
-                    activity.startActivity(browserIntent)
-                } catch (_: Exception) {
-                    Toast.makeText(activity, "无法打开浏览器", Toast.LENGTH_SHORT).show()
-                }
-            }
-            .setNegativeButton("稍后再说", null)
-            .show()
+        binding.customVersionBadge.text = "${release.tagName} (当前 v$currentVer)"
+        binding.customUpdateSize.text = if (release.apkSize > 0) formatFileSize(release.apkSize) else ""
+        binding.customUpdateDate.text = release.publishedAt.ifEmpty { "最新构建" }
+        binding.customUpdateChangelog.text = release.changelog.ifEmpty { "优化部分体验与修复已知问题。" }
+
+        binding.customBtnCancel.setOnClickListener {
+            dialog.dismiss()
+        }
+
+        binding.customBtnUpdate.setOnClickListener {
+            dialog.dismiss()
+            startDownloadAndInstall(activity, release)
+        }
+
+        dialog.show()
     }
 
     /**
-     * 开始下载并安装 APK
+     * 定制现代极速下载与安装流程
      */
     private fun startDownloadAndInstall(activity: Activity, release: ReleaseInfo) {
-        val progressBinding = DialogUpdateProgressBinding.inflate(LayoutInflater.from(activity))
-        progressBinding.progressStatus.text = "正在下载 ${release.tagName}..."
-        progressBinding.downloadProgressBar.progress = 0
-        progressBinding.progressPercent.text = "0%"
-        progressBinding.progressSize.text = "0 MB / ${formatFileSize(release.apkSize)}"
+        val progressBinding = DialogCustomUpdateProgressBinding.inflate(LayoutInflater.from(activity))
+        progressBinding.customProgressStatus.text = "正在下载 ${release.tagName}..."
+        progressBinding.customDownloadProgressBar.progress = 0
+        progressBinding.customProgressPercent.text = "0%"
+        progressBinding.customProgressSize.text = "0.0 MB / ${formatFileSize(release.apkSize)}"
 
         var isCanceled = false
         var downloadThread: Thread? = null
 
-        val progressDialog = MaterialAlertDialogBuilder(activity)
-            .setTitle("下载更新")
-            .setView(progressBinding.root)
-            .setCancelable(false)
-            .setNegativeButton("取消") { _, _ ->
-                isCanceled = true
-                downloadThread?.interrupt()
-            }
-            .create()
+        val progressDialog = createCustomDialog(activity, progressBinding.root, cancelable = false)
+
+        progressBinding.customBtnCancelDownload.setOnClickListener {
+            isCanceled = true
+            downloadThread?.interrupt()
+            progressDialog.dismiss()
+        }
 
         progressDialog.show()
 
         val saveDir = activity.getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS) ?: activity.cacheDir
         val apkFile = File(saveDir, "Collecter_${release.versionName}.apk")
 
-        // 尝试直接下载，若失败可使用国内镜像加速
         val urlsToTry = listOf(
             release.apkDownloadUrl,
             "https://ghfast.top/${release.apkDownloadUrl}",
@@ -299,10 +292,9 @@ object UpdateManager {
                         connectTimeout = 15000
                         readTimeout = 15000
                         instanceFollowRedirects = true
-                        setRequestProperty("User-Agent", "Mozilla/5.0 DiaperTracker")
+                        setRequestProperty("User-Agent", "Mozilla/5.0 (Android; Mobile) CollecterApp")
                     }
 
-                    // 处理重定向
                     var responseCode = conn.responseCode
                     var currentConn = conn
                     if (responseCode == HttpURLConnection.HTTP_MOVED_TEMP ||
@@ -313,7 +305,7 @@ object UpdateManager {
                             currentConn = (URL(newLocation).openConnection() as HttpURLConnection).apply {
                                 connectTimeout = 15000
                                 readTimeout = 15000
-                                setRequestProperty("User-Agent", "Mozilla/5.0 DiaperTracker")
+                                setRequestProperty("User-Agent", "Mozilla/5.0 (Android; Mobile) CollecterApp")
                             }
                             responseCode = currentConn.responseCode
                         }
@@ -343,14 +335,14 @@ object UpdateManager {
                         downloadedBytes += bytesRead
 
                         val now = System.currentTimeMillis()
-                        if (now - lastUpdateTs > 100 || downloadedBytes == totalBytes) {
+                        if (now - lastUpdateTs > 80 || downloadedBytes == totalBytes) {
                             lastUpdateTs = now
                             val percent = if (totalBytes > 0) ((downloadedBytes * 100) / totalBytes).toInt().coerceIn(0, 100) else 0
                             mainHandler.post {
                                 if (!activity.isFinishing && !activity.isDestroyed) {
-                                    progressBinding.downloadProgressBar.progress = percent
-                                    progressBinding.progressPercent.text = "$percent%"
-                                    progressBinding.progressSize.text = "${formatFileSize(downloadedBytes)} / ${formatFileSize(totalBytes)}"
+                                    progressBinding.customDownloadProgressBar.progress = percent
+                                    progressBinding.customProgressPercent.text = "$percent%"
+                                    progressBinding.customProgressSize.text = "${formatFileSize(downloadedBytes)} / ${formatFileSize(totalBytes)}"
                                 }
                             }
                         }
@@ -384,27 +376,61 @@ object UpdateManager {
         downloadThread.start()
     }
 
-    /**
-     * 调起系统安装器安装 APK
-     */
+    /** 定制当前已是最新弹窗 */
+    private fun showUpToDateDialog(activity: Activity, currentVer: String) {
+        val binding = DialogCustomResultBinding.inflate(LayoutInflater.from(activity))
+        val dialog = createCustomDialog(activity, binding.root, cancelable = true)
+
+        binding.resultTitle.text = "当前已是最新版本"
+        binding.resultMessage.text = "当前应用版本为 v$currentVer\n已包含所有最新功能与性能优化，无需更新。"
+        binding.resultBtnConfirm.text = "好的"
+        binding.resultBtnConfirm.setOnClickListener {
+            dialog.dismiss()
+        }
+
+        dialog.show()
+    }
+
+    /** 定制检查失败弹窗 */
+    private fun showErrorDialog(activity: Activity, repo: String, errorMsg: String) {
+        val binding = DialogCustomResultBinding.inflate(LayoutInflater.from(activity))
+        val dialog = createCustomDialog(activity, binding.root, cancelable = true)
+
+        binding.resultTitle.text = "检查更新失败"
+        binding.resultMessage.text = "目标仓库: $repo\n原因: $errorMsg\n\n提示: 可在“我的”页面检查网络连接或配置 GitHub 仓库。"
+        binding.resultBtnConfirm.text = "我知道了"
+        binding.resultBtnConfirm.setOnClickListener {
+            dialog.dismiss()
+        }
+
+        dialog.show()
+    }
+
+    /** 调起系统安装器安装 APK */
     fun installApk(context: Context, apkFile: File) {
         try {
-            // Android 8.0+ 安装未知来源应用权限判断
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                 val hasInstallPermission = context.packageManager.canRequestPackageInstalls()
                 if (!hasInstallPermission) {
-                    MaterialAlertDialogBuilder(context)
-                        .setTitle("需要安装权限")
-                        .setMessage("为完成更新安装，请在随后的设置页面中允许【安装未知应用】权限。")
-                        .setPositiveButton("去开启") { _, _ ->
-                            val intent = Intent(Settings.ACTION_MANAGE_UNKNOWN_APP_SOURCES).apply {
-                                data = Uri.parse("package:${context.packageName}")
-                                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-                            }
-                            context.startActivity(intent)
+                    val binding = DialogCustomResultBinding.inflate(LayoutInflater.from(context))
+                    val dialog = MaterialAlertDialogBuilder(context)
+                        .setView(binding.root)
+                        .setCancelable(false)
+                        .create()
+                    dialog.window?.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
+
+                    binding.resultTitle.text = "需要安装应用权限"
+                    binding.resultMessage.text = "为完成更新安装，请在随后的系统设置页面中开启【允许安装未知应用】权限。"
+                    binding.resultBtnConfirm.text = "前往开启"
+                    binding.resultBtnConfirm.setOnClickListener {
+                        dialog.dismiss()
+                        val intent = Intent(Settings.ACTION_MANAGE_UNKNOWN_APP_SOURCES).apply {
+                            data = Uri.parse("package:${context.packageName}")
+                            addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
                         }
-                        .setNegativeButton("取消", null)
-                        .show()
+                        context.startActivity(intent)
+                    }
+                    dialog.show()
                     return
                 }
             }
@@ -422,40 +448,26 @@ object UpdateManager {
             }
             context.startActivity(installIntent)
         } catch (e: Exception) {
-            Toast.makeText(context, "调起安装程序失败: ${e.message}", Toast.LENGTH_LONG).show()
+            Toast.makeText(context, "调起安装失败: ${e.message}", Toast.LENGTH_LONG).show()
         }
     }
 
-    /**
-     * 错误提示对话框
-     */
-    private fun showErrorDialog(context: Context, repo: String, message: String) {
-        MaterialAlertDialogBuilder(context)
-            .setTitle("检查更新失败")
-            .setMessage("目标仓库：$repo\n原因：$message\n\n提示：可在“我的”页面中点击更新项配置或修改 GitHub 仓库地址。")
-            .setPositiveButton("确定", null)
-            .show()
-    }
-
-    private fun formatFileSize(sizeBytes: Long): String {
-        if (sizeBytes <= 0) return "0 MB"
-        val mb = sizeBytes.toDouble() / (1024 * 1024)
+    private fun formatFileSize(bytes: Long): String {
+        if (bytes <= 0) return "0 MB"
+        val mb = bytes.toDouble() / (1024 * 1024)
         return String.format(Locale.getDefault(), "%.1f MB", mb)
     }
 
-    private fun formatIsoDate(isoString: String): String {
+    private fun formatIsoDate(iso: String): String {
+        if (iso.isBlank()) return ""
         return try {
-            val parser = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'", Locale.US).apply {
-                timeZone = TimeZone.getTimeZone("UTC")
-            }
-            val date = parser.parse(isoString)
-            if (date != null) {
-                SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(date)
-            } else {
-                "近期"
-            }
+            val parser = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'", Locale.getDefault())
+            parser.timeZone = TimeZone.getTimeZone("UTC")
+            val date = parser.parse(iso) ?: return iso
+            val formatter = SimpleDateFormat("yyyy-MM-dd HH:mm", Locale.getDefault())
+            formatter.format(date)
         } catch (_: Exception) {
-            "近期"
+            iso
         }
     }
 }
