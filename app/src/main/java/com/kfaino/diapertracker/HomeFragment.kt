@@ -1,21 +1,27 @@
 package com.kfaino.diapertracker
 
+import android.app.DatePickerDialog
+import android.content.ClipData
+import android.content.ClipboardManager
+import android.content.Context
 import android.graphics.Color
 import android.os.Bundle
-import android.view.Gravity
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.Button
+import android.widget.EditText
 import android.widget.LinearLayout
 import android.widget.TextView
 import android.widget.Toast
+import androidx.appcompat.widget.PopupMenu
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
+import com.kfaino.diapertracker.databinding.DialogRetireItemBinding
 import com.kfaino.diapertracker.databinding.FragmentHomeBinding
 import java.text.SimpleDateFormat
+import java.util.Calendar
 import java.util.Date
 import java.util.Locale
 
@@ -25,22 +31,13 @@ class HomeFragment : Fragment() {
     private val binding get() = _binding!!
 
     private val store by lazy { DataStore(requireContext()) }
-    private val entries = mutableListOf<Entry>()
-    private lateinit var adapter: CategoryAdapter
+    private lateinit var assetAdapter: AssetAdapter
+    private lateinit var subscriptionAdapter: SubscriptionAdapter
 
-    // 当前筛选与排序状态
-    private var selectedCategory = "全部"
-    private var sortMode = 0 // 0=按分组排序, 1=按库存降序, 2=按库存升序, 3=按花费降序, 4=按名称
-
-    companion object {
-        val SORT_LABELS = arrayOf(
-            "⚡ 智能分组排序",
-            "📉 按在库数量从多到少",
-            "📈 按在库数量从少到多",
-            "💰 按花费金额从多到少",
-            "🔤 按名称字母排序"
-        )
-    }
+    private var selectedTab = 0 // 0 = 物品, 1 = 订阅
+    private var selectedStatusFilter = 0 // 0 = 全部, 1 = 仅在役, 2 = 仅已退役
+    private var selectedSortType = 0 // 0 = 按拥有天数降序, 1 = 按价格降序, 2 = 按日均成本降序, 3 = 按最新入库
+    private var selectedCategory: String? = null
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -54,395 +51,452 @@ class HomeFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        adapter = CategoryAdapter(
-            onBrandClick = { brand, category ->
-                showBrandActionSheet(brand, category)
-            }
-        )
-        binding.brandRecycler.layoutManager = LinearLayoutManager(requireContext())
-        binding.brandRecycler.adapter = adapter
-
-        setupSortButton()
-        setupActions()
-
-        loadData()
-        renderCategoryChips()
+        setupAdapters()
+        setupTopBarAndTabs()
+        setupFilters()
+        setupBackupBanner()
         refresh()
     }
 
     override fun onResume() {
         super.onResume()
-        loadData()
-        renderCategoryChips()
         refresh()
     }
 
-    private fun setupSortButton() {
-        binding.btnSortOrder.applyPressScaleAnimation(0.92f)
-        binding.btnSortOrder.text = SORT_LABELS[sortMode] + " ▾"
-        binding.btnSortOrder.setOnClickListener {
-            MaterialAlertDialogBuilder(requireContext())
-                .setTitle("选择排序方式")
-                .setSingleChoiceItems(SORT_LABELS, sortMode) { dialog, which ->
-                    sortMode = which
-                    binding.btnSortOrder.text = SORT_LABELS[sortMode] + " ▾"
-                    refresh()
-                    dialog.dismiss()
-                }
-                .setNegativeButton(R.string.cancel, null)
-                .show()
-        }
+    private fun setupAdapters() {
+        assetAdapter = AssetAdapter(
+            onEntryClick = { entry ->
+                (activity as? MainActivity)?.showEditDialog(entry)
+            },
+            onMoreClick = { entry, anchorView ->
+                showAssetMoreMenu(entry, anchorView)
+            }
+        )
+
+        subscriptionAdapter = SubscriptionAdapter(
+            onSubClick = { sub ->
+                (activity as? MainActivity)?.showEditDialog(sub)
+            },
+            onMoreClick = { sub, anchorView ->
+                showSubMoreMenu(sub, anchorView)
+            }
+        )
+
+        binding.rvAssetList.layoutManager = LinearLayoutManager(requireContext())
+        binding.rvAssetList.adapter = assetAdapter
     }
 
-    private fun setupActions() {
-        binding.btnOpenFloorplanMap.applyPressScaleAnimation(0.92f)
-        binding.btnOpenFloorplanMap.setOnClickListener {
+    private fun setupTopBarAndTabs() {
+        // 顶部操作按钮
+        binding.btnOpenFloorplanTop.applyPressScaleAnimation(0.90f)
+        binding.btnOpenFloorplanTop.setOnClickListener {
             FloorPlanDialog.show(requireActivity(), store, isSelectMode = false)
         }
 
-        binding.btnManageCategories.applyPressScaleAnimation(0.92f)
-        binding.btnManageCategories.setOnClickListener {
-            CategoryManagerDialog.showManageDialog(requireContext(), store) {
-                renderCategoryChips()
-                refresh()
-            }
+        binding.btnSearchItems.applyPressScaleAnimation(0.90f)
+        binding.btnSearchItems.setOnClickListener {
+            showSearchDialog()
+        }
+
+        binding.btnTopAdd.applyPressScaleAnimation(0.90f)
+        binding.btnTopAdd.setOnClickListener {
+            (activity as? MainActivity)?.showAddDialog(presetCategory = selectedCategory)
+        }
+
+        // 分段切换器 (物品 / 订阅)
+        binding.tabItems.applyPressScaleAnimation(0.94f)
+        binding.tabSubs.applyPressScaleAnimation(0.94f)
+
+        binding.tabItems.setOnClickListener {
+            switchMainTab(0)
+        }
+
+        binding.tabSubs.setOnClickListener {
+            switchMainTab(1)
         }
     }
 
-    private fun loadData() {
-        entries.clear()
-        entries.addAll(store.loadAll())
+    private fun switchMainTab(tab: Int) {
+        selectedTab = tab
+        if (tab == 0) {
+            // 切换为【物品】
+            binding.tabItems.setBackgroundResource(R.drawable.bg_chip_active)
+            binding.tabItems.backgroundTintList = ContextCompat.getColorStateList(requireContext(), android.R.color.white)
+            binding.tabItems.setTextColor(Color.parseColor("#0A0E17"))
+            binding.tabItems.paint.isFakeBoldText = true
+
+            binding.tabSubs.setBackgroundColor(Color.TRANSPARENT)
+            binding.tabSubs.setTextColor(ContextCompat.getColor(requireContext(), R.color.text_secondary))
+            binding.tabSubs.paint.isFakeBoldText = false
+
+            binding.cardMyAssets.visibility = View.VISIBLE
+            binding.cardMySubscriptions.visibility = View.GONE
+            binding.rvAssetList.adapter = assetAdapter
+        } else {
+            // 切换为【订阅】
+            binding.tabSubs.setBackgroundResource(R.drawable.bg_chip_active)
+            binding.tabSubs.backgroundTintList = ContextCompat.getColorStateList(requireContext(), android.R.color.white)
+            binding.tabSubs.setTextColor(Color.parseColor("#0A0E17"))
+            binding.tabSubs.paint.isFakeBoldText = true
+
+            binding.tabItems.setBackgroundColor(Color.TRANSPARENT)
+            binding.tabItems.setTextColor(ContextCompat.getColor(requireContext(), R.color.text_secondary))
+            binding.tabItems.paint.isFakeBoldText = false
+
+            binding.cardMyAssets.visibility = View.GONE
+            binding.cardMySubscriptions.visibility = View.VISIBLE
+            binding.rvAssetList.adapter = subscriptionAdapter
+        }
+        refresh()
     }
 
-    /** 渲染重要物品与防丢订阅核对卡片 */
-    private fun renderImportantItems() {
-        val importantEntries = store.getImportantEntries()
-        if (importantEntries.isEmpty()) {
-            binding.cardImportantItemsTracker.visibility = View.GONE
-            return
+    private fun setupBackupBanner() {
+        binding.btnCloseBackupBanner.setOnClickListener {
+            binding.cardBackupBanner.visibility = View.GONE
         }
 
-        binding.cardImportantItemsTracker.visibility = View.VISIBLE
-        binding.importantCountBadge.text = "共 ${importantEntries.size} 项关注"
+        binding.btnRemindLater.setOnClickListener {
+            binding.cardBackupBanner.visibility = View.GONE
+            Toast.makeText(requireContext(), "已推迟备份提醒", Toast.LENGTH_SHORT).show()
+        }
 
-        val container = binding.importantItemsListContainer
-        container.removeAllViews()
-
-        val now = System.currentTimeMillis()
-        val dayMs = 24L * 60 * 60 * 1000
-
-        for (e in importantEntries) {
-            val row = LinearLayout(requireContext()).apply {
-                orientation = LinearLayout.HORIZONTAL
-                gravity = Gravity.CENTER_VERTICAL
-                setPadding(0, dpToPx(6), 0, dpToPx(6))
-            }
-
-            val iconTv = TextView(requireContext()).apply {
-                text = "⭐"
-                textSize = 14f
-                setPadding(0, 0, dpToPx(8), 0)
-            }
-
-            val infoLayout = LinearLayout(requireContext()).apply {
-                orientation = LinearLayout.VERTICAL
-                layoutParams = LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f)
-            }
-
-            val nameTv = TextView(requireContext()).apply {
-                text = e.brand
-                textSize = 13f
-                setTextColor(ContextCompat.getColor(context, R.color.text_primary))
-                paint.isFakeBoldText = true
-            }
-
-            val locText = if (e.location.isNotBlank()) "📍 ${e.houseName} · ${e.location}" else "📍 未标记放置位置"
-            val lastCheckedText = if (e.lastCheckedAt > 0) {
-                val daysAgo = ((now - e.lastCheckedAt) / dayMs).toInt()
-                if (daysAgo == 0) "✅ 今日已核对" else "⚠️ 已 $daysAgo 天未核对"
-            } else {
-                "⚠️ 尚未核对位置"
-            }
-
-            val locTv = TextView(requireContext()).apply {
-                text = "$locText  ($lastCheckedText)"
-                textSize = 11f
-                setTextColor(if (lastCheckedText.startsWith("✅")) Color.parseColor("#10B981") else Color.parseColor("#F59E0B"))
-            }
-
-            infoLayout.addView(nameTv)
-            infoLayout.addView(locTv)
-
-            val checkBtn = TextView(requireContext()).apply {
-                text = "✅ 确认在位"
-                textSize = 11f
-                setTextColor(Color.WHITE)
-                setBackgroundResource(R.drawable.bg_chip_active)
-                setPadding(dpToPx(8), dpToPx(4), dpToPx(8), dpToPx(4))
-                applyPressScaleAnimation(0.90f)
-                setOnClickListener {
-                    store.confirmItemChecked(e.id)
-                    Toast.makeText(requireContext(), "已确认【${e.brand}】位置在位！", Toast.LENGTH_SHORT).show()
-                    loadData()
-                    renderImportantItems()
-                }
-            }
-
-            row.addView(iconTv)
-            row.addView(infoLayout)
-            row.addView(checkBtn)
-            container.addView(row)
+        binding.btnBackupNow.setOnClickListener {
+            val json = store.exportBackupJson()
+            val clipboard = requireContext().getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+            clipboard.setPrimaryClip(ClipData.newPlainText("Collecter Backup", json))
+            Toast.makeText(requireContext(), "已将完整数据备份复制到剪贴板！", Toast.LENGTH_LONG).show()
+            binding.cardBackupBanner.visibility = View.GONE
         }
     }
 
-    /** 动态渲染横向滑动的分类筛选药丸 (Chips) */
-    private fun renderCategoryChips() {
-        val container = binding.categoryChipsContainer
-        container.removeAllViews()
+    private fun setupFilters() {
+        binding.btnFilterStatus.applyPressScaleAnimation(0.92f)
+        binding.btnFilterSort.applyPressScaleAnimation(0.92f)
+        binding.btnFilterCategory.applyPressScaleAnimation(0.92f)
+        binding.btnFilterMapView.applyPressScaleAnimation(0.92f)
 
-        val allCategories = listOf("全部") + store.getCategories()
-
-        for (cat in allCategories) {
-            val chip = TextView(requireContext()).apply {
-                text = cat
-                textSize = 13f
-                gravity = Gravity.CENTER
-                setPadding(dpToPx(14), dpToPx(6), dpToPx(14), dpToPx(6))
-                val isSelected = (selectedCategory == cat)
-
-                if (isSelected) {
-                    setBackgroundResource(R.drawable.bg_chip_active)
-                    setTextColor(ContextCompat.getColor(context, android.R.color.white))
-                } else {
-                    setBackgroundResource(R.drawable.bg_chip_inactive)
-                    setTextColor(ContextCompat.getColor(context, R.color.text_primary))
-                }
-
-                applyPressScaleAnimation(0.92f)
-                val params = LinearLayout.LayoutParams(
-                    LinearLayout.LayoutParams.WRAP_CONTENT,
-                    LinearLayout.LayoutParams.WRAP_CONTENT
-                ).apply {
-                    marginEnd = dpToPx(8)
-                }
-                layoutParams = params
-
-                setOnClickListener {
-                    selectedCategory = cat
-                    renderCategoryChips()
+        // 状态筛选：全部 / 仅在役 / 仅已退役
+        binding.btnFilterStatus.setOnClickListener {
+            val options = arrayOf("全部状态", "🟢 仅在役物品", "🔴 仅已退役 / 待办归置")
+            MaterialAlertDialogBuilder(requireContext())
+                .setTitle("筛选在役/退役状态")
+                .setSingleChoiceItems(options, selectedStatusFilter) { dialog, which ->
+                    selectedStatusFilter = which
+                    binding.btnFilterStatus.text = when (which) {
+                        1 -> "在役 ▾"
+                        2 -> "退役 ▾"
+                        else -> "全部 ▾"
+                    }
+                    dialog.dismiss()
                     refresh()
                 }
-            }
-            container.addView(chip)
+                .show()
         }
 
-        // + 自定义快捷药丸
-        val addCustomChip = TextView(requireContext()).apply {
-            text = "+ 自定义"
-            textSize = 13f
-            gravity = Gravity.CENTER
-            setPadding(dpToPx(12), dpToPx(6), dpToPx(12), dpToPx(6))
-            setBackgroundResource(R.drawable.bg_btn_custom_add)
-            setTextColor(ContextCompat.getColor(context, R.color.primary))
-            isClickable = true
-            isFocusable = true
-            applyPressScaleAnimation(0.92f)
-            setOnClickListener {
-                CategoryManagerDialog.showAddCategoryDialog(requireContext(), store) {
-                    renderCategoryChips()
+        // 排序方式
+        binding.btnFilterSort.setOnClickListener {
+            val options = arrayOf("⏳ 按拥有天数 (长→短)", "💰 按物品价值 (高→低)", "📉 按日均消费 (高→低)", "🕒 按添加时间 (新→旧)")
+            MaterialAlertDialogBuilder(requireContext())
+                .setTitle("排序方式")
+                .setSingleChoiceItems(options, selectedSortType) { dialog, which ->
+                    selectedSortType = which
+                    binding.btnFilterSort.text = when (which) {
+                        0 -> "天数 ▾"
+                        1 -> "价值 ▾"
+                        2 -> "日均 ▾"
+                        else -> "时间 ▾"
+                    }
+                    dialog.dismiss()
                     refresh()
                 }
-            }
-        }
-        container.addView(addCustomChip)
-    }
-
-    /** 构建分组数据并依据设定排序 */
-    private fun buildGroups(): List<CategoryGroup> {
-        val configuredCats = store.getCategories()
-        val data = LinkedHashMap<String, LinkedHashMap<String, BrandData>>()
-
-        for (cat in configuredCats) {
-            data[cat] = linkedMapOf()
+                .show()
         }
 
-        for (e in entries) {
-            val cat = e.category
-            if (!data.containsKey(cat)) data[cat] = linkedMapOf()
-            val brands = data[cat]!!
-            if (!brands.containsKey(e.brand)) brands[e.brand] = BrandData()
-            val bd = brands[e.brand]!!
-            bd.unit = e.unit.ifEmpty { "片" }
-            bd.location = e.location
-            bd.houseName = e.houseName
-            bd.isImportant = e.isImportant
-            if (e.isIn) {
-                bd.addCount += e.qty
-                bd.addAmount += e.qty * e.price
-            } else {
-                bd.reduceCount += e.qty
-            }
+        // 分类筛选
+        binding.btnFilterCategory.setOnClickListener {
+            val cats = listOf("全部") + store.getCategories()
+            val curIdx = if (selectedCategory == null) 0 else cats.indexOf(selectedCategory).coerceAtLeast(0)
+            MaterialAlertDialogBuilder(requireContext())
+                .setTitle("选择所属分类")
+                .setSingleChoiceItems(cats.toTypedArray(), curIdx) { dialog, which ->
+                    selectedCategory = if (which == 0) null else cats[which]
+                    binding.btnFilterCategory.text = if (selectedCategory == null) "全部分类 ▾" else "$selectedCategory ▾"
+                    dialog.dismiss()
+                    refresh()
+                }
+                .show()
         }
 
-        val result = mutableListOf<CategoryGroup>()
-        for ((cat, brands) in data) {
-            if (brands.isEmpty()) continue
-            val brandList = brands.entries.map { (name, bd) ->
-                val stock = bd.addCount - bd.reduceCount
-                val avg = if (bd.addCount > 0) bd.addAmount / bd.addCount else 0.0
-                BrandSummary(
-                    name = name,
-                    count = stock,
-                    amount = bd.addAmount,
-                    avgPrice = avg,
-                    unit = bd.unit,
-                    location = bd.location,
-                    houseName = bd.houseName,
-                    isImportant = bd.isImportant
-                )
-            }.sortedWith(when (sortMode) {
-                1 -> compareByDescending<BrandSummary> { it.count }
-                2 -> compareBy<BrandSummary> { it.count }
-                3 -> compareByDescending<BrandSummary> { it.amount }
-                4 -> compareBy<BrandSummary> { it.name }
-                else -> compareByDescending<BrandSummary> { it.count }
-            })
-
-            if (brandList.isNotEmpty()) {
-                val total = brandList.sumOf { it.count }
-                val amount = brandList.sumOf { it.amount }
-                val u = brandList.firstOrNull()?.unit ?: "片"
-                result.add(CategoryGroup(cat, brandList, total, amount, u))
-            }
-        }
-
-        val sortedResult = when (sortMode) {
-            0 -> result
-            1 -> result.sortedByDescending { it.totalCount }
-            2 -> result.sortedBy { it.totalCount }
-            3 -> result.sortedByDescending { it.totalAmount }
-            4 -> result.sortedBy { it.name }
-            else -> result
-        }
-
-        return if (selectedCategory != "全部") {
-            sortedResult.filter { it.name == selectedCategory }
-        } else {
-            sortedResult
+        // 筛选入口/平面图快速进入
+        binding.btnFilterMapView.setOnClickListener {
+            FloorPlanDialog.show(requireActivity(), store, isSelectMode = false)
         }
     }
 
-    private fun refresh() {
-        val groups = buildGroups()
-
-        val grandCount = entries.filter { it.isIn }.sumOf { it.qty } - entries.filter { !it.isIn }.sumOf { it.qty }
-        val totalSpent = entries.filter { it.isIn }.sumOf { it.qty * it.price }
-        val distinctBrands = entries.map { it.brand }.distinct().size
-
-        binding.totalCount.text = grandCount.coerceAtLeast(0).toString()
-        binding.totalAmount.text = "¥${String.format(Locale.getDefault(), "%.2f", totalSpent)}"
-        binding.brandCoverageText.text = "$distinctBrands 种"
-
-        val totalBrandsCount = groups.sumOf { it.brands.size }
-        binding.groupCountText.text = if (selectedCategory == "全部") {
-            "共 ${groups.size} 个分类，共 $totalBrandsCount 种物品"
-        } else {
-            "【$selectedCategory】分类下共 ${groups.find { it.name == selectedCategory }?.brands?.size ?: 0} 种物品"
+    private fun showSearchDialog() {
+        val input = EditText(requireContext()).apply {
+            hint = "输入物品、品牌或位置关键字搜索"
+            setPadding(48, 36, 48, 36)
         }
-
-        binding.emptyLayout.visibility = if (groups.isEmpty()) View.VISIBLE else View.GONE
-        binding.brandRecycler.visibility = if (groups.isEmpty()) View.GONE else View.VISIBLE
-
-        adapter.submit(groups)
-        renderImportantItems()
-    }
-
-    /** 品牌/物品快捷操作弹窗 */
-    private fun showBrandActionSheet(brand: BrandSummary, category: String) {
-        val u = brand.unit.ifEmpty { "片" }
-        val locInfo = if (brand.location.isNotBlank()) "📍 放置于: ${brand.houseName} · ${brand.location}" else "📍 放置位置未填"
-        val options = arrayOf(
-            "➕ 极速入库 (+1 $u)",
-            "➖ 极速消耗 (-1 $u)",
-            "📍 查看该物品位置变迁时光轴",
-            "🗺️ 在空间平面图上查看定位",
-            "📝 自定义记一笔"
-        )
         MaterialAlertDialogBuilder(requireContext())
-            .setTitle("【$category】${brand.name} (当前: ${brand.count} $u)\n$locInfo")
-            .setItems(options) { _, which ->
-                when (which) {
-                    0 -> {
-                        val newEntry = Entry(
-                            category = category,
-                            brand = brand.name,
-                            qty = 1,
-                            price = brand.avgPrice,
-                            ts = System.currentTimeMillis(),
-                            isIn = true,
-                            notes = "快捷入库",
-                            unit = u,
-                            location = brand.location,
-                            houseName = brand.houseName
-                        )
-                        entries.add(newEntry)
-                        store.saveAll(entries)
-                        refresh()
-                        Toast.makeText(requireContext(), "已成功补货 +1 $u", Toast.LENGTH_SHORT).show()
+            .setTitle("🔍 搜索资产与物品")
+            .setView(input)
+            .setPositiveButton("搜索") { _, _ ->
+                val query = input.text.toString().trim().lowercase()
+                if (query.isNotEmpty()) {
+                    val all = if (selectedTab == 0) store.getNonSubscriptionEntries() else store.getSubscriptionEntries()
+                    val filtered = all.filter {
+                        it.brand.lowercase().contains(query) ||
+                        it.category.lowercase().contains(query) ||
+                        it.location.lowercase().contains(query) ||
+                        it.notes.lowercase().contains(query)
                     }
-                    1 -> {
-                        if (brand.count <= 0) {
-                            Toast.makeText(requireContext(), "当前在库已为 0，消耗记录将使在库变为负数", Toast.LENGTH_SHORT).show()
-                        }
-                        val newEntry = Entry(
-                            category = category,
-                            brand = brand.name,
-                            qty = 1,
-                            price = brand.avgPrice,
-                            ts = System.currentTimeMillis(),
-                            isIn = false,
-                            notes = "快捷出库消耗",
-                            unit = u,
-                            location = brand.location,
-                            houseName = brand.houseName
-                        )
-                        entries.add(newEntry)
-                        store.saveAll(entries)
-                        refresh()
-                        Toast.makeText(requireContext(), "已成功消耗 -1 $u", Toast.LENGTH_SHORT).show()
+                    if (selectedTab == 0) {
+                        assetAdapter.submitList(filtered)
+                    } else {
+                        subscriptionAdapter.submitList(filtered)
                     }
-                    2 -> {
-                        val entry = entries.lastOrNull { it.brand == brand.name && it.category == category } ?: Entry(category = category, brand = brand.name, qty = brand.count)
-                        LocationHistoryDialog.show(requireActivity(), entry)
-                    }
-                    3 -> {
-                        FloorPlanDialog.show(requireActivity(), store, isSelectMode = false, currentHouseName = brand.houseName)
-                    }
-                    4 -> {
-                        (activity as? MainActivity)?.showAddDialogWithInitial(category, brand.name, u)
-                    }
+                    Toast.makeText(requireContext(), "找到 ${filtered.size} 项匹配记录", Toast.LENGTH_SHORT).show()
+                } else {
+                    refresh()
                 }
             }
-            .setNegativeButton(R.string.cancel, null)
+            .setNegativeButton("重置", { _, _ -> refresh() })
             .show()
     }
 
-    private fun dpToPx(dp: Int): Int {
-        return (dp * resources.displayMetrics.density + 0.5f).toInt()
+    private fun showAssetMoreMenu(entry: Entry, anchor: View) {
+        val popup = PopupMenu(requireContext(), anchor)
+        popup.menu.add(0, 1, 0, if (entry.isRetired) "🟢 恢复为在役状态" else "📦 物品退役与待办归置 (闲鱼/赠送)")
+        popup.menu.add(0, 2, 1, "📍 查看位置轨迹")
+        popup.menu.add(0, 3, 2, "✏️ 编辑物品信息")
+        popup.menu.add(0, 4, 3, "🗑️ 删除此记录")
+
+        popup.setOnMenuItemClickListener { item ->
+            when (item.itemId) {
+                1 -> {
+                    if (entry.isRetired) {
+                        store.setRetired(entry.id, false)
+                        Toast.makeText(requireContext(), "已恢复为在役状态", Toast.LENGTH_SHORT).show()
+                        refresh()
+                    } else {
+                        showRetireDialog(entry)
+                    }
+                    true
+                }
+                2 -> {
+                    LocationHistoryDialog.show(requireActivity(), entry)
+                    true
+                }
+                3 -> {
+                    (activity as? MainActivity)?.showEditDialog(entry)
+                    true
+                }
+                4 -> {
+                    val all = store.loadAll()
+                    val idx = all.indexOfFirst { it.id == entry.id }
+                    if (idx != -1) {
+                        store.deleteEntryAt(idx)
+                        Toast.makeText(requireContext(), "已删除【${entry.brand}】", Toast.LENGTH_SHORT).show()
+                        refresh()
+                    }
+                    true
+                }
+                else -> false
+            }
+        }
+        popup.show()
+    }
+
+    private fun showSubMoreMenu(sub: Entry, anchor: View) {
+        val popup = PopupMenu(requireContext(), anchor)
+        popup.menu.add(0, 1, 0, "✏️ 编辑订阅信息")
+        popup.menu.add(0, 2, 1, "🗑️ 取消/删除此订阅")
+
+        popup.setOnMenuItemClickListener { item ->
+            when (item.itemId) {
+                1 -> {
+                    (activity as? MainActivity)?.showEditDialog(sub)
+                    true
+                }
+                2 -> {
+                    val all = store.loadAll()
+                    val idx = all.indexOfFirst { it.id == sub.id }
+                    if (idx != -1) {
+                        store.deleteEntryAt(idx)
+                        Toast.makeText(requireContext(), "已删除订阅【${sub.brand}】", Toast.LENGTH_SHORT).show()
+                        refresh()
+                    }
+                    true
+                }
+                else -> false
+            }
+        }
+        popup.show()
+    }
+
+    /** 弹出物品退役归置对话框 (挂闲鱼/转转/赠送/封箱/回收) */
+    private fun showRetireDialog(entry: Entry) {
+        val dialogView = LayoutInflater.from(requireContext()).inflate(R.layout.dialog_retire_item, null)
+        val b = DialogRetireItemBinding.bind(dialogView)
+        val dialog = MaterialAlertDialogBuilder(requireContext())
+            .setView(dialogView)
+            .create()
+
+        b.retireItemInfo.text = "正在为【${entry.brand}】设置退役归置方案"
+        b.btnCloseRetire.setOnClickListener { dialog.dismiss() }
+
+        b.btnRestoreActive.setOnClickListener {
+            store.setRetired(entry.id, false)
+            Toast.makeText(requireContext(), "已恢复为在役状态", Toast.LENGTH_SHORT).show()
+            dialog.dismiss()
+            refresh()
+        }
+
+        b.btnConfirmRetire.setOnClickListener {
+            val selectedAction = when {
+                b.rbXianyu.isChecked -> "📦 挂闲鱼代售"
+                b.rbZhuanzhuan.isChecked -> "📱 挂转转二手"
+                b.rbGift.isChecked -> "🎁 赠送亲友"
+                b.rbArchive.isChecked -> "🗄️ 封箱入库收藏"
+                b.rbRecycle.isChecked -> "♻️ 环保回收"
+                else -> "🗑️ 损坏报废"
+            }
+            val soldPrice = b.inputRetireSoldPrice.text.toString().toDoubleOrNull() ?: 0.0
+            val note = b.inputRetireNote.text.toString().trim()
+
+            store.setRetired(entry.id, isRetired = true, action = selectedAction, soldPrice = soldPrice, note = note)
+            Toast.makeText(requireContext(), "已标记为退役，待办归置：$selectedAction", Toast.LENGTH_LONG).show()
+            dialog.dismiss()
+            refresh()
+        }
+
+        dialog.show()
+    }
+
+    fun refresh() {
+        if (_binding == null) return
+        val allEntries = store.loadAll()
+
+        // 1. VIP 重要物品核对卡片
+        val vipEntries = allEntries.filter { (it.isImportant || it.reminderEnabled) && !it.isRetired }
+        if (vipEntries.isNotEmpty()) {
+            binding.cardImportantVip.visibility = View.VISIBLE
+            binding.vipItemsCountBadge.text = "${vipEntries.size} 件重要关注"
+            binding.vipItemsListContainer.removeAllViews()
+
+            for (vip in vipEntries.take(3)) {
+                val row = LinearLayout(requireContext()).apply {
+                    orientation = LinearLayout.HORIZONTAL
+                    gravity = android.view.Gravity.CENTER_VERTICAL
+                    setPadding(0, 8, 0, 8)
+                }
+
+                val titleTv = TextView(requireContext()).apply {
+                    text = "🔑 ${vip.brand}"
+                    textSize = 14f
+                    setTextColor(Color.parseColor("#F3E8FF"))
+                    paint.isFakeBoldText = true
+                    layoutParams = LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f)
+                }
+
+                val locTv = TextView(requireContext()).apply {
+                    text = if (vip.location.isNotBlank()) "📍 ${vip.location}" else "未设位置"
+                    textSize = 12f
+                    setTextColor(Color.parseColor("#C084FC"))
+                    setPadding(0, 0, 12, 0)
+                }
+
+                val checkBtn = TextView(requireContext()).apply {
+                    text = "✅ 确认在位"
+                    textSize = 12f
+                    setTextColor(Color.WHITE)
+                    setBackgroundResource(R.drawable.bg_chip_active)
+                    setPadding(20, 10, 20, 10)
+                    applyPressScaleAnimation(0.92f)
+                    setOnClickListener {
+                        store.confirmItemChecked(vip.id)
+                        Toast.makeText(context, "已确认【${vip.brand}】在位！", Toast.LENGTH_SHORT).show()
+                        refresh()
+                    }
+                }
+
+                row.addView(titleTv)
+                row.addView(locTv)
+                row.addView(checkBtn)
+                binding.vipItemsListContainer.addView(row)
+            }
+        } else {
+            binding.cardImportantVip.visibility = View.GONE
+        }
+
+        // 2. 根据选中的 Tab 填充数据
+        if (selectedTab == 0) {
+            // 【物品 Tab】
+            val nonSubs = allEntries.filter { !it.isSubscription }
+            val activeCount = nonSubs.count { !it.isRetired }
+            val retiredCount = nonSubs.count { it.isRetired }
+
+            binding.tvActiveRetiredRatio.text = "$activeCount 在役 / $retiredCount 退役"
+
+            val totalAssetWorth = nonSubs.filter { it.isIn && !it.isRetired }.sumOf { it.price * it.qty }
+            binding.tvTotalAssetAmount.text = "¥${String.format(Locale.getDefault(), "%,.2f", totalAssetWorth)}"
+
+            val activeItems = nonSubs.filter { !it.isRetired }
+            val totalDaily = activeItems.sumOf { it.getDailyCost() }
+            binding.tvTotalDailyCost.text = "¥${String.format(Locale.getDefault(), "%.2f", totalDaily)}"
+
+            // 过滤列表
+            var filtered = nonSubs
+            if (selectedStatusFilter == 1) {
+                filtered = filtered.filter { !it.isRetired }
+            } else if (selectedStatusFilter == 2) {
+                filtered = filtered.filter { it.isRetired }
+            }
+
+            if (selectedCategory != null) {
+                filtered = filtered.filter { it.category == selectedCategory }
+            }
+
+            filtered = when (selectedSortType) {
+                0 -> filtered.sortedByDescending { it.getDaysOwned() }
+                1 -> filtered.sortedByDescending { it.price * it.qty }
+                2 -> filtered.sortedByDescending { it.getDailyCost() }
+                else -> filtered.sortedByDescending { it.ts }
+            }
+
+            assetAdapter.submitList(filtered)
+            binding.layoutEmptyAssets.visibility = if (filtered.isEmpty()) View.VISIBLE else View.GONE
+            binding.tvEmptyText.text = "暂无物品资产\n点击下方 + 开始记一笔"
+
+        } else {
+            // 【订阅 Tab】
+            val subs = allEntries.filter { it.isSubscription }
+            binding.tvActiveSubsCount.text = "${subs.size} 项活跃订阅"
+
+            var monthlyTotal = 0.0
+            for (s in subs) {
+                val p = s.price
+                monthlyTotal += when (s.subCycle) {
+                    "按年" -> p / 12.0
+                    "按季" -> p / 3.0
+                    "按周" -> p * 4.33
+                    else -> p
+                }
+            }
+
+            binding.tvMonthlySubAmount.text = "¥${String.format(Locale.getDefault(), "%,.2f", monthlyTotal)}"
+            binding.tvAnnualSubAmount.text = "¥${String.format(Locale.getDefault(), "%,.2f", monthlyTotal * 12)}"
+
+            val sortedSubs = subs.sortedBy { if (it.subNextBillingDate > 0) it.subNextBillingDate else Long.MAX_VALUE }
+            subscriptionAdapter.submitList(sortedSubs)
+            binding.layoutEmptyAssets.visibility = if (sortedSubs.isEmpty()) View.VISIBLE else View.GONE
+            binding.tvEmptyText.text = "暂无订阅资产 (如 iCloud、宽带、ChatGPT)\n点击下方 + 新增订阅"
+        }
     }
 
     override fun onDestroyView() {
         super.onDestroyView()
         _binding = null
-    }
-
-    private class BrandData {
-        var addCount: Int = 0
-        var addAmount: Double = 0.0
-        var reduceCount: Int = 0
-        var unit: String = "片"
-        var location: String = ""
-        var houseName: String = "我的家"
-        var isImportant: Boolean = false
     }
 }

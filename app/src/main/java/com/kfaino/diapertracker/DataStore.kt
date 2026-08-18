@@ -5,20 +5,30 @@ import androidx.appcompat.app.AppCompatDelegate
 import org.json.JSONArray
 import org.json.JSONObject
 
-/** 基于 SharedPreferences 的高可用持久化层，管理收纳记账、多家庭空间平面图、移动轨迹溯源与重要物品订阅提醒 */
+/** 基于 SharedPreferences 的高可用持久化层，管理物品折旧、在役/退役待办归置、周期订阅资产与空间位置 */
 class DataStore(ctx: Context) {
     private val prefs = ctx.getSharedPreferences("collector_data", Context.MODE_PRIVATE)
-    private val keyEntries = "entries_v3"
+    private val keyEntries = "entries_v4"
     private val keyHouses = "houses_v1"
     private val keyCategories = "custom_categories_v2"
     private val keyTheme = "app_theme_mode"
 
     companion object {
         // 通用默认分类
-        val DEFAULT_CATEGORIES = listOf("数码", "日用品", "零食", "耗材", "贵重证件")
+        val DEFAULT_CATEGORIES = listOf("数码", "日用品", "零食", "耗材", "贵重证件", "网络订阅")
 
         // 常用快捷数量单位
-        val COMMON_UNITS = listOf("片", "件", "包", "个", "箱", "瓶", "盒", "本", "套", "张")
+        val COMMON_UNITS = listOf("件", "台", "个", "套", "张", "片", "包", "箱", "瓶", "盒", "本")
+
+        // 常见待办归置渠道
+        val RETIRED_ACTIONS = listOf(
+            "📦 挂闲鱼代售",
+            "📱 挂转转二手",
+            "🎁 赠送亲友",
+            "♻️ 环保回收 / 以旧换新",
+            "🗄️ 封箱入库收藏",
+            "🗑️ 报废丢弃"
+        )
 
         const val THEME_SYSTEM = 0
         const val THEME_LIGHT = 1
@@ -33,10 +43,10 @@ class DataStore(ctx: Context) {
         }
     }
 
-    // ==================== 物品出入库与位置记录 ====================
+    // ==================== 物品出入库、折旧与订阅记录 ====================
 
     fun loadAll(): List<Entry> {
-        val raw = prefs.getString(keyEntries, null) ?: prefs.getString("entries_v2", null) ?: return emptyList()
+        val raw = prefs.getString(keyEntries, null) ?: prefs.getString("entries_v3", null) ?: prefs.getString("entries_v2", null) ?: return emptyList()
         return try {
             val arr = JSONArray(raw)
             val result = mutableListOf<Entry>()
@@ -61,6 +71,9 @@ class DataStore(ctx: Context) {
                     }
                 }
 
+                val ts = o.optLong("ts", System.currentTimeMillis())
+                val pDate = o.optLong("p_date", ts)
+
                 result.add(
                     Entry(
                         id = o.optString("id", java.util.UUID.randomUUID().toString()),
@@ -68,10 +81,12 @@ class DataStore(ctx: Context) {
                         brand = o.optString("brand", "物品"),
                         qty = o.optInt("qty", 1),
                         price = o.optDouble("price", 0.0),
-                        ts = o.optLong("ts", System.currentTimeMillis()),
+                        currentValuation = o.optDouble("cur_val", 0.0),
+                        purchaseDate = pDate,
+                        ts = ts,
                         isIn = o.optBoolean("in", true),
                         notes = o.optString("notes", ""),
-                        unit = o.optString("unit", "片"),
+                        unit = o.optString("unit", "件"),
                         location = o.optString("loc", ""),
                         houseId = o.optString("h_id", "default_house"),
                         houseName = o.optString("h_name", "我的家"),
@@ -83,7 +98,16 @@ class DataStore(ctx: Context) {
                         reminderEnabled = o.optBoolean("rem_en", false),
                         reminderIntervalDays = o.optInt("rem_int", 1),
                         reminderTime = o.optString("rem_tm", "09:00"),
-                        lastCheckedAt = o.optLong("chk_ts", 0L)
+                        lastCheckedAt = o.optLong("chk_ts", 0L),
+                        isRetired = o.optBoolean("is_ret", false),
+                        retiredAt = o.optLong("ret_at", 0L),
+                        retiredAction = o.optString("ret_act", ""),
+                        retiredSoldPrice = o.optDouble("ret_sp", 0.0),
+                        retiredNote = o.optString("ret_note", ""),
+                        isSubscription = o.optBoolean("is_sub", false),
+                        subCycle = o.optString("sub_cyc", "按月"),
+                        subNextBillingDate = o.optLong("sub_nxt", 0L),
+                        subAutoRenew = o.optBoolean("sub_rnw", true)
                     )
                 )
             }
@@ -117,6 +141,8 @@ class DataStore(ctx: Context) {
                     .put("brand", e.brand)
                     .put("qty", e.qty)
                     .put("price", e.price)
+                    .put("cur_val", e.currentValuation)
+                    .put("p_date", e.purchaseDate)
                     .put("ts", e.ts)
                     .put("in", e.isIn)
                     .put("notes", e.notes)
@@ -133,6 +159,15 @@ class DataStore(ctx: Context) {
                     .put("rem_int", e.reminderIntervalDays)
                     .put("rem_tm", e.reminderTime)
                     .put("chk_ts", e.lastCheckedAt)
+                    .put("is_ret", e.isRetired)
+                    .put("ret_at", e.retiredAt)
+                    .put("ret_act", e.retiredAction)
+                    .put("ret_sp", e.retiredSoldPrice)
+                    .put("ret_note", e.retiredNote)
+                    .put("is_sub", e.isSubscription)
+                    .put("sub_cyc", e.subCycle)
+                    .put("sub_nxt", e.subNextBillingDate)
+                    .put("sub_rnw", e.subAutoRenew)
             )
         }
         prefs.edit().putString(keyEntries, arr.toString()).apply()
@@ -179,12 +214,27 @@ class DataStore(ctx: Context) {
         return false
     }
 
+    fun setRetired(entryId: String, isRetired: Boolean, action: String = "挂闲鱼代售", soldPrice: Double = 0.0, note: String = "") {
+        val list = loadAll().toMutableList()
+        val idx = list.indexOfFirst { it.id == entryId }
+        if (idx != -1) {
+            list[idx] = list[idx].copy(
+                isRetired = isRetired,
+                retiredAt = if (isRetired) System.currentTimeMillis() else 0L,
+                retiredAction = if (isRetired) action else "",
+                retiredSoldPrice = soldPrice,
+                retiredNote = note
+            )
+            saveAll(list)
+        }
+    }
+
     fun clearAllData() {
         prefs.edit().remove(keyEntries).apply()
     }
 
     fun getLastUsedUnit(): String {
-        return prefs.getString("last_used_unit", "片") ?: "片"
+        return prefs.getString("last_used_unit", "件") ?: "件"
     }
 
     fun setLastUsedUnit(unit: String) {
@@ -198,6 +248,14 @@ class DataStore(ctx: Context) {
 
     fun getImportantEntries(): List<Entry> {
         return loadAll().filter { it.isImportant || it.reminderEnabled }
+    }
+
+    fun getSubscriptionEntries(): List<Entry> {
+        return loadAll().filter { it.isSubscription }
+    }
+
+    fun getNonSubscriptionEntries(): List<Entry> {
+        return loadAll().filter { !it.isSubscription }
     }
 
     fun confirmItemChecked(entryId: String) {
@@ -424,7 +482,7 @@ class DataStore(ctx: Context) {
 
     fun exportBackupJson(): String {
         val root = JSONObject()
-        root.put("version", 3)
+        root.put("version", 4)
         root.put("timestamp", System.currentTimeMillis())
 
         val catArr = JSONArray()
@@ -452,6 +510,8 @@ class DataStore(ctx: Context) {
                     .put("brand", e.brand)
                     .put("qty", e.qty)
                     .put("price", e.price)
+                    .put("cur_val", e.currentValuation)
+                    .put("p_date", e.purchaseDate)
                     .put("ts", e.ts)
                     .put("in", e.isIn)
                     .put("notes", e.notes)
@@ -467,6 +527,15 @@ class DataStore(ctx: Context) {
                     .put("rem_en", e.reminderEnabled)
                     .put("rem_int", e.reminderIntervalDays)
                     .put("chk_ts", e.lastCheckedAt)
+                    .put("is_ret", e.isRetired)
+                    .put("ret_at", e.retiredAt)
+                    .put("ret_act", e.retiredAction)
+                    .put("ret_sp", e.retiredSoldPrice)
+                    .put("ret_note", e.retiredNote)
+                    .put("is_sub", e.isSubscription)
+                    .put("sub_cyc", e.subCycle)
+                    .put("sub_nxt", e.subNextBillingDate)
+                    .put("sub_rnw", e.subAutoRenew)
             )
         }
         root.put("entries", entryArr)
@@ -512,6 +581,9 @@ class DataStore(ctx: Context) {
                         }
                     }
 
+                    val ts = o.optLong("ts", System.currentTimeMillis())
+                    val pDate = o.optLong("p_date", ts)
+
                     list.add(
                         Entry(
                             id = o.optString("id", java.util.UUID.randomUUID().toString()),
@@ -519,10 +591,12 @@ class DataStore(ctx: Context) {
                             brand = o.optString("brand", "物品"),
                             qty = o.optInt("qty", 1),
                             price = o.optDouble("price", 0.0),
-                            ts = o.optLong("ts", System.currentTimeMillis()),
+                            currentValuation = o.optDouble("cur_val", 0.0),
+                            purchaseDate = pDate,
+                            ts = ts,
                             isIn = o.optBoolean("in", true),
                             notes = o.optString("notes", ""),
-                            unit = o.optString("unit", "片"),
+                            unit = o.optString("unit", "件"),
                             location = o.optString("loc", ""),
                             houseId = o.optString("h_id", "default_house"),
                             houseName = o.optString("h_name", "我的家"),
@@ -534,7 +608,16 @@ class DataStore(ctx: Context) {
                             reminderEnabled = o.optBoolean("rem_en", false),
                             reminderIntervalDays = o.optInt("rem_int", 1),
                             reminderTime = o.optString("rem_tm", "09:00"),
-                            lastCheckedAt = o.optLong("chk_ts", 0L)
+                            lastCheckedAt = o.optLong("chk_ts", 0L),
+                            isRetired = o.optBoolean("is_ret", false),
+                            retiredAt = o.optLong("ret_at", 0L),
+                            retiredAction = o.optString("ret_act", ""),
+                            retiredSoldPrice = o.optDouble("ret_sp", 0.0),
+                            retiredNote = o.optString("ret_note", ""),
+                            isSubscription = o.optBoolean("is_sub", false),
+                            subCycle = o.optString("sub_cyc", "按月"),
+                            subNextBillingDate = o.optLong("sub_nxt", 0L),
+                            subAutoRenew = o.optBoolean("sub_rnw", true)
                         )
                     )
                 }

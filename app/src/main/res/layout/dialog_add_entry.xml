@@ -119,370 +119,422 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="12dp"
-                android:text="🏷️ 选择分类"
+                android:text="🏷️ 分类"
                 android:textColor="@color/text_primary"
                 android:textStyle="bold"
                 android:textSize="13sp" />
 
-            <HorizontalScrollView
+            <Spinner
+                android:id="@+id/categorySpinner"
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:scrollbars="none"
-                android:overScrollMode="never"
-                android:layout_marginTop="6dp">
+                android:layout_height="46dp"
+                android:layout_marginTop="5dp"
+                android:background="@drawable/bg_spinner"
+                android:paddingHorizontal="12dp" />
 
-                <LinearLayout
-                    android:id="@+id/dialog_category_chips"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:orientation="horizontal"
-                    android:gravity="center_vertical" />
-            </HorizontalScrollView>
-
-            <!-- 物品/品牌名称 (独立清爽输入框) -->
+            <!-- 品牌 / 物品名称 -->
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="12dp"
-                android:text="📦 物品 / 品牌名称"
+                android:text="📦 品牌 / 物品名称 *"
                 android:textColor="@color/text_primary"
                 android:textStyle="bold"
                 android:textSize="13sp" />
 
-            <AutoCompleteTextView
+            <EditText
                 android:id="@+id/brandInput"
                 android:layout_width="match_parent"
                 android:layout_height="46dp"
                 android:layout_marginTop="5dp"
                 android:background="@drawable/bg_input_box"
-                android:hint="例如：好奇小森林、房门钥匙、身份证"
+                android:hint="例如：联想拯救者Y9000X、戴森吹风机"
                 android:textColorHint="@color/text_hint"
                 android:textColor="@color/text_primary"
-                android:textSize="14sp"
                 android:paddingHorizontal="14dp"
                 android:inputType="text"
                 android:maxLines="1"
-                android:completionThreshold="1" />
+                android:textSize="14sp" />
 
-            <!-- 数量与单位 -->
-            <LinearLayout
-                android:layout_width="match_parent"
+            <!-- 数量与单位输入行 -->
+            <TextView
+                android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                android:gravity="center_vertical"
-                android:layout_marginTop="12dp">
-
-                <TextView
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:text="🔢 数量与单位"
-                    android:textColor="@color/text_primary"
-                    android:textStyle="bold"
-                    android:textSize="13sp" />
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="单位可自定"
-                    android:textSize="11sp"
-                    android:textColor="@color/text_secondary" />
-            </LinearLayout>
+                android:layout_marginTop="12dp"
+                android:text="🔢 数量与单位 *"
+                android:textColor="@color/text_primary"
+                android:textStyle="bold"
+                android:textSize="13sp" />
 
             <LinearLayout
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"
+                android:layout_height="46dp"
                 android:layout_marginTop="5dp"
                 android:orientation="horizontal"
                 android:gravity="center_vertical">
 
                 <TextView
-                    android:id="@+id/minusBtn"
-                    android:layout_width="46dp"
-                    android:layout_height="46dp"
+                    android:id="@+id/btn_step_dec"
+                    android:layout_width="44dp"
+                    android:layout_height="match_parent"
                     android:background="@drawable/bg_stepper_btn"
-                    android:text="−"
+                    android:gravity="center"
+                    android:text="-"
+                    android:textColor="@color/text_primary"
                     android:textSize="22sp"
                     android:textStyle="bold"
-                    android:textColor="@color/text_primary"
-                    android:gravity="center"
                     android:clickable="true"
                     android:focusable="true" />
 
                 <EditText
                     android:id="@+id/qtyInput"
                     android:layout_width="0dp"
-                    android:layout_height="46dp"
+                    android:layout_height="match_parent"
                     android:layout_weight="1"
-                    android:layout_marginStart="8dp"
-                    android:layout_marginEnd="8dp"
+                    android:layout_marginHorizontal="6dp"
                     android:background="@drawable/bg_input_box"
                     android:gravity="center"
-                    android:inputType="number"
-                    android:maxLength="6"
+                    android:hint="数量"
                     android:text="1"
+                    android:textColorHint="@color/text_hint"
                     android:textColor="@color/text_primary"
-                    android:textSize="19sp"
+                    android:inputType="number"
+                    android:maxLines="1"
+                    android:textSize="15sp"
                     android:textStyle="bold" />
 
                 <TextView
-                    android:id="@+id/plusBtn"
-                    android:layout_width="46dp"
-                    android:layout_height="46dp"
+                    android:id="@+id/btn_step_inc"
+                    android:layout_width="44dp"
+                    android:layout_height="match_parent"
                     android:background="@drawable/bg_stepper_btn"
+                    android:gravity="center"
                     android:text="+"
-                    android:textSize="22sp"
-                    android:textStyle="bold"
                     android:textColor="@color/text_primary"
-                    android:gravity="center"
+                    android:textSize="20sp"
+                    android:textStyle="bold"
                     android:clickable="true"
                     android:focusable="true" />
 
-                <AutoCompleteTextView
-                    android:id="@+id/unitDropdown"
-                    android:layout_width="86dp"
-                    android:layout_height="46dp"
+                <EditText
+                    android:id="@+id/unitInput"
+                    android:layout_width="68dp"
+                    android:layout_height="match_parent"
                     android:layout_marginStart="8dp"
                     android:background="@drawable/bg_input_box"
                     android:gravity="center"
-                    android:inputType="text"
-                    android:text="片"
-                    android:textSize="14sp"
-                    android:textStyle="bold"
-                    android:textColor="@color/primary"
-                    android:paddingHorizontal="6dp" />
-            </LinearLayout>
-
-            <!-- 快捷数量药丸 -->
-            <HorizontalScrollView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:scrollbars="none"
-                android:overScrollMode="never"
-                android:layout_marginTop="6dp">
-
-                <LinearLayout
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:orientation="horizontal">
-
-                    <TextView
-                        android:id="@+id/quick1"
-                        android:layout_width="wrap_content"
-                        android:layout_height="32dp"
-                        android:layout_marginEnd="6dp"
-                        android:paddingHorizontal="14dp"
-                        android:background="@drawable/bg_chip_inactive"
-                        android:textColor="@color/text_primary"
-                        android:textSize="12sp"
-                        android:textStyle="bold"
-                        android:gravity="center"
-                        android:text="1"
-                        android:clickable="true"
-                        android:focusable="true" />
-
-                    <TextView
-                        android:id="@+id/quick10"
-                        android:layout_width="wrap_content"
-                        android:layout_height="32dp"
-                        android:layout_marginEnd="6dp"
-                        android:paddingHorizontal="14dp"
-                        android:background="@drawable/bg_chip_inactive"
-                        android:textColor="@color/text_primary"
-                        android:textSize="12sp"
-                        android:textStyle="bold"
-                        android:gravity="center"
-                        android:text="10"
-                        android:clickable="true"
-                        android:focusable="true" />
-
-                    <TextView
-                        android:id="@+id/quick20"
-                        android:layout_width="wrap_content"
-                        android:layout_height="32dp"
-                        android:layout_marginEnd="6dp"
-                        android:paddingHorizontal="14dp"
-                        android:background="@drawable/bg_chip_inactive"
-                        android:textColor="@color/text_primary"
-                        android:textSize="12sp"
-                        android:textStyle="bold"
-                        android:gravity="center"
-                        android:text="20"
-                        android:clickable="true"
-                        android:focusable="true" />
-
-                    <TextView
-                        android:id="@+id/quick50"
-                        android:layout_width="wrap_content"
-                        android:layout_height="32dp"
-                        android:layout_marginEnd="6dp"
-                        android:paddingHorizontal="14dp"
-                        android:background="@drawable/bg_chip_inactive"
-                        android:textColor="@color/text_primary"
-                        android:textSize="12sp"
-                        android:textStyle="bold"
-                        android:gravity="center"
-                        android:text="50"
-                        android:clickable="true"
-                        android:focusable="true" />
-
-                    <TextView
-                        android:id="@+id/quick100"
-                        android:layout_width="wrap_content"
-                        android:layout_height="32dp"
-                        android:paddingHorizontal="14dp"
-                        android:background="@drawable/bg_chip_inactive"
-                        android:textColor="@color/text_primary"
-                        android:textSize="12sp"
-                        android:textStyle="bold"
-                        android:gravity="center"
-                        android:text="100"
-                        android:clickable="true"
-                        android:focusable="true" />
-                </LinearLayout>
-            </HorizontalScrollView>
-
-            <!-- 📍 空间与放置位置 (选填/支持平面图定位) -->
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                android:gravity="center_vertical"
-                android:layout_marginTop="14dp">
-
-                <TextView
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:text="📍 空间与放置位置（选填）"
-                    android:textColor="@color/text_primary"
-                    android:textStyle="bold"
-                    android:textSize="13sp" />
-
-                <TextView
-                    android:id="@+id/btn_select_on_map"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="🗺️ 平面图点位"
-                    android:textSize="11sp"
-                    android:textColor="@color/primary"
-                    android:padding="4dp"
-                    android:clickable="true"
-                    android:focusable="true" />
-            </LinearLayout>
-
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                android:layout_marginTop="5dp">
-
-                <AutoCompleteTextView
-                    android:id="@+id/houseDropdown"
-                    android:layout_width="110dp"
-                    android:layout_height="46dp"
-                    android:background="@drawable/bg_input_box"
-                    android:gravity="center"
-                    android:inputType="none"
-                    android:text="🏠 自己的家"
-                    android:textSize="13sp"
-                    android:textColor="@color/text_primary"
-                    android:paddingHorizontal="6dp" />
-
-                <AutoCompleteTextView
-                    android:id="@+id/locationInput"
-                    android:layout_width="0dp"
-                    android:layout_height="46dp"
-                    android:layout_weight="1"
-                    android:layout_marginStart="8dp"
-                    android:background="@drawable/bg_input_box"
-                    android:hint="如：主卧衣柜二层、玄关柜"
+                    android:hint="单位"
+                    android:text="件"
                     android:textColorHint="@color/text_hint"
                     android:textColor="@color/text_primary"
-                    android:textSize="13sp"
-                    android:paddingHorizontal="12dp"
                     android:inputType="text"
-                    android:maxLines="1" />
+                    android:maxLines="1"
+                    android:textSize="13sp" />
             </LinearLayout>
 
-            <!-- 常用房间快速填入药丸 -->
-            <HorizontalScrollView
+            <!-- 1. 购入日期与折旧估值 (用于计算拥有天数和日均花费) -->
+            <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:scrollbars="none"
-                android:overScrollMode="never"
-                android:layout_marginTop="5dp">
+                android:orientation="vertical"
+                android:layout_marginTop="12dp"
+                android:background="@drawable/bg_changelog_box"
+                android:padding="12dp">
 
-                <LinearLayout
+                <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:orientation="horizontal">
+                    android:text="📅 购入时间与折旧估值（计算拥有天数与日均花费）"
+                    android:textColor="@color/primary"
+                    android:textStyle="bold"
+                    android:textSize="12sp" />
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical"
+                    android:layout_marginTop="8dp">
 
                     <TextView
-                        android:id="@+id/room_chip_entry"
-                        android:layout_width="wrap_content"
-                        android:layout_height="28dp"
-                        android:layout_marginEnd="6dp"
-                        android:paddingHorizontal="10dp"
+                        android:id="@+id/btn_pick_purchase_date"
+                        android:layout_width="0dp"
+                        android:layout_height="40dp"
+                        android:layout_weight="1"
                         android:background="@drawable/bg_chip_inactive"
-                        android:textColor="@color/text_secondary"
-                        android:textSize="11sp"
-                        android:gravity="center"
-                        android:text="🚪 玄关"
-                        android:clickable="true" />
+                        android:gravity="center_vertical"
+                        android:paddingHorizontal="10dp"
+                        android:text="📅 购入: 2026-08-19 (1天)"
+                        android:textColor="@color/text_primary"
+                        android:textSize="12sp"
+                        android:clickable="true"
+                        android:focusable="true"
+                        android:layout_marginEnd="8dp" />
 
-                    <TextView
-                        android:id="@+id/room_chip_living"
-                        android:layout_width="wrap_content"
-                        android:layout_height="28dp"
-                        android:layout_marginEnd="6dp"
+                    <EditText
+                        android:id="@+id/input_current_valuation"
+                        android:layout_width="0dp"
+                        android:layout_height="40dp"
+                        android:layout_weight="1"
+                        android:background="@drawable/bg_input_box"
+                        android:hint="当前估值: 如3500"
+                        android:inputType="numberDecimal"
                         android:paddingHorizontal="10dp"
-                        android:background="@drawable/bg_chip_inactive"
-                        android:textColor="@color/text_secondary"
-                        android:textSize="11sp"
-                        android:gravity="center"
-                        android:text="🛋️ 客厅"
-                        android:clickable="true" />
-
-                    <TextView
-                        android:id="@+id/room_chip_bedroom"
-                        android:layout_width="wrap_content"
-                        android:layout_height="28dp"
-                        android:layout_marginEnd="6dp"
-                        android:paddingHorizontal="10dp"
-                        android:background="@drawable/bg_chip_inactive"
-                        android:textColor="@color/text_secondary"
-                        android:textSize="11sp"
-                        android:gravity="center"
-                        android:text="🛏️ 主卧"
-                        android:clickable="true" />
-
-                    <TextView
-                        android:id="@+id/room_chip_kitchen"
-                        android:layout_width="wrap_content"
-                        android:layout_height="28dp"
-                        android:layout_marginEnd="6dp"
-                        android:paddingHorizontal="10dp"
-                        android:background="@drawable/bg_chip_inactive"
-                        android:textColor="@color/text_secondary"
-                        android:textSize="11sp"
-                        android:gravity="center"
-                        android:text="🍳 厨房"
-                        android:clickable="true" />
-
-                    <TextView
-                        android:id="@+id/room_chip_storage"
-                        android:layout_width="wrap_content"
-                        android:layout_height="28dp"
-                        android:paddingHorizontal="10dp"
-                        android:background="@drawable/bg_chip_inactive"
-                        android:textColor="@color/text_secondary"
-                        android:textSize="11sp"
-                        android:gravity="center"
-                        android:text="📦 储物间"
-                        android:clickable="true" />
+                        android:textSize="12sp"
+                        android:textColor="@color/text_primary"
+                        android:textColorHint="@color/text_hint" />
                 </LinearLayout>
-            </HorizontalScrollView>
+            </LinearLayout>
+
+            <!-- 2. 空间与放置位置 (带平面图选点与常用房间) -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:layout_marginTop="12dp">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical">
+
+                    <TextView
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="📍 放置位置与空间（选填）"
+                        android:textColor="@color/text_primary"
+                        android:textStyle="bold"
+                        android:textSize="13sp" />
+
+                    <TextView
+                        android:id="@+id/btn_open_floorplan_picker"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="🗺️ 平面图打点"
+                        android:textSize="12sp"
+                        android:textColor="@color/primary"
+                        android:padding="4dp"
+                        android:clickable="true"
+                        android:focusable="true"
+                        android:background="?attr/selectableItemBackgroundBorderless" />
+                </LinearLayout>
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="46dp"
+                    android:layout_marginTop="5dp"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical">
+
+                    <Spinner
+                        android:id="@+id/houseSpinner"
+                        android:layout_width="120dp"
+                        android:layout_height="match_parent"
+                        android:background="@drawable/bg_spinner"
+                        android:paddingHorizontal="8dp" />
+
+                    <EditText
+                        android:id="@+id/locationInput"
+                        android:layout_width="0dp"
+                        android:layout_height="match_parent"
+                        android:layout_weight="1"
+                        android:layout_marginStart="8dp"
+                        android:background="@drawable/bg_input_box"
+                        android:hint="如: 主卧衣柜二层抽屉"
+                        android:textColorHint="@color/text_hint"
+                        android:textColor="@color/text_primary"
+                        android:paddingHorizontal="12dp"
+                        android:inputType="text"
+                        android:maxLines="1"
+                        android:textSize="13sp" />
+                </LinearLayout>
+
+                <!-- 常用房间快捷标签 -->
+                <HorizontalScrollView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="6dp"
+                    android:scrollbars="none">
+
+                    <LinearLayout
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal">
+
+                        <TextView
+                            android:id="@+id/room_chip_hall"
+                            android:layout_width="wrap_content"
+                            android:layout_height="28dp"
+                            android:layout_marginEnd="6dp"
+                            android:paddingHorizontal="10dp"
+                            android:background="@drawable/bg_chip_inactive"
+                            android:textColor="@color/text_secondary"
+                            android:textSize="11sp"
+                            android:gravity="center"
+                            android:text="🚪 玄关"
+                            android:clickable="true" />
+
+                        <TextView
+                            android:id="@+id/room_chip_living"
+                            android:layout_width="wrap_content"
+                            android:layout_height="28dp"
+                            android:layout_marginEnd="6dp"
+                            android:paddingHorizontal="10dp"
+                            android:background="@drawable/bg_chip_inactive"
+                            android:textColor="@color/text_secondary"
+                            android:textSize="11sp"
+                            android:gravity="center"
+                            android:text="🛋️ 客厅"
+                            android:clickable="true" />
+
+                        <TextView
+                            android:id="@+id/room_chip_bedroom"
+                            android:layout_width="wrap_content"
+                            android:layout_height="28dp"
+                            android:layout_marginEnd="6dp"
+                            android:paddingHorizontal="10dp"
+                            android:background="@drawable/bg_chip_inactive"
+                            android:textColor="@color/text_secondary"
+                            android:textSize="11sp"
+                            android:gravity="center"
+                            android:text="🛏️ 主卧"
+                            android:clickable="true" />
+
+                        <TextView
+                            android:id="@+id/room_chip_kitchen"
+                            android:layout_width="wrap_content"
+                            android:layout_height="28dp"
+                            android:layout_marginEnd="6dp"
+                            android:paddingHorizontal="10dp"
+                            android:background="@drawable/bg_chip_inactive"
+                            android:textColor="@color/text_secondary"
+                            android:textSize="11sp"
+                            android:gravity="center"
+                            android:text="🍳 厨房"
+                            android:clickable="true" />
+
+                        <TextView
+                            android:id="@+id/room_chip_storage"
+                            android:layout_width="wrap_content"
+                            android:layout_height="28dp"
+                            android:paddingHorizontal="10dp"
+                            android:background="@drawable/bg_chip_inactive"
+                            android:textColor="@color/text_secondary"
+                            android:textSize="11sp"
+                            android:gravity="center"
+                            android:text="📦 储物间"
+                            android:clickable="true" />
+                    </LinearLayout>
+                </HorizontalScrollView>
+            </LinearLayout>
+
+            <!-- 3. 退役与待办归置 (挂闲鱼/转转/赠送/回收) -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:layout_marginTop="12dp"
+                android:background="@drawable/bg_changelog_box"
+                android:padding="12dp">
+
+                <CheckBox
+                    android:id="@+id/cb_is_retired"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="🔴 设置为此物品已退役 / 待办归置"
+                    android:textSize="12sp"
+                    android:textStyle="bold"
+                    android:textColor="@color/text_primary"
+                    android:buttonTint="#EF4444" />
+
+                <LinearLayout
+                    android:id="@+id/layout_retire_details"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:layout_marginTop="6dp"
+                    android:visibility="gone">
+
+                    <Spinner
+                        android:id="@+id/spinner_retire_action"
+                        android:layout_width="match_parent"
+                        android:layout_height="40dp"
+                        android:background="@drawable/bg_spinner"
+                        android:paddingHorizontal="8dp" />
+
+                    <EditText
+                        android:id="@+id/input_retire_sold_price_edit"
+                        android:layout_width="match_parent"
+                        android:layout_height="40dp"
+                        android:layout_marginTop="6dp"
+                        android:background="@drawable/bg_input_box"
+                        android:hint="出二手实际回血金额 (元，选填)"
+                        android:inputType="numberDecimal"
+                        android:paddingHorizontal="10dp"
+                        android:textSize="12sp"
+                        android:textColor="@color/text_primary"
+                        android:textColorHint="@color/text_hint" />
+                </LinearLayout>
+            </LinearLayout>
+
+            <!-- 4. 周期按月/按年订阅资产体系 -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:layout_marginTop="12dp"
+                android:background="@drawable/bg_changelog_box"
+                android:padding="12dp">
+
+                <CheckBox
+                    android:id="@+id/cb_is_subscription_asset"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="🔄 设为周期订阅资产（iCloud/会员/宽带/车险）"
+                    android:textSize="12sp"
+                    android:textStyle="bold"
+                    android:textColor="@color/text_primary"
+                    android:buttonTint="#3B82F6" />
+
+                <LinearLayout
+                    android:id="@+id/layout_sub_asset_details"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:layout_marginTop="6dp"
+                    android:visibility="gone">
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal">
+
+                        <Spinner
+                            android:id="@+id/spinner_sub_cycle"
+                            android:layout_width="0dp"
+                            android:layout_height="40dp"
+                            android:layout_weight="1"
+                            android:background="@drawable/bg_spinner"
+                            android:paddingHorizontal="8dp"
+                            android:layout_marginEnd="6dp" />
+
+                        <TextView
+                            android:id="@+id/btn_pick_next_billing_date"
+                            android:layout_width="0dp"
+                            android:layout_height="40dp"
+                            android:layout_weight="1.2"
+                            android:background="@drawable/bg_chip_inactive"
+                            android:gravity="center"
+                            android:text="下次扣费: 2026-09-01"
+                            android:textSize="11sp"
+                            android:textColor="@color/primary"
+                            android:clickable="true"
+                            android:focusable="true" />
+                    </LinearLayout>
+                </LinearLayout>
+            </LinearLayout>
 
             <!-- ⭐ 重要物品防丢标记与订阅提醒 -->
             <LinearLayout
@@ -493,22 +545,15 @@
                 android:background="@drawable/bg_changelog_box"
                 android:padding="12dp">
 
-                <LinearLayout
-                    android:layout_width="match_parent"
+                <CheckBox
+                    android:id="@+id/cb_is_important"
+                    android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:orientation="horizontal"
-                    android:gravity="center_vertical">
-
-                    <CheckBox
-                        android:id="@+id/cb_is_important"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="⭐ 设为重要贵重物品（钥匙/证件/存单）"
-                        android:textSize="12sp"
-                        android:textStyle="bold"
-                        android:textColor="@color/text_primary"
-                        android:buttonTint="@color/primary" />
-                </LinearLayout>
+                    android:text="⭐ 设为重要贵重物品（钥匙/证件/存单）"
+                    android:textSize="12sp"
+                    android:textStyle="bold"
+                    android:textColor="@color/text_primary"
+                    android:buttonTint="@color/primary" />
 
                 <LinearLayout
                     android:id="@+id/layout_subscription_options"
@@ -605,7 +650,7 @@
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
-                        android:text="💰 实付总金额（元，可选）"
+                        android:text="💰 购入金额 / 订阅价格（元）"
                         android:textColor="@color/text_primary"
                         android:textStyle="bold"
                         android:textSize="13sp" />
@@ -630,7 +675,7 @@
                     android:layout_marginTop="5dp"
                     android:background="@drawable/bg_input_box"
                     android:gravity="center_vertical"
-                    android:hint="例如：120.00 (出库可不填)"
+                    android:hint="例如：5500.00"
                     android:textColorHint="@color/text_hint"
                     android:textColor="@color/text_primary"
                     android:importantForAutofill="no"
@@ -656,7 +701,7 @@
                 android:layout_height="44dp"
                 android:layout_marginTop="5dp"
                 android:background="@drawable/bg_input_box"
-                android:hint="例如：618自营购入、放次卧衣柜"
+                android:hint="例如：京东自营购入、放次卧衣柜"
                 android:textColorHint="@color/text_hint"
                 android:textColor="@color/text_primary"
                 android:paddingHorizontal="14dp"
@@ -678,7 +723,7 @@
                     android:id="@+id/amountPreview"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="本次入库：+ 1 片"
+                    android:text="本次入库：+ 1 件"
                     android:textColor="@color/primary"
                     android:textSize="13sp"
                     android:textStyle="bold" />
@@ -711,7 +756,7 @@
             android:layout_width="0dp"
             android:layout_height="48dp"
             android:layout_weight="1.6"
-            android:text="确认添加"
+            android:text="确认保存"
             android:textSize="14sp"
             android:textStyle="bold"
             android:textColor="#FFFFFFFF"

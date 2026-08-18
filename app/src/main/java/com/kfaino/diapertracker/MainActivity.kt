@@ -1,17 +1,16 @@
 package com.kfaino.diapertracker
 
+import android.app.DatePickerDialog
 import android.content.res.ColorStateList
 import android.graphics.Color
 import android.graphics.drawable.ColorDrawable
 import android.os.Bundle
 import android.text.Editable
 import android.text.TextWatcher
-import android.view.Gravity
 import android.view.View
+import android.widget.AdapterView
 import android.widget.ArrayAdapter
-import android.widget.EditText
 import android.widget.ImageView
-import android.widget.LinearLayout
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
@@ -20,6 +19,9 @@ import androidx.fragment.app.Fragment
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.kfaino.diapertracker.databinding.ActivityMainBinding
 import com.kfaino.diapertracker.databinding.DialogAddEntryBinding
+import java.text.SimpleDateFormat
+import java.util.Calendar
+import java.util.Date
 import java.util.Locale
 
 class MainActivity : AppCompatActivity() {
@@ -28,40 +30,29 @@ class MainActivity : AppCompatActivity() {
     private val store by lazy { DataStore(this) }
     private val entries = mutableListOf<Entry>()
 
-    // 0=首页, 1=生活流, 2=报表, 3=我的
     private var currentTab = 0
 
     override fun onCreate(savedInstanceState: Bundle?) {
-        // 应用保存的主题模式（跟随系统/浅色/深色）
+        // 应用用户主题设置
         DataStore.applyThemeMode(store.getThemeMode())
-
         super.onCreate(savedInstanceState)
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        entries.clear()
-        entries.addAll(store.loadAll())
+        setupBottomNavigation()
+        setupFloatingAddButton()
 
-        setupNav()
-        binding.fabAdd.applyPressScaleAnimation(0.90f)
-        binding.fabAdd.setOnClickListener { showAddDialog() }
+        // 默认进入首页
+        if (savedInstanceState == null) {
+            switchFragment(HomeFragment())
+            selectTab(0)
+        }
 
-        // 默认显示首页
-        showFragment(HomeFragment())
-        selectTab(0)
-
-        // 后台静默预加载更新安装包（0秒极速升级就绪）
+        // 后台静默预下载最新版本 APK（无感缓存）
         UpdateManager.preloadSilently(this)
     }
 
-    override fun onResume() {
-        super.onResume()
-        entries.clear()
-        entries.addAll(store.loadAll())
-    }
-
-    private fun setupNav() {
-        // 绑定底部导航栏微动效与点击响应
+    private fun setupBottomNavigation() {
         binding.navHome.applyPressScaleAnimation(0.92f)
         binding.navTimeline.applyPressScaleAnimation(0.92f)
         binding.navReport.applyPressScaleAnimation(0.92f)
@@ -69,33 +60,42 @@ class MainActivity : AppCompatActivity() {
 
         binding.navHome.setOnClickListener {
             if (currentTab != 0) {
-                showFragment(HomeFragment())
+                switchFragment(HomeFragment())
                 selectTab(0)
             }
         }
+
         binding.navTimeline.setOnClickListener {
             if (currentTab != 1) {
-                showFragment(TimelineFragment())
+                switchFragment(TimelineFragment())
                 selectTab(1)
             }
         }
+
         binding.navReport.setOnClickListener {
             if (currentTab != 2) {
-                showFragment(ReportFragment())
+                switchFragment(ReportFragment())
                 selectTab(2)
             }
         }
+
         binding.navProfile.setOnClickListener {
             if (currentTab != 3) {
-                showFragment(ProfileFragment())
+                switchFragment(ProfileFragment())
                 selectTab(3)
             }
         }
     }
 
-    private fun showFragment(fragment: Fragment) {
+    private fun setupFloatingAddButton() {
+        binding.fabAdd.applyPressScaleAnimation(0.88f)
+        binding.fabAdd.setOnClickListener {
+            showAddDialog()
+        }
+    }
+
+    private fun switchFragment(fragment: Fragment) {
         supportFragmentManager.beginTransaction()
-            .setCustomAnimations(R.anim.anim_fade_in, R.anim.anim_fade_out)
             .replace(R.id.fragment_container, fragment)
             .commit()
     }
@@ -120,15 +120,20 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    fun showAddDialogWithInitial(category: String, brand: String, unit: String) {
-        showAddDialog(prefillBrand = brand, prefillCategory = category)
+    fun showEditDialog(entry: Entry) {
+        val all = store.loadAll()
+        val idx = all.indexOfFirst { it.id == entry.id }
+        if (idx != -1) {
+            showAddDialog(editEntry = entry, editPosition = idx)
+        }
     }
 
-    // ---------- 记一笔 / 编辑记录 高定现代卡片弹窗 (自带微动效、无原生框、无穿模) ----------
+    // ---------- 记一笔 / 编辑记录 高定现代卡片弹窗 (自带微动效、无原生框、折旧、待办归置与订阅) ----------
 
     fun showAddDialog(
         prefillBrand: String? = null,
         prefillCategory: String? = null,
+        presetCategory: String? = null,
         editEntry: Entry? = null,
         editPosition: Int? = null
     ) {
@@ -136,8 +141,12 @@ class MainActivity : AppCompatActivity() {
         val dialogBinding = DialogAddEntryBinding.inflate(layoutInflater)
         val categories = store.getCategories().toMutableList()
 
-        var selectedCategory = editEntry?.category ?: prefillCategory ?: if (categories.isNotEmpty()) categories[0] else "数码"
+        val defaultCat = presetCategory ?: prefillCategory
+        var selectedCategory = editEntry?.category ?: defaultCat ?: if (categories.isNotEmpty()) categories[0] else "数码"
         var selectedUnit = editEntry?.unit ?: store.getLastUsedUnit()
+
+        // 购入时间与折旧估值
+        var selectedPurchaseDate = editEntry?.purchaseDate ?: System.currentTimeMillis()
 
         // 空间与平面图图钉参数
         var selectedHouseName = editEntry?.houseName ?: "🏠 自己的家"
@@ -145,14 +154,22 @@ class MainActivity : AppCompatActivity() {
         var selectedPinX = editEntry?.pinX ?: -1f
         var selectedPinY = editEntry?.pinY ?: -1f
 
-        // 订阅提醒参数
+        // 退役与待办归置
+        var isRetired = editEntry?.isRetired ?: false
+        var selectedRetireAction = editEntry?.retiredAction ?: "📦 挂闲鱼代售"
+
+        // 订阅型资产
+        var isSubscription = editEntry?.isSubscription ?: false
+        var selectedSubCycle = editEntry?.subCycle ?: "按月"
+        var selectedNextBillingDate = editEntry?.subNextBillingDate ?: (System.currentTimeMillis() + 30L * 24 * 60 * 60 * 1000)
+
+        // 重要物品防丢
         var isImportant = editEntry?.isImportant ?: false
         var reminderIntervalDays = editEntry?.reminderIntervalDays ?: 1
 
-        // 默认按总金额记账模式 (true=按实付总额输入, false=按单件价格输入)
+        // 记账模式 (true=按总额输入, false=按单件价格输入)
         var isTotalPriceMode = true
 
-        // 弹窗创建与窗口动画设置
         val dialog = MaterialAlertDialogBuilder(this)
             .setView(dialogBinding.root)
             .setCancelable(true)
@@ -163,7 +180,7 @@ class MainActivity : AppCompatActivity() {
 
         // 标题与图标
         if (isEditMode) {
-            dialogBinding.dialogTitle.text = "编辑记录"
+            dialogBinding.dialogTitle.text = "编辑资产记录"
             dialogBinding.btnDialogConfirm.text = "保存修改"
             if (editEntry != null && (editEntry.location.isNotBlank() || editEntry.locationHistory.isNotEmpty())) {
                 dialogBinding.btnViewLocationHistory.visibility = View.VISIBLE
@@ -178,7 +195,7 @@ class MainActivity : AppCompatActivity() {
             dialogBinding.btnViewLocationHistory.visibility = View.GONE
         }
 
-        // 1. 设置入库/出库模式 (默认增加/入库)
+        // 1. 设置入库/出库模式
         val defaultIsIn = editEntry?.isIn ?: true
         if (defaultIsIn) {
             dialogBinding.modeGroup.check(dialogBinding.modeBuy.id)
@@ -189,7 +206,11 @@ class MainActivity : AppCompatActivity() {
         // 2. 数量与实时预览辅助函数
         if (editEntry != null) {
             dialogBinding.qtyInput.setText(editEntry.qty.toString())
+            dialogBinding.unitInput.setText(editEntry.unit)
+        } else {
+            dialogBinding.unitInput.setText(selectedUnit)
         }
+
         fun curQty(): Int = dialogBinding.qtyInput.text.toString().toIntOrNull() ?: 1
         fun setQty(v: Int) { dialogBinding.qtyInput.setText(v.coerceIn(1, 99999).toString()) }
 
@@ -197,7 +218,7 @@ class MainActivity : AppCompatActivity() {
             val q = dialogBinding.qtyInput.text.toString().toIntOrNull() ?: 0
             val inputVal = dialogBinding.priceInput.text.toString().toDoubleOrNull() ?: 0.0
             val isBuy = dialogBinding.modeGroup.checkedButtonId == dialogBinding.modeBuy.id
-            val u = selectedUnit.ifEmpty { "片" }
+            val u = dialogBinding.unitInput.text.toString().trim().ifEmpty { "件" }
 
             if (isBuy) {
                 dialogBinding.priceSectionContainer.alpha = 1.0f
@@ -205,14 +226,14 @@ class MainActivity : AppCompatActivity() {
                     if (isTotalPriceMode) {
                         val totalAmount = inputVal
                         val unitPrice = totalAmount / q
-                        dialogBinding.amountPreview.text = "本次实付：¥${String.format(Locale.getDefault(), "%.2f", totalAmount)} · 折合 ¥${String.format(Locale.getDefault(), "%.2f", unitPrice)} / $u"
+                        dialogBinding.amountPreview.text = "本次总额：¥${String.format(Locale.getDefault(), "%.2f", totalAmount)} · 折合 ¥${String.format(Locale.getDefault(), "%.2f", unitPrice)} / $u"
                     } else {
                         val unitPrice = inputVal
                         val totalAmount = unitPrice * q
-                        dialogBinding.amountPreview.text = "本次实付：¥${String.format(Locale.getDefault(), "%.2f", totalAmount)} · $q $u × ¥${String.format(Locale.getDefault(), "%.2f", unitPrice)}"
+                        dialogBinding.amountPreview.text = "本次总额：¥${String.format(Locale.getDefault(), "%.2f", totalAmount)} · $q $u × ¥${String.format(Locale.getDefault(), "%.2f", unitPrice)}"
                     }
                 } else {
-                    dialogBinding.amountPreview.text = "本次入库：+ $q $u"
+                    dialogBinding.amountPreview.text = "本次增加/购入：+ $q $u"
                 }
             } else {
                 dialogBinding.priceSectionContainer.alpha = 0.6f
@@ -220,124 +241,73 @@ class MainActivity : AppCompatActivity() {
             }
         }
 
-        // 3. 渲染分类横向药丸
-        fun renderCategoryChips() {
-            dialogBinding.dialogCategoryChips.removeAllViews()
-            for (cat in categories) {
-                val chip = TextView(this).apply {
-                    text = cat
-                    textSize = 13f
-                    gravity = Gravity.CENTER
-                    setPadding(dpToPx(14), dpToPx(6), dpToPx(14), dpToPx(6))
-                    val isSelected = (selectedCategory == cat)
+        // 3. 分类下拉绑定
+        if (!categories.contains(selectedCategory)) {
+            categories.add(0, selectedCategory)
+        }
+        val catAdapter = ArrayAdapter(this, android.R.layout.simple_spinner_dropdown_item, categories)
+        dialogBinding.categorySpinner.adapter = catAdapter
+        val catPos = categories.indexOf(selectedCategory)
+        if (catPos != -1) dialogBinding.categorySpinner.setSelection(catPos)
 
-                    if (isSelected) {
-                        setBackgroundResource(R.drawable.bg_chip_active)
-                        setTextColor(ContextCompat.getColor(context, android.R.color.white))
-                    } else {
-                        setBackgroundResource(R.drawable.bg_chip_inactive)
-                        setTextColor(ContextCompat.getColor(context, R.color.text_primary))
-                    }
-
-                    isClickable = true
-                    isFocusable = true
-                    applyPressScaleAnimation(0.92f)
-                    val params = LinearLayout.LayoutParams(
-                        LinearLayout.LayoutParams.WRAP_CONTENT,
-                        LinearLayout.LayoutParams.WRAP_CONTENT
-                    ).apply {
-                        marginEnd = dpToPx(8)
-                    }
-                    layoutParams = params
-
-                    setOnClickListener {
-                        selectedCategory = cat
-                        renderCategoryChips()
-                    }
-                }
-                dialogBinding.dialogCategoryChips.addView(chip)
+        dialogBinding.categorySpinner.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
+            override fun onItemSelected(p: AdapterView<*>?, v: View?, pos: Int, id: Long) {
+                selectedCategory = categories[pos]
             }
-
-            // + 自定义分类药丸
-            val addChip = TextView(this).apply {
-                text = "+ 自定义"
-                textSize = 13f
-                gravity = Gravity.CENTER
-                setPadding(dpToPx(12), dpToPx(6), dpToPx(12), dpToPx(6))
-                setBackgroundResource(R.drawable.bg_btn_custom_add)
-                setTextColor(ContextCompat.getColor(context, R.color.primary))
-                isClickable = true
-                isFocusable = true
-                applyPressScaleAnimation(0.92f)
-                setOnClickListener {
-                    CategoryManagerDialog.showAddCategoryDialog(this@MainActivity, store) { newCat ->
-                        if (!categories.contains(newCat)) {
-                            categories.add(newCat)
-                        }
-                        selectedCategory = newCat
-                        renderCategoryChips()
-                    }
-                }
-            }
-            dialogBinding.dialogCategoryChips.addView(addChip)
+            override fun onNothingSelected(p: AdapterView<*>?) {}
         }
 
-        renderCategoryChips()
-
-        // 4. 品牌/物品名称联想
+        // 4. 品牌/物品名称
         if (!prefillBrand.isNullOrEmpty()) {
             dialogBinding.brandInput.setText(prefillBrand)
         } else if (editEntry != null) {
             dialogBinding.brandInput.setText(editEntry.brand)
         }
-        val brandNames = store.loadAll().map { it.brand }.distinct().sorted()
-        val brandAdapter = ArrayAdapter(this, android.R.layout.simple_dropdown_item_1line, brandNames)
-        dialogBinding.brandInput.setAdapter(brandAdapter)
 
-        // 5. 单位下拉选择与自定义
-        val unitList = DataStore.COMMON_UNITS.toMutableList()
-        if (!unitList.contains(selectedUnit)) {
-            unitList.add(0, selectedUnit)
+        // 5. 购入日期与折旧估值
+        fun updatePurchaseDateButton() {
+            val df = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
+            val dateStr = df.format(Date(selectedPurchaseDate))
+            val days = ((System.currentTimeMillis() - selectedPurchaseDate) / (24L * 60 * 60 * 1000)).toInt().coerceAtLeast(1)
+            dialogBinding.btnPickPurchaseDate.text = "📅 购入: $dateStr ($days 天)"
         }
-        val unitAdapter = ArrayAdapter(this, android.R.layout.simple_dropdown_item_1line, unitList)
-        dialogBinding.unitDropdown.setAdapter(unitAdapter)
-        dialogBinding.unitDropdown.setText(selectedUnit, false)
+        updatePurchaseDateButton()
 
-        dialogBinding.unitDropdown.setOnItemClickListener { _, _, position, _ ->
-            selectedUnit = unitAdapter.getItem(position) ?: "片"
-            store.setLastUsedUnit(selectedUnit)
-            updatePreview()
-        }
-
-        dialogBinding.unitDropdown.addTextChangedListener(object : TextWatcher {
-            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
-            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {}
-            override fun afterTextChanged(s: Editable?) {
-                val inputUnit = s?.toString()?.trim().orEmpty()
-                if (inputUnit.isNotEmpty()) {
-                    selectedUnit = inputUnit
-                    store.setLastUsedUnit(selectedUnit)
-                    updatePreview()
+        dialogBinding.btnPickPurchaseDate.applyPressScaleAnimation(0.92f)
+        dialogBinding.btnPickPurchaseDate.setOnClickListener {
+            val cal = Calendar.getInstance().apply { timeInMillis = selectedPurchaseDate }
+            DatePickerDialog(this, { _, year, month, dayOfMonth ->
+                val newCal = Calendar.getInstance().apply {
+                    set(year, month, dayOfMonth, 12, 0, 0)
                 }
-            }
-        })
+                selectedPurchaseDate = newCal.timeInMillis
+                updatePurchaseDateButton()
+            }, cal.get(Calendar.YEAR), cal.get(Calendar.MONTH), cal.get(Calendar.DAY_OF_MONTH)).show()
+        }
+
+        if (editEntry != null && editEntry.currentValuation > 0) {
+            dialogBinding.inputCurrentValuation.setText(String.format(Locale.getDefault(), "%.2f", editEntry.currentValuation))
+        }
 
         // 6. 空间与位置体系绑定
         val houses = store.getHouses()
         val houseNames = houses.map { it.name }
-        val houseAdapter = ArrayAdapter(this, android.R.layout.simple_dropdown_item_1line, houseNames)
-        dialogBinding.houseDropdown.setAdapter(houseAdapter)
-        dialogBinding.houseDropdown.setText(selectedHouseName, false)
+        val houseAdapter = ArrayAdapter(this, android.R.layout.simple_spinner_dropdown_item, houseNames)
+        dialogBinding.houseSpinner.adapter = houseAdapter
+        val housePos = houseNames.indexOf(selectedHouseName)
+        if (housePos != -1) dialogBinding.houseSpinner.setSelection(housePos)
 
-        dialogBinding.houseDropdown.setOnItemClickListener { _, _, pos, _ ->
-            selectedHouseName = houseAdapter.getItem(pos) ?: "🏠 自己的家"
+        dialogBinding.houseSpinner.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
+            override fun onItemSelected(p: AdapterView<*>?, v: View?, pos: Int, id: Long) {
+                selectedHouseName = houseNames[pos]
+            }
+            override fun onNothingSelected(p: AdapterView<*>?) {}
         }
 
         if (editEntry != null) {
             dialogBinding.locationInput.setText(editEntry.location)
         }
 
-        // 房间快捷药丸
         fun setQuickRoom(roomName: String) {
             selectedRoomName = roomName
             val currentLoc = dialogBinding.locationInput.text.toString().trim()
@@ -346,21 +316,21 @@ class MainActivity : AppCompatActivity() {
                 dialogBinding.locationInput.setSelection(dialogBinding.locationInput.text.length)
             }
         }
-        dialogBinding.roomChipEntry.setOnClickListener { setQuickRoom("玄关") }
+        dialogBinding.roomChipHall.setOnClickListener { setQuickRoom("玄关") }
         dialogBinding.roomChipLiving.setOnClickListener { setQuickRoom("客厅") }
         dialogBinding.roomChipBedroom.setOnClickListener { setQuickRoom("主卧") }
         dialogBinding.roomChipKitchen.setOnClickListener { setQuickRoom("厨房") }
         dialogBinding.roomChipStorage.setOnClickListener { setQuickRoom("储物间") }
 
-        // 平面图选点
-        dialogBinding.btnSelectOnMap.applyPressScaleAnimation(0.92f)
-        dialogBinding.btnSelectOnMap.setOnClickListener {
+        dialogBinding.btnOpenFloorplanPicker.applyPressScaleAnimation(0.92f)
+        dialogBinding.btnOpenFloorplanPicker.setOnClickListener {
             FloorPlanDialog.show(this, store, isSelectMode = true, currentHouseName = selectedHouseName) { hName, rName, px, py ->
                 selectedHouseName = hName
                 selectedRoomName = rName
                 selectedPinX = px
                 selectedPinY = py
-                dialogBinding.houseDropdown.setText(hName, false)
+                val p = houseNames.indexOf(hName)
+                if (p != -1) dialogBinding.houseSpinner.setSelection(p)
                 val curLoc = dialogBinding.locationInput.text.toString().trim()
                 if (curLoc.isEmpty() || !curLoc.contains(rName)) {
                     dialogBinding.locationInput.setText(if (rName.isNotBlank()) "$rName " else curLoc)
@@ -368,7 +338,70 @@ class MainActivity : AppCompatActivity() {
             }
         }
 
-        // 7. ⭐ 重要物品防丢与订阅设置绑定
+        // 7. 退役与待办归置 (挂闲鱼/转转/赠送/封存/回收)
+        val retireActions = DataStore.RETIRED_ACTIONS
+        val retireAdapter = ArrayAdapter(this, android.R.layout.simple_spinner_dropdown_item, retireActions)
+        dialogBinding.spinnerRetireAction.adapter = retireAdapter
+        val actPos = retireActions.indexOf(selectedRetireAction)
+        if (actPos != -1) dialogBinding.spinnerRetireAction.setSelection(actPos)
+
+        dialogBinding.spinnerRetireAction.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
+            override fun onItemSelected(p: AdapterView<*>?, v: View?, pos: Int, id: Long) {
+                selectedRetireAction = retireActions[pos]
+            }
+            override fun onNothingSelected(p: AdapterView<*>?) {}
+        }
+
+        dialogBinding.cbIsRetired.isChecked = isRetired
+        dialogBinding.layoutRetireDetails.visibility = if (isRetired) View.VISIBLE else View.GONE
+        dialogBinding.cbIsRetired.setOnCheckedChangeListener { _, isChecked ->
+            isRetired = isChecked
+            dialogBinding.layoutRetireDetails.visibility = if (isChecked) View.VISIBLE else View.GONE
+        }
+        if (editEntry != null && editEntry.retiredSoldPrice > 0) {
+            dialogBinding.inputRetireSoldPriceEdit.setText(String.format(Locale.getDefault(), "%.2f", editEntry.retiredSoldPrice))
+        }
+
+        // 8. 周期订阅资产设置
+        val subCycles = listOf("按月", "按年", "按季", "按周")
+        val subCycleAdapter = ArrayAdapter(this, android.R.layout.simple_spinner_dropdown_item, subCycles)
+        dialogBinding.spinnerSubCycle.adapter = subCycleAdapter
+        val cyclePos = subCycles.indexOf(selectedSubCycle)
+        if (cyclePos != -1) dialogBinding.spinnerSubCycle.setSelection(cyclePos)
+
+        dialogBinding.spinnerSubCycle.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
+            override fun onItemSelected(p: AdapterView<*>?, v: View?, pos: Int, id: Long) {
+                selectedSubCycle = subCycles[pos]
+            }
+            override fun onNothingSelected(p: AdapterView<*>?) {}
+        }
+
+        fun updateNextBillingDateButton() {
+            val df = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
+            dialogBinding.btnPickNextBillingDate.text = "下次扣费: ${df.format(Date(selectedNextBillingDate))}"
+        }
+        updateNextBillingDateButton()
+
+        dialogBinding.btnPickNextBillingDate.applyPressScaleAnimation(0.92f)
+        dialogBinding.btnPickNextBillingDate.setOnClickListener {
+            val cal = Calendar.getInstance().apply { timeInMillis = selectedNextBillingDate }
+            DatePickerDialog(this, { _, year, month, dayOfMonth ->
+                val newCal = Calendar.getInstance().apply {
+                    set(year, month, dayOfMonth, 10, 0, 0)
+                }
+                selectedNextBillingDate = newCal.timeInMillis
+                updateNextBillingDateButton()
+            }, cal.get(Calendar.YEAR), cal.get(Calendar.MONTH), cal.get(Calendar.DAY_OF_MONTH)).show()
+        }
+
+        dialogBinding.cbIsSubscriptionAsset.isChecked = isSubscription
+        dialogBinding.layoutSubAssetDetails.visibility = if (isSubscription) View.VISIBLE else View.GONE
+        dialogBinding.cbIsSubscriptionAsset.setOnCheckedChangeListener { _, isChecked ->
+            isSubscription = isChecked
+            dialogBinding.layoutSubAssetDetails.visibility = if (isChecked) View.VISIBLE else View.GONE
+        }
+
+        // 9. 重要物品防丢标记
         dialogBinding.cbIsImportant.isChecked = isImportant
         dialogBinding.layoutSubscriptionOptions.visibility = if (isImportant) View.VISIBLE else View.GONE
 
@@ -404,32 +437,21 @@ class MainActivity : AppCompatActivity() {
         dialogBinding.subInterval7.setOnClickListener { updateIntervalChips(7) }
         dialogBinding.subInterval30.setOnClickListener { updateIntervalChips(30) }
 
-        // 8. 步进器按钮绑定 (带弹簧轻触动效)
-        dialogBinding.minusBtn.applyPressScaleAnimation(0.90f)
-        dialogBinding.plusBtn.applyPressScaleAnimation(0.90f)
-        dialogBinding.quick1.applyPressScaleAnimation(0.92f)
-        dialogBinding.quick10.applyPressScaleAnimation(0.92f)
-        dialogBinding.quick20.applyPressScaleAnimation(0.92f)
-        dialogBinding.quick50.applyPressScaleAnimation(0.92f)
-        dialogBinding.quick100.applyPressScaleAnimation(0.92f)
+        // 10. 数量加减与单价/总额模式
+        dialogBinding.btnStepDec.applyPressScaleAnimation(0.90f)
+        dialogBinding.btnStepInc.applyPressScaleAnimation(0.90f)
+        dialogBinding.btnStepDec.setOnClickListener { setQty(curQty() - 1) }
+        dialogBinding.btnStepInc.setOnClickListener { setQty(curQty() + 1) }
 
-        dialogBinding.minusBtn.setOnClickListener { setQty(curQty() - 1) }
-        dialogBinding.plusBtn.setOnClickListener { setQty(curQty() + 1) }
-        dialogBinding.quick1.setOnClickListener { setQty(1) }
-        dialogBinding.quick10.setOnClickListener { setQty(10) }
-        dialogBinding.quick20.setOnClickListener { setQty(20) }
-        dialogBinding.quick50.setOnClickListener { setQty(50) }
-        dialogBinding.quick100.setOnClickListener { setQty(100) }
-
-        // 9. 价格与金额输入模式切换
         fun refreshPriceModeUI() {
+            val u = dialogBinding.unitInput.text.toString().trim().ifEmpty { "件" }
             if (isTotalPriceMode) {
-                dialogBinding.priceModeLabel.text = "💰 实付总金额（元，可选）"
-                dialogBinding.priceInput.hint = "例如：120.00 (出库可不填)"
+                dialogBinding.priceModeLabel.text = "💰 购入总金额 / 订阅价格（元）"
+                dialogBinding.priceInput.hint = "例如：5500.00"
                 dialogBinding.btnTogglePriceMode.text = "🔄 切换为按单价输入"
             } else {
-                dialogBinding.priceModeLabel.text = "🏷️ 单件价格（元/$selectedUnit，可选）"
-                dialogBinding.priceInput.hint = "例如：1.20 (出库可不填)"
+                dialogBinding.priceModeLabel.text = "🏷️ 单件价格（元/$u）"
+                dialogBinding.priceInput.hint = "例如：550.00"
                 dialogBinding.btnTogglePriceMode.text = "🔄 切换为按总金额输入"
             }
             updatePreview()
@@ -469,10 +491,11 @@ class MainActivity : AppCompatActivity() {
             override fun afterTextChanged(s: Editable?) = updatePreview()
         }
         dialogBinding.qtyInput.addTextChangedListener(watcher)
+        dialogBinding.unitInput.addTextChangedListener(watcher)
         dialogBinding.priceInput.addTextChangedListener(watcher)
         updatePreview()
 
-        // 10. 弹窗操作按钮绑定
+        // 11. 弹窗操作按钮绑定
         dialogBinding.dialogCloseBtn.applyPressScaleAnimation(0.90f)
         dialogBinding.dialogCloseBtn.setOnClickListener { dialog.dismiss() }
 
@@ -486,8 +509,9 @@ class MainActivity : AppCompatActivity() {
             val isIn = dialogBinding.modeGroup.checkedButtonId == dialogBinding.modeBuy.id
             val qty = dialogBinding.qtyInput.text.toString().toIntOrNull()
             val inputPriceVal = dialogBinding.priceInput.text.toString().toDoubleOrNull() ?: 0.0
+            val valuation = dialogBinding.inputCurrentValuation.text.toString().toDoubleOrNull() ?: 0.0
             val notes = dialogBinding.notesInput.text?.toString()?.trim().orEmpty()
-            val unit = selectedUnit.ifEmpty { "片" }
+            val unit = dialogBinding.unitInput.text.toString().trim().ifEmpty { "件" }
             val location = dialogBinding.locationInput.text?.toString()?.trim().orEmpty()
 
             val calculatedUnitPrice = if (isIn && qty != null && qty > 0) {
@@ -500,10 +524,13 @@ class MainActivity : AppCompatActivity() {
                 0.0
             }
 
+            val soldPrice = dialogBinding.inputRetireSoldPriceEdit.text.toString().toDoubleOrNull() ?: 0.0
+
             when {
                 brand.isEmpty() -> Toast.makeText(this, "请输入物品或品牌名称", Toast.LENGTH_SHORT).show()
                 qty == null || qty < 1 -> Toast.makeText(this, "数量至少为 1", Toast.LENGTH_SHORT).show()
                 else -> {
+                    store.setLastUsedUnit(unit)
                     val targetTs = editEntry?.ts ?: System.currentTimeMillis()
                     val targetId = editEntry?.id ?: java.util.UUID.randomUUID().toString()
                     val existingHist = editEntry?.locationHistory ?: emptyList()
@@ -514,6 +541,8 @@ class MainActivity : AppCompatActivity() {
                         brand = brand,
                         qty = qty,
                         price = calculatedUnitPrice,
+                        currentValuation = valuation,
+                        purchaseDate = selectedPurchaseDate,
                         ts = targetTs,
                         isIn = isIn,
                         notes = notes,
@@ -527,7 +556,15 @@ class MainActivity : AppCompatActivity() {
                         isImportant = isImportant,
                         reminderEnabled = isImportant,
                         reminderIntervalDays = reminderIntervalDays,
-                        lastCheckedAt = if (isImportant && editEntry?.lastCheckedAt ?: 0L == 0L) System.currentTimeMillis() else (editEntry?.lastCheckedAt ?: 0L)
+                        lastCheckedAt = if (isImportant && editEntry?.lastCheckedAt ?: 0L == 0L) System.currentTimeMillis() else (editEntry?.lastCheckedAt ?: 0L),
+                        isRetired = isRetired,
+                        retiredAt = if (isRetired) (if (editEntry?.retiredAt ?: 0L > 0L) editEntry!!.retiredAt else System.currentTimeMillis()) else 0L,
+                        retiredAction = if (isRetired) selectedRetireAction else "",
+                        retiredSoldPrice = soldPrice,
+                        isSubscription = isSubscription,
+                        subCycle = selectedSubCycle,
+                        subNextBillingDate = selectedNextBillingDate,
+                        subAutoRenew = true
                     )
 
                     if (isEditMode && editPosition != null) {
@@ -554,13 +591,9 @@ class MainActivity : AppCompatActivity() {
         entries.addAll(store.loadAll())
         val current = supportFragmentManager.findFragmentById(R.id.fragment_container)
         when (current) {
-            is HomeFragment -> current.onResume()
+            is HomeFragment -> current.refresh()
             is TimelineFragment -> current.refresh()
-            is ReportFragment -> current.onResume()
+            is ReportFragment -> current.refresh()
         }
-    }
-
-    private fun dpToPx(dp: Int): Int {
-        return (dp * resources.displayMetrics.density + 0.5f).toInt()
     }
 }

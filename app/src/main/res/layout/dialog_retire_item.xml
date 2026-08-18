@@ -1,0 +1,189 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:background="@drawable/bg_dialog_card"
+    android:padding="20dp">
+
+    <!-- 弹窗标题 -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:layout_marginBottom="16dp">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="📦"
+            android:textSize="20sp"
+            android:layout_marginEnd="8dp" />
+
+        <TextView
+            android:id="@+id/dialog_retire_title"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="物品退役与待办归置"
+            android:textSize="18sp"
+            android:textStyle="bold"
+            android:textColor="@color/text_primary"
+            android:fontFamily="sans-serif-medium" />
+
+        <ImageView
+            android:id="@+id/btn_close_retire"
+            android:layout_width="28dp"
+            android:layout_height="28dp"
+            android:src="@drawable/ic_close"
+            app:tint="@color/text_secondary"
+            android:padding="4dp"
+            android:clickable="true"
+            android:focusable="true"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:contentDescription="关闭" />
+    </LinearLayout>
+
+    <TextView
+        android:id="@+id/retire_item_info"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="正在为【联想拯救者Y9000X】设置退役归置方案"
+        android:textSize="13sp"
+        android:textColor="@color/text_secondary"
+        android:layout_marginBottom="14dp" />
+
+    <!-- 退役状态选择开关 -->
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="选择归置处置渠道："
+        android:textSize="13sp"
+        android:textColor="@color/text_secondary"
+        android:layout_marginBottom="8dp" />
+
+    <RadioGroup
+        android:id="@+id/retire_action_group"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:layout_marginBottom="12dp">
+
+        <RadioButton
+            android:id="@+id/rb_xianyu"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="📦 挂闲鱼平台代售 (待出二手)"
+            android:textSize="14sp"
+            android:textColor="@color/text_primary"
+            android:checked="true" />
+
+        <RadioButton
+            android:id="@+id/rb_zhuanzhuan"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="📱 挂转转二手 / 拍卖"
+            android:textSize="14sp"
+            android:textColor="@color/text_primary" />
+
+        <RadioButton
+            android:id="@+id/rb_gift"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="🎁 赠送亲朋好友"
+            android:textSize="14sp"
+            android:textColor="@color/text_primary" />
+
+        <RadioButton
+            android:id="@+id/rb_archive"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="🗄️ 封箱入库收藏 (长期封存)"
+            android:textSize="14sp"
+            android:textColor="@color/text_primary" />
+
+        <RadioButton
+            android:id="@+id/rb_recycle"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="♻️ 环保回收 / 品牌以旧换新"
+            android:textSize="14sp"
+            android:textColor="@color/text_primary" />
+
+        <RadioButton
+            android:id="@+id/rb_trash"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="🗑️ 损坏报废丢弃"
+            android:textSize="14sp"
+            android:textColor="@color/text_primary" />
+    </RadioGroup>
+
+    <!-- 预期转售回血金额 / 实际售价 -->
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="预计回血 / 二手实售金额 (元，选填)："
+        android:textSize="12sp"
+        android:textColor="@color/text_secondary"
+        android:layout_marginBottom="4dp" />
+
+    <EditText
+        android:id="@+id/input_retire_sold_price"
+        android:layout_width="match_parent"
+        android:layout_height="44dp"
+        android:background="@drawable/bg_input_box"
+        android:hint="例如: 3200.00"
+        android:inputType="numberDecimal"
+        android:paddingHorizontal="14dp"
+        android:textSize="14sp"
+        android:textColor="@color/text_primary"
+        android:textColorHint="@color/text_hint"
+        android:layout_marginBottom="12dp" />
+
+    <!-- 归置备注 -->
+    <EditText
+        android:id="@+id/input_retire_note"
+        android:layout_width="match_parent"
+        android:layout_height="44dp"
+        android:background="@drawable/bg_input_box"
+        android:hint="归置备注 (如: 闲鱼已挂标价3500已擦亮)"
+        android:paddingHorizontal="14dp"
+        android:textSize="14sp"
+        android:textColor="@color/text_primary"
+        android:textColorHint="@color/text_hint"
+        android:layout_marginBottom="20dp" />
+
+    <!-- 确认与恢复在役按钮 -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal">
+
+        <Button
+            android:id="@+id/btn_restore_active"
+            android:layout_width="0dp"
+            android:layout_height="48dp"
+            android:layout_weight="1"
+            android:background="@drawable/bg_btn_secondary"
+            android:text="恢复为在役"
+            android:textSize="14sp"
+            android:textColor="@color/text_secondary"
+            android:layout_marginEnd="10dp" />
+
+        <Button
+            android:id="@+id/btn_confirm_retire"
+            android:layout_width="0dp"
+            android:layout_height="48dp"
+            android:layout_weight="1"
+            android:background="@drawable/bg_btn_primary"
+            android:text="确认退役归置"
+            android:textSize="14sp"
+            android:textColor="#FFFFFFFF"
+            android:textStyle="bold" />
+    </LinearLayout>
+
+</LinearLayout>

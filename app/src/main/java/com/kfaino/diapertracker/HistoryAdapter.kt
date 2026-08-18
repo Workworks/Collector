@@ -33,9 +33,16 @@ class HistoryAdapter(
         val entry = items[position]
         val b = holder.binding
         val ctx = holder.itemView.context
-        val unit = entry.unit.ifEmpty { "片" }
+        val unit = entry.unit.ifEmpty { "件" }
 
-        b.categoryTag.text = entry.category
+        if (entry.isRetired) {
+            b.categoryTag.text = "🔴 已退役"
+        } else if (entry.isSubscription) {
+            b.categoryTag.text = "🔄 ${entry.subCycle}订阅"
+        } else {
+            b.categoryTag.text = entry.category
+        }
+
         b.brand.text = (if (entry.isImportant) "⭐ " else "") + entry.brand
         b.time.text = SimpleDateFormat("yyyy-MM-dd HH:mm", Locale.getDefault()).format(Date(entry.ts))
 
@@ -46,9 +53,9 @@ class HistoryAdapter(
             b.amount.text = "+ ¥${String.format(Locale.getDefault(), "%.2f", totalAmount)}"
             b.amount.setTextColor(ContextCompat.getColor(ctx, R.color.primary))
             b.qtyInfo.text = if (entry.price > 0)
-                "${entry.qty}$unit · 单价 ¥${String.format(Locale.getDefault(), "%.2f", entry.price)}/$unit"
+                "${entry.qty}$unit · 拥有 ${entry.getDaysOwned()} 天 · 日均 ¥${String.format(Locale.getDefault(), "%.2f", entry.getDailyCost())}"
             else
-                "${entry.qty}$unit 入库"
+                "${entry.qty}$unit 入库 · 拥有 ${entry.getDaysOwned()} 天"
         } else {
             b.badge.text = "-"
             b.badge.backgroundTintList = ColorStateList.valueOf(ContextCompat.getColor(ctx, R.color.danger))
@@ -71,22 +78,25 @@ class HistoryAdapter(
             b.locationBadgeContainer.visibility = View.GONE
         }
 
-        if (entry.notes.isNotBlank()) {
+        if (entry.notes.isNotBlank() || (entry.isRetired && entry.retiredAction.isNotBlank())) {
             b.notesText.visibility = View.VISIBLE
-            b.notesText.text = "💬 备注: ${entry.notes}"
+            val noteContent = if (entry.isRetired && entry.retiredAction.isNotBlank()) {
+                "📦 退役归置: ${entry.retiredAction}${if (entry.notes.isNotBlank()) " · " + entry.notes else ""}"
+            } else {
+                "💬 备注: ${entry.notes}"
+            }
+            b.notesText.text = noteContent
         } else {
             b.notesText.visibility = View.GONE
         }
 
-        // 点击编辑
+        // 点击编辑与删除
         holder.itemView.applyPressScaleAnimation(0.96f)
         b.editBtn.applyPressScaleAnimation(0.88f)
         b.deleteBtn.applyPressScaleAnimation(0.88f)
 
         holder.itemView.setOnClickListener { onEdit?.invoke(entry, position) }
         b.editBtn.setOnClickListener { onEdit?.invoke(entry, position) }
-
-        // 点击删除
         b.deleteBtn.setOnClickListener { onDelete?.invoke(entry, position) }
     }
 

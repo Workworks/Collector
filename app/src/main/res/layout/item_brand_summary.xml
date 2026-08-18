@@ -7,9 +7,9 @@
     android:layout_marginHorizontal="16dp"
     android:layout_marginBottom="10dp"
     app:cardCornerRadius="16dp"
-    app:cardElevation="1dp"
-    app:cardBackgroundColor="@color/card"
-    app:strokeColor="@color/card_border"
+    app:cardElevation="0dp"
+    app:cardBackgroundColor="#1A2234"
+    app:strokeColor="#2A344A"
     app:strokeWidth="1dp"
     android:clickable="true"
     android:focusable="true"
@@ -45,7 +45,8 @@
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
                 android:orientation="vertical"
-                android:layout_marginStart="14dp">
+                android:layout_marginStart="14dp"
+                android:layout_marginEnd="8dp">
 
                 <TextView
                     android:id="@+id/brand_name"
@@ -55,7 +56,9 @@
                     android:textSize="16sp"
                     android:textStyle="bold"
                     android:textColor="@color/text_primary"
-                    android:fontFamily="sans-serif-medium" />
+                    android:fontFamily="sans-serif-medium"
+                    android:maxLines="1"
+                    android:ellipsize="end" />
 
                 <!-- 📍 放置位置标签 -->
                 <TextView
@@ -66,11 +69,13 @@
                     android:textSize="11sp"
                     android:textColor="@color/primary"
                     android:layout_marginTop="2dp"
+                    android:maxLines="1"
+                    android:ellipsize="end"
                     android:visibility="gone" />
 
                 <!-- 均价 & 累计花费 -->
                 <LinearLayout
-                    android:layout_width="wrap_content"
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="horizontal"
                     android:gravity="center_vertical"
@@ -82,7 +87,9 @@
                         android:layout_height="wrap_content"
                         android:text="均价 ¥1.50/件"
                         android:textSize="12sp"
-                        android:textColor="@color/text_secondary" />
+                        android:textColor="@color/text_secondary"
+                        android:maxLines="1"
+                        android:ellipsize="end" />
 
                     <TextView
                         android:layout_width="wrap_content"
@@ -97,7 +104,9 @@
                         android:layout_height="wrap_content"
                         android:text="累计 ¥120.00"
                         android:textSize="12sp"
-                        android:textColor="@color/text_secondary" />
+                        android:textColor="@color/text_secondary"
+                        android:maxLines="1"
+                        android:ellipsize="end" />
                 </LinearLayout>
             </LinearLayout>
 
@@ -117,7 +126,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="24 件"
-                    android:textSize="14sp"
+                    android:textSize="13sp"
                     android:textStyle="bold"
                     android:textColor="@color/stock_healthy_text"
                     android:fontFamily="sans-serif-medium" />

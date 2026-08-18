@@ -13,19 +13,21 @@ data class LocationMovement(
     val note: String = ""                           // 挪动备注 (如 "从客厅茶几移入")
 )
 
-/** 一条出入库/记账记录（集成空间位置、移动历史、重要订阅提醒） */
+/** 一条出入库/记账记录（集成折旧拥有天数、在役/退役待办归置、订阅型资产体系） */
 data class Entry(
     val id: String = UUID.randomUUID().toString(),
     val category: String,       // 分类: 数码, 日用品, 零食, 耗材等
     val brand: String,          // 品牌/物品名称
-    val qty: Int,               // 数量
-    val price: Double = 0.0,    // 单价（元/单位）
-    val ts: Long = System.currentTimeMillis(), // 时间戳
+    val qty: Int = 1,           // 数量
+    val price: Double = 0.0,    // 购买原价 / 单价（元/单位）
+    val currentValuation: Double = 0.0, // 当前二手/折旧估值 (元，若为0则默认按原价)
+    val purchaseDate: Long = System.currentTimeMillis(), // 购入日期 (用于计算拥有天数和日均成本)
+    val ts: Long = System.currentTimeMillis(),           // 记录时间戳
     val isIn: Boolean = true,   // true=增加(入库/购入), false=减少(出库/消耗)
     val notes: String = "",     // 备注
-    val unit: String = "片",    // 数量单位: 片, 件, 包, 个, 箱, 瓶等
+    val unit: String = "件",    // 数量单位: 件, 台, 片, 包, 个, 箱, 瓶等
 
-    // 空间与位置体系 (可填可不填)
+    // 空间与位置体系 (选填)
     val location: String = "",                      // 当前放置位置 (如 "主卧衣柜二层")
     val houseId: String = "default_house",          // 所属空间 ID
     val houseName: String = "我的家",                // 所属空间名称
@@ -39,8 +41,41 @@ data class Entry(
     val reminderEnabled: Boolean = false,           // 是否开启定期核对订阅提醒
     val reminderIntervalDays: Int = 1,              // 提醒间隔天数 (1=每天, 3=每3天, 7=每周, 15=半月, 30=每月)
     val reminderTime: String = "09:00",             // 每日提醒时间
-    val lastCheckedAt: Long = 0L                    // 上次核对位置确认时间戳
-)
+    val lastCheckedAt: Long = 0L,                   // 上次核对位置确认时间戳
+
+    // 3. 物品在役 / 退役与待办归置系统
+    val isRetired: Boolean = false,                 // false=在役, true=已退役 (如闲鱼代售、封存)
+    val retiredAt: Long = 0L,                       // 退役时间戳
+    val retiredAction: String = "",                 // 待办归置渠道 (如 "挂闲鱼代售", "挂转转代售", "赠送亲友", "封箱入库", "环保回收", "报废")
+    val retiredSoldPrice: Double = 0.0,             // 二手出掉回血金额 (如有)
+    val retiredNote: String = "",                   // 退役归置备注
+
+    // 2. 按期订阅型资产体系 (如 iCloud, ChatGPT, Netflix, 宽带, 健身年卡)
+    val isSubscription: Boolean = false,            // 是否为订阅型资产
+    val subCycle: String = "按月",                  // 订阅周期: "按月", "按年", "按季", "按周"
+    val subNextBillingDate: Long = 0L,              // 下次扣费日期
+    val subAutoRenew: Boolean = true                // 是否自动续费
+) {
+    /** 计算拥有天数 */
+    fun getDaysOwned(): Int {
+        val endTime = if (isRetired && retiredAt > 0) retiredAt else System.currentTimeMillis()
+        val days = ((endTime - purchaseDate) / (24L * 60 * 60 * 1000)).toInt()
+        return days.coerceAtLeast(1)
+    }
+
+    /** 计算日均使用成本 (元/天) */
+    fun getDailyCost(): Double {
+        val days = getDaysOwned().toDouble()
+        val totalCost = price * qty
+        return if (isRetired && retiredSoldPrice > 0) {
+            (totalCost - retiredSoldPrice).coerceAtLeast(0.0) / days
+        } else if (currentValuation > 0 && currentValuation < totalCost) {
+            (totalCost - currentValuation).coerceAtLeast(0.0) / days
+        } else {
+            totalCost / days
+        }
+    }
+}
 
 /** 空间房间模型 */
 data class HouseRoom(
@@ -54,7 +89,7 @@ data class HouseRoom(
     val heightPct: Float = 0.35f  // 房间高 (0.0 ~ 1.0)
 )
 
-/** 家庭/空间模型 (支持多个家与平面图) */
+/** 家庭/空间模型 */
 data class HouseSpace(
     val id: String = UUID.randomUUID().toString(),
     val name: String,             // 空间名称 (如 "🏠 自己的家", "🏡 父母家", "🏢 办公室", "🚗 汽车")
@@ -80,10 +115,18 @@ data class BrandSummary(
     val count: Int,             // 当前库存（增加-减少）
     val amount: Double,         // 累计花费（仅增加）
     val avgPrice: Double,       // 平均单价
-    val unit: String = "片",    // 常用单位
+    val unit: String = "件",    // 常用单位
     val location: String = "",  // 当前最新放置位置
     val houseName: String = "", // 所属空间
-    val isImportant: Boolean = false
+    val isImportant: Boolean = false,
+    val isRetired: Boolean = false,
+    val retiredAction: String = "",
+    val daysOwned: Int = 1,
+    val dailyCost: Double = 0.0,
+    val isSubscription: Boolean = false,
+    val subCycle: String = "按月",
+    val subNextBillingDate: Long = 0L,
+    val currentValuation: Double = 0.0
 )
 
 /** 分类汇总 */
@@ -92,7 +135,7 @@ data class CategoryGroup(
     val brands: List<BrandSummary>,
     val totalCount: Int,
     val totalAmount: Double,
-    val unit: String = "片"
+    val unit: String = "件"
 )
 
 /** 月度统计模型（账本报表） */
