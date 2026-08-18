@@ -5,15 +5,17 @@ import androidx.appcompat.app.AppCompatDelegate
 import org.json.JSONArray
 import org.json.JSONObject
 
-/** 基于 SharedPreferences 的持久化层，管理记账记录、自定义分组和主题外观 */
+/** 基于 SharedPreferences 的持久化层，管理收纳记账记录、通用分类和主题外观 */
 class DataStore(ctx: Context) {
-    private val prefs = ctx.getSharedPreferences("diaper_data", Context.MODE_PRIVATE)
+    private val prefs = ctx.getSharedPreferences("collector_data", Context.MODE_PRIVATE)
+    private val legacyPrefs = ctx.getSharedPreferences("diaper_data", Context.MODE_PRIVATE)
     private val keyEntries = "entries_v2"
-    private val keyCategories = "custom_categories_v1"
+    private val keyCategories = "custom_categories_v2"
     private val keyTheme = "app_theme_mode"
 
     companion object {
-        val DEFAULT_CATEGORIES = listOf("NB", "S", "M", "L", "XL", "XXL", "XXXL")
+        // 通用默认分类（数码、日用品、零食、耗材）
+        val DEFAULT_CATEGORIES = listOf("数码", "日用品", "零食", "耗材")
 
         const val THEME_SYSTEM = 0
         const val THEME_LIGHT = 1
@@ -33,7 +35,7 @@ class DataStore(ctx: Context) {
     fun loadAll(): List<Entry> {
         val v2 = loadV2()
         if (v2.isNotEmpty()) return v2
-        return loadV1Migration()
+        return loadLegacyMigration()
     }
 
     fun saveAll(entries: List<Entry>) {
@@ -53,7 +55,83 @@ class DataStore(ctx: Context) {
         prefs.edit().putString(keyEntries, arr.toString()).apply()
     }
 
-    /** 加载 v2 格式（含 category） */
+    fun clearAllData() {
+        prefs.edit().remove(keyEntries).apply()
+    }
+
+    /** 导出全部数据为 JSON 字符串 */
+    fun exportBackupJson(): String {
+        val root = JSONObject()
+        root.put("version", 2)
+        root.put("timestamp", System.currentTimeMillis())
+
+        val catArr = JSONArray()
+        for (c in getCategories()) {
+            catArr.put(c)
+        }
+        root.put("categories", catArr)
+
+        val entryArr = JSONArray()
+        for (e in loadAll()) {
+            entryArr.put(
+                JSONObject()
+                    .put("cat", e.category)
+                    .put("brand", e.brand)
+                    .put("qty", e.qty)
+                    .put("price", e.price)
+                    .put("ts", e.ts)
+                    .put("in", e.isIn)
+                    .put("notes", e.notes)
+            )
+        }
+        root.put("entries", entryArr)
+        return root.toString(2)
+    }
+
+    /** 导入 JSON 备份数据 */
+    fun importBackupJson(jsonStr: String): Boolean {
+        return try {
+            val root = JSONObject(jsonStr)
+            val catArr = root.optJSONArray("categories")
+            if (catArr != null) {
+                val cats = mutableListOf<String>()
+                for (i in 0 until catArr.length()) {
+                    val c = catArr.optString(i).trim()
+                    if (c.isNotEmpty() && !cats.contains(c)) {
+                        cats.add(c)
+                    }
+                }
+                if (cats.isNotEmpty()) {
+                    saveCategories(cats)
+                }
+            }
+
+            val entryArr = root.optJSONArray("entries")
+            if (entryArr != null) {
+                val list = mutableListOf<Entry>()
+                for (i in 0 until entryArr.length()) {
+                    val o = entryArr.getJSONObject(i)
+                    list.add(
+                        Entry(
+                            category = o.optString("cat", "默认分类"),
+                            brand = o.optString("brand", "未知"),
+                            qty = o.optInt("qty", 1),
+                            price = o.optDouble("price", 0.0),
+                            ts = o.optLong("ts", System.currentTimeMillis()),
+                            isIn = o.optBoolean("in", true),
+                            notes = o.optString("notes", "")
+                        )
+                    )
+                }
+                saveAll(list)
+            }
+            true
+        } catch (_: Exception) {
+            false
+        }
+    }
+
+    /** 加载 v2 格式 */
     private fun loadV2(): List<Entry> {
         val raw = prefs.getString(keyEntries, null) ?: return emptyList()
         return try {
@@ -63,7 +141,7 @@ class DataStore(ctx: Context) {
                 val o = arr.getJSONObject(i)
                 result.add(
                     Entry(
-                        category = o.optString("cat", "S"),
+                        category = o.optString("cat", "默认分类"),
                         brand = o.optString("brand"),
                         qty = o.optInt("qty", 1),
                         price = o.optDouble("price", 0.0),
@@ -79,9 +157,9 @@ class DataStore(ctx: Context) {
         }
     }
 
-    /** 迁移旧版 v1 数据（无 category），默认归类为 S */
-    private fun loadV1Migration(): List<Entry> {
-        val raw = prefs.getString("entries", null) ?: return emptyList()
+    /** 迁移旧版数据 */
+    private fun loadLegacyMigration(): List<Entry> {
+        val raw = legacyPrefs.getString("entries_v2", null) ?: legacyPrefs.getString("entries", null) ?: return emptyList()
         return try {
             val arr = JSONArray(raw)
             val result = mutableListOf<Entry>()
@@ -89,25 +167,26 @@ class DataStore(ctx: Context) {
                 val o = arr.getJSONObject(i)
                 result.add(
                     Entry(
-                        category = "S",
+                        category = o.optString("cat", "默认分类"),
                         brand = o.optString("brand"),
                         qty = o.optInt("qty", 1),
                         price = o.optDouble("price", 0.0),
                         ts = o.optLong("ts", 0L),
                         isIn = o.optBoolean("in", true),
-                        notes = ""
+                        notes = o.optString("notes", "")
                     )
                 )
             }
+            saveAll(result)
             result
         } catch (_: Exception) {
             emptyList()
         }
     }
 
-    // ==================== 尺码/分类分组管理 ====================
+    // ==================== 通用分类分组管理 ====================
 
-    /** 获取所有分类（按保存的自定义顺序，并自动合并已存在记录中的分类） */
+    /** 获取所有分类（按保存的顺序，并自动合并已存在记录中的分类） */
     fun getCategories(): List<String> {
         val raw = prefs.getString(keyCategories, null)
         val list = mutableListOf<String>()
@@ -174,10 +253,9 @@ class DataStore(ctx: Context) {
         return removed
     }
 
-    /** 恢复默认预设分类 */
+    /** 恢复默认预设通用分类 */
     fun resetCategories(): List<String> {
         val defaults = DEFAULT_CATEGORIES.toMutableList()
-        // 保留已有记录中使用的分类
         for (entry in loadAll()) {
             val cat = entry.category.trim()
             if (cat.isNotEmpty() && !defaults.contains(cat)) {
@@ -188,7 +266,7 @@ class DataStore(ctx: Context) {
         return defaults
     }
 
-    /** 判断是否为系统预设分类 */
+    /** 判断是否为默认推荐分类 */
     fun isPresetCategory(category: String): Boolean {
         return DEFAULT_CATEGORIES.contains(category)
     }
@@ -214,4 +292,3 @@ class DataStore(ctx: Context) {
         prefs.edit().putString("github_repo", repo.trim()).apply()
     }
 }
-

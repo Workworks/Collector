@@ -37,7 +37,7 @@
     <string name="add_entry">记一笔</string>
     <string name="mode_add">增加</string>
     <string name="mode_reduce">减少</string>
-    <string name="label_category">分类（尺码）</string>
+    <string name="label_category">分类</string>
     <string name="brand_label">品牌名称</string>
     <string name="brand_hint">输入品牌名，如好奇小森林</string>
     <string name="qty_label">数量</string>

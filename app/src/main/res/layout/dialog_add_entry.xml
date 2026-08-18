@@ -49,7 +49,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginTop="16dp"
-        android:text="选择尺码 / 分类"
+        android:text="选择分类"
         android:textColor="@color/text_primary"
         android:textStyle="bold"
         android:textSize="14sp" />

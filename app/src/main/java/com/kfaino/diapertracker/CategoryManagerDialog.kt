@@ -3,7 +3,6 @@ package com.kfaino.diapertracker
 import android.content.Context
 import android.view.LayoutInflater
 import android.widget.Toast
-import androidx.appcompat.app.AlertDialog
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.kfaino.diapertracker.databinding.DialogInputCategoryBinding
@@ -11,7 +10,7 @@ import com.kfaino.diapertracker.databinding.DialogManageCategoriesBinding
 
 object CategoryManagerDialog {
 
-    /** 弹出新增自定义分类对话框 */
+    /** 弹出新增分类对话框 */
     fun showAddCategoryDialog(
         context: Context,
         store: DataStore,
@@ -19,7 +18,7 @@ object CategoryManagerDialog {
     ) {
         val binding = DialogInputCategoryBinding.inflate(LayoutInflater.from(context))
         MaterialAlertDialogBuilder(context)
-            .setTitle("新增自定义分类")
+            .setTitle("新增分类")
             .setView(binding.root)
             .setNegativeButton(R.string.cancel, null)
             .setPositiveButton(R.string.confirm) { _, _ ->
@@ -39,7 +38,7 @@ object CategoryManagerDialog {
             .show()
     }
 
-    /** 弹出分类与尺码管理及排序对话框 */
+    /** 弹出分类管理及排序对话框 */
     fun showManageDialog(
         context: Context,
         store: DataStore,
@@ -47,7 +46,6 @@ object CategoryManagerDialog {
     ) {
         val binding = DialogManageCategoriesBinding.inflate(LayoutInflater.from(context))
         var categories = store.getCategories().toMutableList()
-
 
         lateinit var adapter: CategoryManageAdapter
         adapter = CategoryManageAdapter(
@@ -71,7 +69,6 @@ object CategoryManagerDialog {
                 }
             },
             onDelete = { pos, cat ->
-                // 检查是否有记录关联该分类
                 val hasEntries = store.loadAll().any { it.category == cat }
                 val msg = if (hasEntries) {
                     "当前已有记录使用分类【$cat】，删除分类后已有记录仍会保留，确定要移除该分类吗？"
@@ -107,23 +104,23 @@ object CategoryManagerDialog {
             }
         }
 
-        // 恢复预设
+        // 恢复默认
         binding.btnResetPreset.setOnClickListener {
             MaterialAlertDialogBuilder(context)
-                .setTitle("恢复默认预设")
-                .setMessage("确定要恢复默认预设分类顺序吗？自定义分类将保留在列表末尾。")
+                .setTitle("恢复默认推荐")
+                .setMessage("确定要恢复默认推荐分类列表吗？")
                 .setNegativeButton(R.string.cancel, null)
                 .setPositiveButton(R.string.confirm) { _, _ ->
                     categories = store.resetCategories().toMutableList()
                     adapter.submit(categories.toList())
-                    Toast.makeText(context, "已恢复预设分类", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(context, "已恢复推荐分类", Toast.LENGTH_SHORT).show()
                     onUpdated()
                 }
                 .show()
         }
 
         MaterialAlertDialogBuilder(context)
-            .setTitle("分类与尺码管理")
+            .setTitle("分类管理")
             .setView(binding.root)
             .setPositiveButton("完成", null)
             .show()
