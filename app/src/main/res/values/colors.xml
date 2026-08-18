@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- 主色调：沉稳深绿 -->
+    <color name="primary">#1B7A3D</color>
+    <color name="primary_dark">#145F2E</color>
+    <color name="primary_light">#43A047</color>
+    <color name="primary_surface">#E8F5E9</color>
+
+    <!-- 强调色：暖琥珀 -->
+    <color name="accent">#F59E0B</color>
+    <color name="accent_dark">#D97706</color>
+
+    <!-- 中性色 -->
+    <color name="background">#F7F8FA</color>
+    <color name="card">#FFFFFF</color>
+    <color name="card_border">#E5E7EB</color>
+    <color name="text_primary">#111827</color>
+    <color name="text_secondary">#6B7280</color>
+    <color name="text_hint">#9CA3AF</color>
+
+    <!-- 输入背景 / 标签背景 -->
+    <color name="input_bg">#F3F4F6</color>
+    <color name="tag_custom_bg">#E0F2FE</color>
+    <color name="tag_custom_text">#0369A1</color>
+    <color name="tag_preset_bg">#F3F4F6</color>
+    <color name="tag_preset_text">#4B5563</color>
+
+    <!-- 图标启动背景 -->
+    <color name="ic_launcher_background">#1B7A3D</color>
+</resources>

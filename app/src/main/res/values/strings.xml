@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Collecter</string>
+
+    <!-- 导航 -->
+    <string name="nav_home">首页</string>
+    <string name="nav_timeline">生活流</string>
+    <string name="nav_report">报表</string>
+    <string name="nav_profile">我的</string>
+
+    <!-- 首页 -->
+    <string name="total_label">总库存</string>
+    <string name="amount_label">累计花费</string>
+    <string name="all_categories">全部分类</string>
+    <string name="sort_by">排序</string>
+    <string name="sort_by_count">按库存</string>
+    <string name="sort_by_amount">按花费</string>
+    <string name="sort_by_name">按名称</string>
+    <string name="filter_label">筛选</string>
+    <string name="empty_brands">暂无库存数据</string>
+    <string name="empty_history">暂无记录</string>
+    <string name="sheet_count">件</string>
+
+    <!-- 报表 -->
+    <string name="report_overview">资产概览</string>
+    <string name="report_current_stock">当前库存</string>
+    <string name="report_total_spent">累计花费</string>
+    <string name="report_avg_daily">日均消耗</string>
+    <string name="report_monthly">月度统计</string>
+    <string name="report_month_add">增加</string>
+    <string name="report_month_reduce">减少</string>
+    <string name="report_month_entries">笔数</string>
+    <string name="report_history">历史月份</string>
+    <string name="report_no_data">暂无统计数据</string>
+
+    <!-- 记一笔对话框 -->
+    <string name="add_entry">记一笔</string>
+    <string name="mode_add">增加</string>
+    <string name="mode_reduce">减少</string>
+    <string name="label_category">分类（尺码）</string>
+    <string name="brand_label">品牌名称</string>
+    <string name="brand_hint">输入品牌名，如好奇小森林</string>
+    <string name="qty_label">数量</string>
+    <string name="price_label">单价（元/件）</string>
+    <string name="label_notes">备注</string>
+    <string name="notes_hint">可选，如"618活动购入"</string>
+    <string name="amount_preview">本次金额：¥0.00</string>
+    <string name="err_brand_empty">请输入品牌名称</string>
+    <string name="err_qty">数量至少为 1</string>
+
+    <!-- 操作 -->
+    <string name="confirm">确定</string>
+    <string name="cancel">取消</string>
+    <string name="delete_entry">确定要删除这条记录吗？</string>
+    <string name="delete_confirm">删除</string>
+    <string name="clear_all">清空所有数据</string>
+    <string name="clear_confirm_title">清空所有数据？</string>
+    <string name="clear_confirm_msg">所有记录都会被删除，此操作不可恢复。</string>
+    <string name="menu_clear">清空数据</string>
+</resources>

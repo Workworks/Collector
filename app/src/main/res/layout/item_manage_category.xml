@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="horizontal"
+    android:gravity="center_vertical"
+    android:paddingVertical="8dp"
+    android:paddingHorizontal="16dp"
+    android:background="?attr/selectableItemBackground">
+
+    <!-- 分类名称 -->
+    <TextView
+        android:id="@+id/category_name"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:text="NB"
+        android:textSize="16sp"
+        android:textStyle="bold"
+        android:textColor="@color/text_primary"
+        android:fontFamily="sans-serif-medium" />
+
+    <!-- 标签：预设 / 自定义 -->
+    <TextView
+        android:id="@+id/category_tag"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="预设"
+        android:textSize="11sp"
+        android:textColor="@color/tag_preset_text"
+        android:background="@drawable/bg_tag_preset"
+        android:paddingHorizontal="6dp"
+        android:paddingVertical="2dp"
+        android:layout_marginEnd="8dp" />
+
+    <!-- 上移按钮 -->
+    <ImageButton
+        android:id="@+id/btn_move_up"
+        android:layout_width="36dp"
+        android:layout_height="36dp"
+        android:src="@drawable/ic_arrow_up"
+        android:contentDescription="上移"
+        android:background="?attr/selectableItemBackgroundBorderless"
+        android:padding="6dp" />
+
+    <!-- 下移按钮 -->
+    <ImageButton
+        android:id="@+id/btn_move_down"
+        android:layout_width="36dp"
+        android:layout_height="36dp"
+        android:src="@drawable/ic_arrow_down"
+        android:contentDescription="下移"
+        android:background="?attr/selectableItemBackgroundBorderless"
+        android:padding="6dp" />
+
+    <!-- 删除按钮 -->
+    <ImageButton
+        android:id="@+id/btn_delete"
+        android:layout_width="36dp"
+        android:layout_height="36dp"
+        android:src="@drawable/ic_delete"
+        android:contentDescription="删除"
+        android:background="?attr/selectableItemBackgroundBorderless"
+        android:padding="6dp" />
+
+</LinearLayout>

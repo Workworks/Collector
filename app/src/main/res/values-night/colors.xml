@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- 主色调：暗夜薄荷绿 -->
+    <color name="primary">#34D399</color>
+    <color name="primary_dark">#10B981</color>
+    <color name="primary_light">#6EE7B7</color>
+    <color name="primary_surface">#133324</color>
+
+    <!-- 强调色：暗夜暖琥珀 -->
+    <color name="accent">#FBBF24</color>
+    <color name="accent_dark">#F59E0B</color>
+
+    <!-- 中性色 -->
+    <color name="background">#111827</color>
+    <color name="card">#1F2937</color>
+    <color name="card_border">#374151</color>
+    <color name="text_primary">#F9FAFB</color>
+    <color name="text_secondary">#9CA3AF</color>
+    <color name="text_hint">#6B7280</color>
+
+    <!-- 输入背景 / 标签背景 -->
+    <color name="input_bg">#283141</color>
+    <color name="tag_custom_bg">#1E3A5F</color>
+    <color name="tag_custom_text">#7DD3FC</color>
+    <color name="tag_preset_bg">#283141</color>
+    <color name="tag_preset_text">#9CA3AF</color>
+
+    <!-- 图标启动背景 -->
+    <color name="ic_launcher_background">#111827</color>
+</resources>
