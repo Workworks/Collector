@@ -1,19 +1,21 @@
 package com.kfaino.diapertracker
 
+import android.content.res.ColorStateList
 import android.graphics.Color
 import android.view.LayoutInflater
 import android.view.ViewGroup
-import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.RecyclerView
 import com.kfaino.diapertracker.databinding.ItemBrandSummaryBinding
 import com.kfaino.diapertracker.databinding.ItemCategoryHeaderBinding
+import java.util.Locale
 
 /**
  * 分组 RecyclerView 适配器
  * 两种 viewType: HEADER = 分类标题, BRAND = 分类下的品牌卡片
  */
 class CategoryAdapter(
-    private val onBrandClick: ((BrandSummary) -> Unit)? = null
+    private val onBrandClick: ((BrandSummary, String) -> Unit)? = null
 ) : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
 
     companion object {
@@ -63,46 +65,73 @@ class CategoryAdapter(
     }
 
     override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int) {
+        val ctx = holder.itemView.context
         when (val item = items[position]) {
             is ListItem.Header -> {
                 val vh = holder as HeaderVH
                 vh.binding.catName.text = item.category
-                vh.binding.catTotal.text = "${item.totalCount}件 · ¥${String.format("%.2f", item.totalAmount)}"
+                vh.binding.catTotal.text = "共 ${item.totalCount} 件 · ¥${String.format(Locale.getDefault(), "%.2f", item.totalAmount)}"
             }
             is ListItem.Brand -> {
                 val vh = holder as BrandVH
                 val brand = item.brand
-                vh.binding.brandName.text = brand.name
-                vh.binding.itemCount.text = "${brand.count}件"
-                vh.binding.itemAmount.text = "¥${String.format("%.2f", brand.amount)}"
-                vh.binding.avatar.text = brand.name.take(1)
-                vh.binding.avatar.backgroundTintList =
-                    android.content.res.ColorStateList.valueOf(colorFor(brand.name))
+                val b = vh.binding
+
+                b.brandName.text = brand.name
+                b.itemAvgPrice.text = if (brand.avgPrice > 0)
+                    "均价 ¥${String.format(Locale.getDefault(), "%.2f", brand.avgPrice)}/件"
+                else
+                    "未设单价"
+
+                b.itemAmount.text = "累计 ¥${String.format(Locale.getDefault(), "%.2f", brand.amount)}"
+
+                b.avatar.text = brand.name.take(1)
+                b.avatar.backgroundTintList = ColorStateList.valueOf(colorFor(brand.name))
+
+                // 库存标签与颜色状态
+                when {
+                    brand.count > 10 -> {
+                        b.stockBadgeLayout.setBackgroundResource(R.drawable.bg_stock_healthy)
+                        b.itemCount.setTextColor(ContextCompat.getColor(ctx, R.color.stock_healthy_text))
+                        b.itemCount.text = "${brand.count} 件"
+                    }
+                    brand.count in 1..10 -> {
+                        b.stockBadgeLayout.setBackgroundResource(R.drawable.bg_stock_low)
+                        b.itemCount.setTextColor(ContextCompat.getColor(ctx, R.color.stock_low_text))
+                        b.itemCount.text = "${brand.count} 件 (紧张)"
+                    }
+                    else -> {
+                        b.stockBadgeLayout.setBackgroundResource(R.drawable.bg_stock_empty)
+                        b.itemCount.setTextColor(ContextCompat.getColor(ctx, R.color.stock_empty_text))
+                        b.itemCount.text = "缺货 (${brand.count})"
+                    }
+                }
 
                 // 进度条（品牌数量在该分类中的占比）
                 val max = maxPerCategory[item.category] ?: 1
-                vh.binding.shareBar.progress = (brand.count * 100 / max).coerceIn(0, 100)
+                val progressVal = (brand.count * 100 / max).coerceIn(0, 100)
+                b.shareBar.progress = progressVal
 
-                vh.itemView.setOnClickListener { onBrandClick?.invoke(brand) }
+                vh.itemView.setOnClickListener { onBrandClick?.invoke(brand, item.category) }
             }
         }
     }
 
-    /** 根据品牌名返回稳定的颜色 */
+    /** 根据品牌名返回稳重现代的调色 */
     private fun colorFor(name: String): Int {
         val palette = intArrayOf(
-            Color.parseColor("#2E7D32"),
-            Color.parseColor("#1565C0"),
-            Color.parseColor("#AD1457"),
-            Color.parseColor("#6A1B9A"),
-            Color.parseColor("#E65100"),
-            Color.parseColor("#00838F"),
-            Color.parseColor("#283593"),
-            Color.parseColor("#AFB42B"),
-            Color.parseColor("#C62828"),
-            Color.parseColor("#4527A0"),
-            Color.parseColor("#00695C"),
-            Color.parseColor("#5D4037")
+            Color.parseColor("#059669"),
+            Color.parseColor("#2563EB"),
+            Color.parseColor("#7C3AED"),
+            Color.parseColor("#DB2777"),
+            Color.parseColor("#EA580C"),
+            Color.parseColor("#0D9488"),
+            Color.parseColor("#4F46E5"),
+            Color.parseColor("#65A30D"),
+            Color.parseColor("#DC2626"),
+            Color.parseColor("#0284C7"),
+            Color.parseColor("#D97706"),
+            Color.parseColor("#475569")
         )
         return palette[(name.hashCode() and Int.MAX_VALUE) % palette.size]
     }

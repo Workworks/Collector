@@ -1,13 +1,19 @@
 package com.kfaino.diapertracker
 
 import android.os.Bundle
+import android.view.Gravity
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.ArrayAdapter
+import android.widget.LinearLayout
+import android.widget.TextView
+import android.widget.Toast
+import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.LinearLayoutManager
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.kfaino.diapertracker.databinding.FragmentHomeBinding
+import java.util.Locale
 
 class HomeFragment : Fragment() {
 
@@ -18,12 +24,18 @@ class HomeFragment : Fragment() {
     private val entries = mutableListOf<Entry>()
     private lateinit var adapter: CategoryAdapter
 
-    // 当前筛选和排序
+    // 当前筛选与排序状态
     private var selectedCategory = "全部"
     private var sortMode = 0 // 0=按分组排序, 1=按库存降序, 2=按库存升序, 3=按花费降序, 4=按名称
 
     companion object {
-        val SORT_LABELS = listOf("按分组排序", "按库存降序", "按库存升序", "按花费降序", "按名称排序")
+        val SORT_LABELS = arrayOf(
+            "⚡ 默认分组排序",
+            "📉 按库存从高到低",
+            "📈 按库存从低到高",
+            "💰 按花费金额从多到少",
+            "🔤 按名称排序"
+        )
     }
 
     override fun onCreateView(
@@ -38,75 +50,49 @@ class HomeFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        adapter = CategoryAdapter()
+        adapter = CategoryAdapter(
+            onBrandClick = { brand, category ->
+                showBrandQuickAction(brand, category)
+            }
+        )
         binding.categoryList.layoutManager = LinearLayoutManager(requireContext())
         binding.categoryList.adapter = adapter
 
-        setupSortSpinner()
-        setupCategorySpinner()
+        setupSortButton()
         setupActions()
 
         loadData()
+        renderCategoryChips()
         refresh()
     }
 
     override fun onResume() {
         super.onResume()
-        setupCategorySpinner()
         loadData()
+        renderCategoryChips()
         refresh()
     }
 
-    private fun setupSortSpinner() {
-        val sortAdapter = ArrayAdapter(requireContext(), android.R.layout.simple_spinner_item, SORT_LABELS)
-        sortAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
-        binding.spinnerSort.adapter = sortAdapter
-        binding.spinnerSort.setSelection(sortMode)
-        binding.spinnerSort.onItemSelectedListener = object : android.widget.AdapterView.OnItemSelectedListener {
-            override fun onItemSelected(parent: android.widget.AdapterView<*>?, view: View?, pos: Int, id: Long) {
-                sortMode = pos
-                refresh()
-            }
-            override fun onNothingSelected(parent: android.widget.AdapterView<*>?) {}
-        }
-    }
-
-    private fun setupCategorySpinner() {
-        val allCats = store.getCategories()
-        val catOptions = listOf("全部分类") + allCats
-        val catAdapter = ArrayAdapter(requireContext(), android.R.layout.simple_spinner_item, catOptions)
-        catAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
-        binding.spinnerCategory.adapter = catAdapter
-
-        val curIndex = if (selectedCategory == "全部" || selectedCategory == "全部分类") {
-            0
-        } else {
-            catOptions.indexOf(selectedCategory).coerceAtLeast(0)
-        }
-        binding.spinnerCategory.setSelection(curIndex)
-
-        binding.spinnerCategory.onItemSelectedListener = object : android.widget.AdapterView.OnItemSelectedListener {
-            override fun onItemSelected(parent: android.widget.AdapterView<*>?, view: View?, pos: Int, id: Long) {
-                selectedCategory = if (pos == 0) "全部" else catOptions[pos]
-                refresh()
-            }
-            override fun onNothingSelected(parent: android.widget.AdapterView<*>?) {}
+    private fun setupSortButton() {
+        binding.btnSortSelector.text = SORT_LABELS[sortMode]
+        binding.btnSortSelector.setOnClickListener {
+            MaterialAlertDialogBuilder(requireContext())
+                .setTitle("选择排序方式")
+                .setSingleChoiceItems(SORT_LABELS, sortMode) { dialog, which ->
+                    sortMode = which
+                    binding.btnSortSelector.text = SORT_LABELS[sortMode]
+                    refresh()
+                    dialog.dismiss()
+                }
+                .setNegativeButton(R.string.cancel, null)
+                .show()
         }
     }
 
     private fun setupActions() {
-        // + 自定义分类快捷按钮
-        binding.btnAddCustom.setOnClickListener {
-            CategoryManagerDialog.showAddCategoryDialog(requireContext(), store) {
-                setupCategorySpinner()
-                refresh()
-            }
-        }
-
-        // 分类与尺码管理入口
         binding.btnManageCategories.setOnClickListener {
             CategoryManagerDialog.showManageDialog(requireContext(), store) {
-                setupCategorySpinner()
+                renderCategoryChips()
                 refresh()
             }
         }
@@ -117,12 +103,73 @@ class HomeFragment : Fragment() {
         entries.addAll(store.loadAll())
     }
 
+    /** 动态渲染横向滑动的分类筛选药丸 (Chips) */
+    private fun renderCategoryChips() {
+        val container = binding.categoryChipsContainer
+        container.removeAllViews()
+
+        val allCategories = listOf("全部") + store.getCategories()
+
+        for (cat in allCategories) {
+            val chip = TextView(requireContext()).apply {
+                text = cat
+                textSize = 13f
+                gravity = Gravity.CENTER
+                setPadding(dpToPx(14), dpToPx(6), dpToPx(14), dpToPx(6))
+                val isSelected = (selectedCategory == cat)
+
+                if (isSelected) {
+                    setBackgroundResource(R.drawable.bg_chip_active)
+                    setTextColor(ContextCompat.getColor(context, android.R.color.white))
+                } else {
+                    setBackgroundResource(R.drawable.bg_chip_inactive)
+                    setTextColor(ContextCompat.getColor(context, R.color.text_primary))
+                }
+
+                isClickable = true
+                isFocusable = true
+                val params = LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.WRAP_CONTENT,
+                    LinearLayout.LayoutParams.WRAP_CONTENT
+                ).apply {
+                    marginEnd = dpToPx(8)
+                }
+                layoutParams = params
+
+                setOnClickListener {
+                    selectedCategory = cat
+                    renderCategoryChips()
+                    refresh()
+                }
+            }
+            container.addView(chip)
+        }
+
+        // + 自定义快捷药丸
+        val addCustomChip = TextView(requireContext()).apply {
+            text = "+ 自定义"
+            textSize = 13f
+            gravity = Gravity.CENTER
+            setPadding(dpToPx(12), dpToPx(6), dpToPx(12), dpToPx(6))
+            setBackgroundResource(R.drawable.bg_btn_custom_add)
+            setTextColor(ContextCompat.getColor(context, R.color.primary))
+            isClickable = true
+            isFocusable = true
+            setOnClickListener {
+                CategoryManagerDialog.showAddCategoryDialog(requireContext(), store) {
+                    renderCategoryChips()
+                    refresh()
+                }
+            }
+        }
+        container.addView(addCustomChip)
+    }
+
     /** 构建分组数据并依据设定排序 */
     private fun buildGroups(): List<CategoryGroup> {
         val configuredCats = store.getCategories()
         val data = LinkedHashMap<String, LinkedHashMap<String, BrandData>>()
 
-        // 按配置的分类顺序初始化
         for (cat in configuredCats) {
             data[cat] = linkedMapOf()
         }
@@ -153,7 +200,7 @@ class HomeFragment : Fragment() {
                 2 -> compareBy<BrandSummary> { it.count }
                 3 -> compareByDescending<BrandSummary> { it.amount }
                 4 -> compareBy<BrandSummary> { it.name }
-                else -> compareByDescending<BrandSummary> { it.count } // 默认分组内按库存降序
+                else -> compareByDescending<BrandSummary> { it.count }
             })
 
             if (brandList.isNotEmpty()) {
@@ -163,17 +210,16 @@ class HomeFragment : Fragment() {
             }
         }
 
-        // 分组间的排序
         val sortedResult = when (sortMode) {
-            0 -> result // 保持用户自定义/预设分组顺序
-            1 -> result.sortedByDescending { it.totalCount } // 按总库存降序
-            2 -> result.sortedBy { it.totalCount } // 按总库存升序
-            3 -> result.sortedByDescending { it.totalAmount } // 按总花费降序
-            4 -> result.sortedBy { it.name } // 按分类名称字母/拼音
+            0 -> result
+            1 -> result.sortedByDescending { it.totalCount }
+            2 -> result.sortedBy { it.totalCount }
+            3 -> result.sortedByDescending { it.totalAmount }
+            4 -> result.sortedBy { it.name }
             else -> result
         }
 
-        return if (selectedCategory != "全部" && selectedCategory != "全部分类") {
+        return if (selectedCategory != "全部") {
             sortedResult.filter { it.name == selectedCategory }
         } else {
             sortedResult
@@ -185,14 +231,87 @@ class HomeFragment : Fragment() {
 
         val grandCount = entries.filter { it.isIn }.sumOf { it.qty } - entries.filter { !it.isIn }.sumOf { it.qty }
         val totalSpent = entries.filter { it.isIn }.sumOf { it.qty * it.price }
+        val distinctBrands = entries.map { it.brand }.distinct().size
 
         binding.totalCount.text = grandCount.coerceAtLeast(0).toString()
-        binding.totalAmount.text = "¥${String.format("%.2f", totalSpent)}"
+        binding.totalAmount.text = "¥${String.format(Locale.getDefault(), "%.2f", totalSpent)}"
+        binding.brandCoverageText.text = "$distinctBrands 个品牌"
+
+        binding.filterSummaryText.text = if (selectedCategory == "全部") {
+            "全部库存明细 (共 ${groups.sumOf { it.brands.size }} 个品牌项)"
+        } else {
+            "【$selectedCategory】分类下共 ${groups.find { it.name == selectedCategory }?.brands?.size ?: 0} 个品牌"
+        }
 
         binding.emptyState.visibility = if (groups.isEmpty()) View.VISIBLE else View.GONE
         binding.categoryList.visibility = if (groups.isEmpty()) View.GONE else View.VISIBLE
 
         adapter.submit(groups)
+    }
+
+    /** 品牌卡片跟手快捷操作：极速补货 / 极速消耗 / 详情 */
+    private fun showBrandQuickAction(brand: BrandSummary, category: String) {
+        val options = arrayOf(
+            "➕ 极速补货 (+1 件)",
+            "➖ 极速消耗 (-1 件)",
+            "📝 自定义记一笔"
+        )
+
+        MaterialAlertDialogBuilder(requireContext())
+            .setTitle("【$category】${brand.name} (库存: ${brand.count}件)")
+            .setItems(options) { _, which ->
+                when (which) {
+                    0 -> {
+                        // 快捷加1
+                        val newEntry = Entry(
+                            category = category,
+                            brand = brand.name,
+                            qty = 1,
+                            price = brand.avgPrice,
+                            ts = System.currentTimeMillis(),
+                            isIn = true,
+                            notes = "快捷补货"
+                        )
+                        entries.add(newEntry)
+                        store.saveAll(entries)
+                        refresh()
+                        Toast.makeText(requireContext(), "已为【${brand.name}】补货 +1 件", Toast.LENGTH_SHORT).show()
+                    }
+                    1 -> {
+                        // 快捷减1
+                        val newEntry = Entry(
+                            category = category,
+                            brand = brand.name,
+                            qty = 1,
+                            price = 0.0,
+                            ts = System.currentTimeMillis(),
+                            isIn = false,
+                            notes = "快捷消耗"
+                        )
+                        entries.add(newEntry)
+                        store.saveAll(entries)
+                        refresh()
+                        Toast.makeText(requireContext(), "已记录【${brand.name}】消耗 -1 件", Toast.LENGTH_SHORT).show()
+                    }
+                    2 -> {
+                        // 打开主界面的记账弹窗
+                        val act = activity as? MainActivity
+                        // (MainActivity 也会更新)
+                        Toast.makeText(requireContext(), "可点击底部 + 记一笔", Toast.LENGTH_SHORT).show()
+                    }
+                }
+            }
+            .setNegativeButton(R.string.cancel, null)
+            .show()
+    }
+
+    private fun dpToPx(dp: Int): Int {
+        return (dp * resources.displayMetrics.density + 0.5f).toInt()
+    }
+
+    override fun onDestroyView() {
+        super.onDestroyView()
+        _binding = null
     }
 
     private data class BrandData(

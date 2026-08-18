@@ -2,7 +2,8 @@
 <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
-    android:layout_height="wrap_content">
+    android:layout_height="wrap_content"
+    android:overScrollMode="never">
 
 <LinearLayout
     android:layout_width="match_parent"
@@ -10,10 +11,10 @@
     android:orientation="vertical"
     android:paddingStart="24dp"
     android:paddingEnd="24dp"
-    android:paddingTop="8dp"
-    android:paddingBottom="16dp">
+    android:paddingTop="12dp"
+    android:paddingBottom="20dp">
 
-    <!-- 购入 / 用掉 切换 -->
+    <!-- 购入 / 用掉 切换 (带颜色反馈) -->
     <com.google.android.material.button.MaterialButtonToggleGroup
         android:id="@+id/modeGroup"
         android:layout_width="match_parent"
@@ -27,8 +28,10 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:text="@string/mode_add"
-            android:checked="true" />
+            android:text="➕ 增加 / 购入"
+            android:textStyle="bold"
+            android:checked="true"
+            app:cornerRadius="12dp" />
 
         <com.google.android.material.button.MaterialButton
             android:id="@+id/modeUse"
@@ -36,56 +39,50 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:text="@string/mode_reduce" />
+            android:text="➖ 减少 / 用掉"
+            android:textStyle="bold"
+            app:cornerRadius="12dp" />
     </com.google.android.material.button.MaterialButtonToggleGroup>
 
-    <!-- 分类（尺码）下拉 -->
+    <!-- 分类（尺码）横向快捷选择条 -->
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginTop="16dp"
-        android:text="@string/label_category"
-        android:textColor="@color/text_secondary"
+        android:text="选择尺码 / 分类"
+        android:textColor="@color/text_primary"
+        android:textStyle="bold"
         android:textSize="14sp" />
 
-    <LinearLayout
+    <HorizontalScrollView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:gravity="center_vertical"
-        android:layout_marginTop="4dp">
+        android:scrollbars="none"
+        android:overScrollMode="never"
+        android:layout_marginTop="8dp">
 
-        <Spinner
-            android:id="@+id/categorySpinner"
-            android:layout_width="0dp"
-            android:layout_height="48dp"
-            android:layout_weight="1"
-            android:background="@drawable/bg_spinner" />
-
-        <TextView
-            android:id="@+id/btnAddCustomCategory"
+        <LinearLayout
+            android:id="@+id/dialog_category_chips"
             android:layout_width="wrap_content"
-            android:layout_height="36dp"
-            android:layout_marginStart="8dp"
-            android:gravity="center"
-            android:paddingHorizontal="12dp"
-            android:text="+ 自定义"
-            android:textSize="13sp"
-            android:textColor="@color/primary"
-            android:textStyle="bold"
-            android:background="@drawable/bg_btn_custom_add"
-            android:clickable="true"
-            android:focusable="true" />
-    </LinearLayout>
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical">
+            <!-- 动态填充各类尺码药丸 -->
+        </LinearLayout>
+    </HorizontalScrollView>
 
-    <!-- 品牌 -->
+    <!-- 品牌输入（带联想） -->
     <com.google.android.material.textfield.TextInputLayout
         android:id="@+id/brandInputLayout"
         style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="12dp"
-        android:hint="@string/brand_label">
+        android:layout_marginTop="14dp"
+        android:hint="@string/brand_label"
+        app:boxCornerRadiusTopStart="12dp"
+        app:boxCornerRadiusTopEnd="12dp"
+        app:boxCornerRadiusBottomStart="12dp"
+        app:boxCornerRadiusBottomEnd="12dp">
 
         <com.google.android.material.textfield.MaterialAutoCompleteTextView
             android:id="@+id/brandInput"
@@ -100,38 +97,39 @@
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="14dp"
-        android:text="@string/qty_label"
-        android:textColor="@color/text_secondary"
+        android:layout_marginTop="16dp"
+        android:text="数量 (件)"
+        android:textColor="@color/text_primary"
+        android:textStyle="bold"
         android:textSize="14sp" />
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="6dp"
+        android:layout_marginTop="8dp"
         android:orientation="horizontal"
         android:gravity="center_vertical">
 
         <com.google.android.material.button.MaterialButton
             android:id="@+id/minusBtn"
             style="?attr/materialButtonOutlinedStyle"
-            android:layout_width="52dp"
-            android:layout_height="52dp"
+            android:layout_width="54dp"
+            android:layout_height="54dp"
             android:text="-"
             android:textSize="26sp"
-            app:cornerRadius="12dp" />
+            app:cornerRadius="14dp" />
 
         <EditText
             android:id="@+id/qtyInput"
             android:layout_width="0dp"
-            android:layout_height="52dp"
+            android:layout_height="54dp"
             android:layout_weight="1"
-            android:layout_marginStart="12dp"
-            android:layout_marginEnd="12dp"
+            android:layout_marginStart="10dp"
+            android:layout_marginEnd="10dp"
             android:background="@drawable/bg_qty"
             android:gravity="center"
             android:inputType="number"
-            android:maxLength="5"
+            android:maxLength="6"
             android:text="1"
             android:textColor="@color/text_primary"
             android:textSize="26sp"
@@ -140,63 +138,105 @@
         <com.google.android.material.button.MaterialButton
             android:id="@+id/plusBtn"
             style="?attr/materialButtonOutlinedStyle"
-            android:layout_width="52dp"
-            android:layout_height="52dp"
+            android:layout_width="54dp"
+            android:layout_height="54dp"
             android:text="+"
             android:textSize="26sp"
-            app:cornerRadius="12dp" />
+            app:cornerRadius="14dp" />
     </LinearLayout>
 
-    <!-- 快捷数量 -->
-    <LinearLayout
+    <!-- 快捷数量药丸 -->
+    <HorizontalScrollView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="8dp"
-        android:orientation="horizontal">
+        android:scrollbars="none"
+        android:overScrollMode="never"
+        android:layout_marginTop="10dp">
 
-        <com.google.android.material.button.MaterialButton
-            android:id="@+id/quick1"
-            style="?attr/materialButtonOutlinedStyle"
-            android:layout_width="0dp"
+        <LinearLayout
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:layout_marginEnd="4dp"
-            android:text="1" />
+            android:orientation="horizontal">
 
-        <com.google.android.material.button.MaterialButton
-            android:id="@+id/quick2"
-            style="?attr/materialButtonOutlinedStyle"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:layout_marginEnd="4dp"
-            android:text="2" />
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/quick1"
+                style="?attr/materialButtonOutlinedStyle"
+                android:layout_width="wrap_content"
+                android:layout_height="38dp"
+                android:layout_marginEnd="6dp"
+                android:paddingHorizontal="14dp"
+                app:cornerRadius="10dp"
+                android:text="1" />
 
-        <com.google.android.material.button.MaterialButton
-            android:id="@+id/quick4"
-            style="?attr/materialButtonOutlinedStyle"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:layout_marginEnd="4dp"
-            android:text="4" />
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/quick2"
+                style="?attr/materialButtonOutlinedStyle"
+                android:layout_width="wrap_content"
+                android:layout_height="38dp"
+                android:layout_marginEnd="6dp"
+                android:paddingHorizontal="14dp"
+                app:cornerRadius="10dp"
+                android:text="2" />
 
-        <com.google.android.material.button.MaterialButton
-            android:id="@+id/quick8"
-            style="?attr/materialButtonOutlinedStyle"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:text="8" />
-    </LinearLayout>
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/quick4"
+                style="?attr/materialButtonOutlinedStyle"
+                android:layout_width="wrap_content"
+                android:layout_height="38dp"
+                android:layout_marginEnd="6dp"
+                android:paddingHorizontal="14dp"
+                app:cornerRadius="10dp"
+                android:text="4" />
 
-    <!-- 单价 -->
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/quick8"
+                style="?attr/materialButtonOutlinedStyle"
+                android:layout_width="wrap_content"
+                android:layout_height="38dp"
+                android:layout_marginEnd="6dp"
+                android:paddingHorizontal="14dp"
+                app:cornerRadius="10dp"
+                android:text="8" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/quick10"
+                style="?attr/materialButtonOutlinedStyle"
+                android:layout_width="wrap_content"
+                android:layout_height="38dp"
+                android:layout_marginEnd="6dp"
+                android:paddingHorizontal="14dp"
+                app:cornerRadius="10dp"
+                android:text="10" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/quick20"
+                style="?attr/materialButtonOutlinedStyle"
+                android:layout_width="wrap_content"
+                android:layout_height="38dp"
+                android:layout_marginEnd="6dp"
+                android:paddingHorizontal="14dp"
+                app:cornerRadius="10dp"
+                android:text="20" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/quick50"
+                style="?attr/materialButtonOutlinedStyle"
+                android:layout_width="wrap_content"
+                android:layout_height="38dp"
+                android:paddingHorizontal="14dp"
+                app:cornerRadius="10dp"
+                android:text="50" />
+        </LinearLayout>
+    </HorizontalScrollView>
+
+    <!-- 单价输入 -->
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginTop="14dp"
-        android:text="@string/price_label"
-        android:textColor="@color/text_secondary"
+        android:text="单价（元/件，可选）"
+        android:textColor="@color/text_primary"
+        android:textStyle="bold"
         android:textSize="14sp" />
 
     <EditText
@@ -206,22 +246,25 @@
         android:layout_marginTop="6dp"
         android:background="@drawable/bg_qty"
         android:gravity="center_vertical"
-        android:hint="如：1.50（可不填）"
+        android:hint="例如：1.50（出库无需填写）"
         android:importantForAutofill="no"
         android:inputType="numberDecimal"
         android:maxLines="1"
-        android:paddingStart="14dp"
-        android:paddingEnd="14dp"
+        android:paddingHorizontal="14dp"
         android:textColor="@color/text_primary"
-        android:textSize="16sp" />
+        android:textSize="15sp" />
 
     <!-- 备注 -->
     <com.google.android.material.textfield.TextInputLayout
         style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="10dp"
-        android:hint="@string/label_notes">
+        android:layout_marginTop="12dp"
+        android:hint="@string/label_notes"
+        app:boxCornerRadiusTopStart="12dp"
+        app:boxCornerRadiusTopEnd="12dp"
+        app:boxCornerRadiusBottomStart="12dp"
+        app:boxCornerRadiusBottomEnd="12dp">
 
         <com.google.android.material.textfield.TextInputEditText
             android:id="@+id/notesInput"
@@ -232,16 +275,29 @@
             android:textSize="14sp" />
     </com.google.android.material.textfield.TextInputLayout>
 
-    <!-- 金额预览 -->
-    <TextView
-        android:id="@+id/amountPreview"
-        android:layout_width="wrap_content"
+    <!-- 实时计算金额预览条 -->
+    <com.google.android.material.card.MaterialCardView
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="8dp"
-        android:text="@string/amount_preview"
-        android:textColor="@color/primary"
-        android:textSize="15sp"
-        android:textStyle="bold" />
+        android:layout_marginTop="14dp"
+        app:cardCornerRadius="12dp"
+        app:cardElevation="0dp"
+        app:cardBackgroundColor="@color/primary_surface"
+        app:strokeColor="@color/primary_surface_stroke"
+        app:strokeWidth="1dp">
+
+        <TextView
+            android:id="@+id/amountPreview"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:paddingHorizontal="14dp"
+            android:paddingVertical="10dp"
+            android:text="本次金额：¥0.00"
+            android:textColor="@color/primary"
+            android:textSize="14sp"
+            android:textStyle="bold"
+            android:gravity="center" />
+    </com.google.android.material.card.MaterialCardView>
 
 </LinearLayout>
 </ScrollView>

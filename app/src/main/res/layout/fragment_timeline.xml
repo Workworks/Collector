@@ -9,21 +9,29 @@
     <!-- 顶部标题栏 -->
     <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="48dp"
+        android:layout_height="52dp"
         android:orientation="horizontal"
         android:gravity="center_vertical"
-        android:paddingHorizontal="16dp"
+        android:paddingHorizontal="18dp"
         android:background="@color/card">
 
         <TextView
-            android:layout_width="0dp"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:text="生活流"
+            android:text="生活流明细"
             android:textSize="20sp"
             android:textStyle="bold"
             android:textColor="@color/text_primary"
             android:fontFamily="sans-serif-medium" />
+
+        <TextView
+            android:id="@+id/timeline_count_badge"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="0 条记录"
+            android:textSize="12sp"
+            android:textColor="@color/text_secondary"
+            android:layout_marginStart="8dp" />
     </LinearLayout>
 
     <!-- 空状态 -->
@@ -40,20 +48,21 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="📋"
-            android:textSize="40sp" />
+            android:textSize="44sp" />
 
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="暂无记录"
+            android:text="暂无出入库流水记录"
             android:textSize="16sp"
-            android:textColor="@color/text_hint"
-            android:layout_marginTop="10dp" />
+            android:textStyle="bold"
+            android:textColor="@color/text_secondary"
+            android:layout_marginTop="12dp" />
 
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="点击 + 开始记录"
+            android:text="点击底部绿色 + 开始记录第一笔"
             android:textSize="13sp"
             android:textColor="@color/text_hint"
             android:layout_marginTop="4dp" />
@@ -68,6 +77,7 @@
         android:clipToPadding="false"
         android:overScrollMode="never"
         android:scrollbars="none"
-        android:paddingBottom="80dp" />
+        android:paddingTop="10dp"
+        android:paddingBottom="84dp" />
 
 </LinearLayout>

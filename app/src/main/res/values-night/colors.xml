@@ -1,30 +1,51 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <!-- 主色调：暗夜薄荷绿 -->
-    <color name="primary">#34D399</color>
-    <color name="primary_dark">#10B981</color>
-    <color name="primary_light">#6EE7B7</color>
-    <color name="primary_surface">#133324</color>
+    <!-- 主色调：暗夜薄荷绿 (Mint Emerald) -->
+    <color name="primary">#10B981</color>
+    <color name="primary_dark">#059669</color>
+    <color name="primary_light">#34D399</color>
+    <color name="primary_surface">#064E3B</color>
+    <color name="primary_surface_stroke">#047857</color>
 
     <!-- 强调色：暗夜暖琥珀 -->
     <color name="accent">#FBBF24</color>
     <color name="accent_dark">#F59E0B</color>
+    <color name="accent_surface">#451A03</color>
+    <color name="accent_surface_stroke">#78350F</color>
 
-    <!-- 中性色 -->
-    <color name="background">#111827</color>
-    <color name="card">#1F2937</color>
-    <color name="card_border">#374151</color>
-    <color name="text_primary">#F9FAFB</color>
-    <color name="text_secondary">#9CA3AF</color>
-    <color name="text_hint">#6B7280</color>
+    <!-- 减少/出库 警示红 -->
+    <color name="danger">#F87171</color>
+    <color name="danger_surface">#450A0A</color>
+    <color name="danger_stroke">#7F1D1D</color>
 
-    <!-- 输入背景 / 标签背景 -->
-    <color name="input_bg">#283141</color>
-    <color name="tag_custom_bg">#1E3A5F</color>
-    <color name="tag_custom_text">#7DD3FC</color>
-    <color name="tag_preset_bg">#283141</color>
-    <color name="tag_preset_text">#9CA3AF</color>
+    <!-- 中性色 (Slate Dark 调色板) -->
+    <color name="background">#0B0F19</color>
+    <color name="card">#131B2E</color>
+    <color name="card_elevated">#1E293B</color>
+    <color name="card_border">#233048</color>
+    <color name="card_border_subtle">#1A2436</color>
+
+    <!-- 文字排版色彩 -->
+    <color name="text_primary">#F8FAFC</color>
+    <color name="text_secondary">#94A3B8</color>
+    <color name="text_tertiary">#64748B</color>
+    <color name="text_hint">#64748B</color>
+
+    <!-- 输入框与标签背景 -->
+    <color name="input_bg">#1A2338</color>
+    <color name="tag_custom_bg">#0C3056</color>
+    <color name="tag_custom_text">#38BDF8</color>
+    <color name="tag_preset_bg">#1E293B</color>
+    <color name="tag_preset_text">#94A3B8</color>
+
+    <!-- 库存状态色彩 -->
+    <color name="stock_healthy_bg">#064E3B</color>
+    <color name="stock_healthy_text">#34D399</color>
+    <color name="stock_low_bg">#451A03</color>
+    <color name="stock_low_text">#FBBF24</color>
+    <color name="stock_empty_bg">#450A0A</color>
+    <color name="stock_empty_text">#F87171</color>
 
     <!-- 图标启动背景 -->
-    <color name="ic_launcher_background">#111827</color>
+    <color name="ic_launcher_background">#0B0F19</color>
 </resources>

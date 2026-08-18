@@ -4,6 +4,7 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.Toast
 import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
@@ -43,22 +44,32 @@ class TimelineFragment : Fragment() {
     }
 
     private fun refresh() {
+        if (_binding == null) return
         val entries = store.loadAll()
+        binding.timelineCountBadge.text = "共 ${entries.size} 条记录"
         adapter.submit(entries.reversed())
         binding.emptyState.visibility = if (entries.isEmpty()) View.VISIBLE else View.GONE
         binding.historyList.visibility = if (entries.isEmpty()) View.GONE else View.VISIBLE
     }
 
     private fun confirmDelete(entry: Entry) {
+        val typeName = if (entry.isIn) "入库记录" else "消耗记录"
         MaterialAlertDialogBuilder(requireContext())
-            .setMessage(R.string.delete_entry)
+            .setTitle("删除记录")
+            .setMessage("确定要删除这条【${entry.category} · ${entry.brand}】的 $typeName 吗？")
             .setNegativeButton(R.string.cancel, null)
             .setPositiveButton(R.string.delete_confirm) { _, _ ->
                 val list = store.loadAll().toMutableList()
                 list.remove(entry)
                 store.saveAll(list)
                 refresh()
+                Toast.makeText(requireContext(), "已删除该条记录", Toast.LENGTH_SHORT).show()
             }
             .show()
+    }
+
+    override fun onDestroyView() {
+        super.onDestroyView()
+        _binding = null
     }
 }

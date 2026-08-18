@@ -4,8 +4,10 @@ import android.content.res.ColorStateList
 import android.os.Bundle
 import android.text.Editable
 import android.text.TextWatcher
+import android.view.Gravity
 import android.widget.ArrayAdapter
 import android.widget.ImageView
+import android.widget.LinearLayout
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
@@ -98,33 +100,79 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    // ---------- 记一笔对话框 ----------
+    // ---------- 记一笔对话框 (极致跟手与触控体验) ----------
 
-    private fun showAddDialog() {
+    private fun showAddDialog(prefillBrand: String? = null, prefillCategory: String? = null) {
         val dialogBinding = DialogAddEntryBinding.inflate(layoutInflater)
-
-        // 分类下拉（动态加载自定义+预设）
         val categories = store.getCategories().toMutableList()
-        val catAdapter = ArrayAdapter(this, android.R.layout.simple_spinner_item, categories)
-        catAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
-        dialogBinding.categorySpinner.adapter = catAdapter
-        dialogBinding.categorySpinner.setSelection(0)
+        var selectedCategory = prefillCategory ?: if (categories.isNotEmpty()) categories[0] else "S"
 
-        // + 自定义分类快捷创建
-        dialogBinding.btnAddCustomCategory.setOnClickListener {
-            CategoryManagerDialog.showAddCategoryDialog(this, store) { newCat ->
-                if (!categories.contains(newCat)) {
-                    categories.add(newCat)
-                    catAdapter.notifyDataSetChanged()
+        // 渲染尺码选择横向药丸
+        fun renderCategoryChips() {
+            dialogBinding.dialogCategoryChips.removeAllViews()
+            for (cat in categories) {
+                val chip = TextView(this).apply {
+                    text = cat
+                    textSize = 13f
+                    gravity = Gravity.CENTER
+                    setPadding(dpToPx(14), dpToPx(6), dpToPx(14), dpToPx(6))
+                    val isSelected = (selectedCategory == cat)
+
+                    if (isSelected) {
+                        setBackgroundResource(R.drawable.bg_chip_active)
+                        setTextColor(ContextCompat.getColor(context, android.R.color.white))
+                    } else {
+                        setBackgroundResource(R.drawable.bg_chip_inactive)
+                        setTextColor(ContextCompat.getColor(context, R.color.text_primary))
+                    }
+
+                    isClickable = true
+                    isFocusable = true
+                    val params = LinearLayout.LayoutParams(
+                        LinearLayout.LayoutParams.WRAP_CONTENT,
+                        LinearLayout.LayoutParams.WRAP_CONTENT
+                    ).apply {
+                        marginEnd = dpToPx(8)
+                    }
+                    layoutParams = params
+
+                    setOnClickListener {
+                        selectedCategory = cat
+                        renderCategoryChips()
+                    }
                 }
-                val index = categories.indexOf(newCat)
-                if (index >= 0) {
-                    dialogBinding.categorySpinner.setSelection(index)
+                dialogBinding.dialogCategoryChips.addView(chip)
+            }
+
+            // + 自定义尺码药丸
+            val addChip = TextView(this).apply {
+                text = "+ 自定义"
+                textSize = 13f
+                gravity = Gravity.CENTER
+                setPadding(dpToPx(12), dpToPx(6), dpToPx(12), dpToPx(6))
+                setBackgroundResource(R.drawable.bg_btn_custom_add)
+                setTextColor(ContextCompat.getColor(context, R.color.primary))
+                isClickable = true
+                isFocusable = true
+                setOnClickListener {
+                    CategoryManagerDialog.showAddCategoryDialog(this@MainActivity, store) { newCat ->
+                        if (!categories.contains(newCat)) {
+                            categories.add(newCat)
+                        }
+                        selectedCategory = newCat
+                        renderCategoryChips()
+                    }
                 }
             }
+            dialogBinding.dialogCategoryChips.addView(addChip)
         }
 
+        renderCategoryChips()
+
         // 品牌联想
+        if (!prefillBrand.isNullOrEmpty()) {
+            dialogBinding.brandInput.setText(prefillBrand)
+        }
         val brandNames = entries.map { it.brand }.distinct().sorted()
         val brandAdapter = ArrayAdapter(this, android.R.layout.simple_dropdown_item_1line, brandNames)
         dialogBinding.brandInput.setAdapter(brandAdapter)
@@ -138,13 +186,28 @@ class MainActivity : AppCompatActivity() {
         dialogBinding.quick2.setOnClickListener { setQty(2) }
         dialogBinding.quick4.setOnClickListener { setQty(4) }
         dialogBinding.quick8.setOnClickListener { setQty(8) }
+        dialogBinding.quick10.setOnClickListener { setQty(10) }
+        dialogBinding.quick20.setOnClickListener { setQty(20) }
+        dialogBinding.quick50.setOnClickListener { setQty(50) }
 
         // 实时金额预览
         fun updatePreview() {
             val q = dialogBinding.qtyInput.text.toString().toIntOrNull() ?: 0
             val p = dialogBinding.priceInput.text.toString().toDoubleOrNull() ?: 0.0
-            dialogBinding.amountPreview.text = "本次金额：¥${String.format(Locale.getDefault(), "%.2f", q * p)}"
+            val isBuy = dialogBinding.modeGroup.checkedButtonId == dialogBinding.modeBuy.id
+            if (isBuy) {
+                if (p > 0) {
+                    dialogBinding.amountPreview.text = "本次金额：¥${String.format(Locale.getDefault(), "%.2f", q * p)} ($q 件 × ¥${String.format(Locale.getDefault(), "%.2f", p)})"
+                } else {
+                    dialogBinding.amountPreview.text = "本次入库：+ $q 件"
+                }
+            } else {
+                dialogBinding.amountPreview.text = "本次出库消耗：- $q 件"
+            }
         }
+
+        dialogBinding.modeGroup.addOnButtonCheckedListener { _, _, _ -> updatePreview() }
+
         val watcher = object : TextWatcher {
             override fun beforeTextChanged(s: CharSequence?, st: Int, c: Int, a: Int) {}
             override fun onTextChanged(s: CharSequence?, st: Int, b: Int, c: Int) {}
@@ -152,6 +215,7 @@ class MainActivity : AppCompatActivity() {
         }
         dialogBinding.qtyInput.addTextChangedListener(watcher)
         dialogBinding.priceInput.addTextChangedListener(watcher)
+        updatePreview()
 
         val dialog = MaterialAlertDialogBuilder(this)
             .setTitle(R.string.add_entry)
@@ -163,7 +227,7 @@ class MainActivity : AppCompatActivity() {
         dialog.setOnShowListener {
             dialog.getButton(androidx.appcompat.app.AlertDialog.BUTTON_POSITIVE)
                 .setOnClickListener {
-                    val category = dialogBinding.categorySpinner.selectedItem?.toString() ?: "S"
+                    val category = selectedCategory
                     val brand = dialogBinding.brandInput.text?.toString()?.trim().orEmpty()
                     val isIn = dialogBinding.modeGroup.checkedButtonId == dialogBinding.modeBuy.id
                     val qty = dialogBinding.qtyInput.text.toString().toIntOrNull()
@@ -177,6 +241,8 @@ class MainActivity : AppCompatActivity() {
                             entries.add(Entry(category, brand, qty, price, System.currentTimeMillis(), isIn, notes))
                             store.saveAll(entries)
                             dialog.dismiss()
+                            Toast.makeText(this, "记录已成功添加", Toast.LENGTH_SHORT).show()
+
                             // 刷新当前 fragment
                             val current = supportFragmentManager.findFragmentById(R.id.fragment_container)
                             when (current) {
@@ -189,6 +255,10 @@ class MainActivity : AppCompatActivity() {
                 }
         }
         dialog.show()
+    }
+
+    private fun dpToPx(dp: Int): Int {
+        return (dp * resources.displayMetrics.density + 0.5f).toInt()
     }
 
     private fun toast(resId: Int) {

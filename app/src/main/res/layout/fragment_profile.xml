@@ -10,17 +10,17 @@
     <!-- 顶部标题栏 -->
     <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="48dp"
+        android:layout_height="52dp"
         android:orientation="horizontal"
         android:gravity="center_vertical"
-        android:paddingHorizontal="16dp"
+        android:paddingHorizontal="18dp"
         android:background="@color/card">
 
         <TextView
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:text="我的"
+            android:text="个人中心"
             android:textSize="20sp"
             android:textStyle="bold"
             android:textColor="@color/text_primary"
@@ -38,15 +38,15 @@
             android:layout_height="wrap_content"
             android:orientation="vertical"
             android:paddingHorizontal="16dp"
-            android:paddingTop="12dp"
+            android:paddingTop="14dp"
             android:paddingBottom="40dp">
 
             <!-- 应用信息卡片 -->
             <com.google.android.material.card.MaterialCardView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                app:cardCornerRadius="14dp"
-                app:cardElevation="0dp"
+                app:cardCornerRadius="16dp"
+                app:cardElevation="1dp"
                 app:cardBackgroundColor="@color/card"
                 app:strokeColor="@color/card_border"
                 app:strokeWidth="1dp"
@@ -55,27 +55,44 @@
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:orientation="vertical"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical"
                     android:padding="16dp">
 
                     <TextView
-                        android:id="@+id/version_label"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="Collecter v2.1"
-                        android:textSize="17sp"
-                        android:textStyle="bold"
-                        android:textColor="@color/text_primary"
-                        android:fontFamily="sans-serif-medium" />
+                        android:layout_width="48dp"
+                        android:layout_height="48dp"
+                        android:gravity="center"
+                        android:text="👶"
+                        android:textSize="24sp"
+                        android:background="@drawable/bg_hero_card" />
 
-                    <TextView
-                        android:id="@+id/data_summary"
-                        android:layout_width="wrap_content"
+                    <LinearLayout
+                        android:layout_width="0dp"
                         android:layout_height="wrap_content"
-                        android:text="共 0 条记录"
-                        android:textSize="13sp"
-                        android:textColor="@color/text_secondary"
-                        android:layout_marginTop="4dp" />
+                        android:layout_weight="1"
+                        android:orientation="vertical"
+                        android:layout_marginStart="14dp">
+
+                        <TextView
+                            android:id="@+id/version_label"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Collecter v2.2"
+                            android:textSize="18sp"
+                            android:textStyle="bold"
+                            android:textColor="@color/text_primary"
+                            android:fontFamily="sans-serif-medium" />
+
+                        <TextView
+                            android:id="@+id/data_summary"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="共 0 条流水记录"
+                            android:textSize="13sp"
+                            android:textColor="@color/text_secondary"
+                            android:layout_marginTop="3dp" />
+                    </LinearLayout>
                 </LinearLayout>
             </com.google.android.material.card.MaterialCardView>
 
@@ -83,8 +100,8 @@
             <com.google.android.material.card.MaterialCardView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                app:cardCornerRadius="14dp"
-                app:cardElevation="0dp"
+                app:cardCornerRadius="16dp"
+                app:cardElevation="1dp"
                 app:cardBackgroundColor="@color/card"
                 app:strokeColor="@color/card_border"
                 app:strokeWidth="1dp"
@@ -215,7 +232,7 @@
                         android:layout_marginStart="52dp"
                         android:background="@color/card_border" />
 
-                    <!-- 版本更新（GitHub Release 在线更新） -->
+                    <!-- 版本更新（GitHub Release 在线热更新） -->
                     <LinearLayout
                         android:id="@+id/btn_check_update"
                         android:layout_width="match_parent"
@@ -255,7 +272,7 @@
                                 android:id="@+id/update_summary"
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
-                                android:text="当前版本 v2.1 · 点击检查更新"
+                                android:text="当前版本 v2.2 · 点击检查更新"
                                 android:textSize="12sp"
                                 android:textColor="@color/text_secondary"
                                 android:layout_marginTop="2dp" />
@@ -276,8 +293,8 @@
             <com.google.android.material.card.MaterialCardView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                app:cardCornerRadius="14dp"
-                app:cardElevation="0dp"
+                app:cardCornerRadius="16dp"
+                app:cardElevation="1dp"
                 app:cardBackgroundColor="@color/card"
                 app:strokeColor="@color/card_border"
                 app:strokeWidth="1dp">

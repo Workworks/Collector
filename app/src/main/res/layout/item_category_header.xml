@@ -4,9 +4,9 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:orientation="vertical"
-    android:paddingHorizontal="20dp"
-    android:paddingTop="14dp"
-    android:paddingBottom="6dp">
+    android:paddingHorizontal="16dp"
+    android:paddingTop="16dp"
+    android:paddingBottom="8dp">
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -20,23 +20,24 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="NB"
-            android:textSize="14sp"
+            android:textSize="13sp"
             android:textStyle="bold"
             android:textColor="@color/primary"
             android:fontFamily="sans-serif-medium"
             android:background="@drawable/bg_cat_tag"
             android:paddingHorizontal="10dp"
-            android:paddingVertical="3dp" />
+            android:paddingVertical="4dp" />
 
-        <!-- 分类汇总 -->
+        <!-- 分类汇总数据 -->
         <TextView
             android:id="@+id/cat_total"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:layout_marginStart="10dp"
-            android:text="7件 · ¥284.10"
+            android:text="共 7 件 · ¥284.10"
             android:textSize="13sp"
+            android:textStyle="bold"
             android:textColor="@color/text_secondary" />
     </LinearLayout>
 
