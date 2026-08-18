@@ -85,6 +85,7 @@ object UpdateManager {
             .setCancelable(cancelable)
             .create()
         dialog.window?.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
+        dialog.window?.attributes?.windowAnimations = R.style.CustomDialogAnimation
         return dialog
     }
 
@@ -235,7 +236,8 @@ object UpdateManager {
         binding.customVersionBadge.text = "${release.tagName} (当前 v$currentVer)"
         binding.customUpdateSize.text = if (release.apkSize > 0) formatFileSize(release.apkSize) else ""
         binding.customUpdateDate.text = release.publishedAt.ifEmpty { "最新构建" }
-        binding.customUpdateChangelog.text = release.changelog.ifEmpty { "优化部分体验与修复已知问题。" }
+        binding.customBtnCancel.applyPressScaleAnimation(0.92f)
+        binding.customBtnUpdate.applyPressScaleAnimation(0.92f)
 
         binding.customBtnCancel.setOnClickListener {
             dialog.dismiss()
@@ -264,6 +266,7 @@ object UpdateManager {
 
         val progressDialog = createCustomDialog(activity, progressBinding.root, cancelable = false)
 
+        progressBinding.customBtnCancelDownload.applyPressScaleAnimation(0.92f)
         progressBinding.customBtnCancelDownload.setOnClickListener {
             isCanceled = true
             downloadThread?.interrupt()
@@ -383,6 +386,7 @@ object UpdateManager {
 
         binding.resultTitle.text = "当前已是最新版本"
         binding.resultMessage.text = "当前应用版本为 v$currentVer\n已包含所有最新功能与性能优化，无需更新。"
+        binding.resultBtnConfirm.applyPressScaleAnimation(0.92f)
         binding.resultBtnConfirm.text = "好的"
         binding.resultBtnConfirm.setOnClickListener {
             dialog.dismiss()
@@ -398,6 +402,7 @@ object UpdateManager {
 
         binding.resultTitle.text = "检查更新失败"
         binding.resultMessage.text = "目标仓库: $repo\n原因: $errorMsg\n\n提示: 可在“我的”页面检查网络连接或配置 GitHub 仓库。"
+        binding.resultBtnConfirm.applyPressScaleAnimation(0.92f)
         binding.resultBtnConfirm.text = "我知道了"
         binding.resultBtnConfirm.setOnClickListener {
             dialog.dismiss()
