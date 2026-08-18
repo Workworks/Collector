@@ -1,356 +1,467 @@
 <?xml version="1.0" encoding="utf-8"?>
-<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:overScrollMode="never">
-
-<LinearLayout
-    android:layout_width="match_parent"
-    android:layout_height="wrap_content"
     android:orientation="vertical"
-    android:paddingStart="24dp"
-    android:paddingEnd="24dp"
-    android:paddingTop="12dp"
-    android:paddingBottom="20dp">
+    android:background="@drawable/bg_dialog_card"
+    android:padding="20dp">
 
-    <!-- 增加 / 减少 模式切换 (默认增加/入库) -->
-    <com.google.android.material.button.MaterialButtonToggleGroup
-        android:id="@+id/modeGroup"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        app:selectionRequired="true"
-        app:singleSelection="true">
-
-        <com.google.android.material.button.MaterialButton
-            android:id="@+id/modeBuy"
-            style="?attr/materialButtonOutlinedStyle"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:text="➕ 增加 / 购入"
-            android:textStyle="bold"
-            android:checked="true"
-            app:cornerRadius="12dp" />
-
-        <com.google.android.material.button.MaterialButton
-            android:id="@+id/modeUse"
-            style="?attr/materialButtonOutlinedStyle"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:text="➖ 减少 / 消耗"
-            android:textStyle="bold"
-            app:cornerRadius="12dp" />
-    </com.google.android.material.button.MaterialButtonToggleGroup>
-
-    <!-- 分类横向快捷选择条 -->
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="16dp"
-        android:text="选择分类"
-        android:textColor="@color/text_primary"
-        android:textStyle="bold"
-        android:textSize="14sp" />
-
-    <HorizontalScrollView
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:scrollbars="none"
-        android:overScrollMode="never"
-        android:layout_marginTop="8dp">
-
-        <LinearLayout
-            android:id="@+id/dialog_category_chips"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:gravity="center_vertical">
-            <!-- 动态填充各类药丸 -->
-        </LinearLayout>
-    </HorizontalScrollView>
-
-    <!-- 品牌/物品名称输入（带联想） -->
-    <com.google.android.material.textfield.TextInputLayout
-        android:id="@+id/brandInputLayout"
-        style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="14dp"
-        android:hint="物品 / 品牌名称 (如：好奇小森林、可乐)"
-        app:boxCornerRadiusTopStart="12dp"
-        app:boxCornerRadiusTopEnd="12dp"
-        app:boxCornerRadiusBottomStart="12dp"
-        app:boxCornerRadiusBottomEnd="12dp">
-
-        <com.google.android.material.textfield.MaterialAutoCompleteTextView
-            android:id="@+id/brandInput"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:inputType="text"
-            android:maxLines="1"
-            android:completionThreshold="1" />
-    </com.google.android.material.textfield.TextInputLayout>
-
-    <!-- 数量与单位设置区 -->
+    <!-- 弹窗顶栏：图标徽章 + 标题 + 关闭按钮 -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
         android:gravity="center_vertical"
-        android:layout_marginTop="16dp">
+        android:layout_marginBottom="16dp">
+
+        <FrameLayout
+            android:layout_width="42dp"
+            android:layout_height="42dp"
+            android:background="@drawable/bg_icon_circle">
+
+            <ImageView
+                android:id="@+id/dialog_icon"
+                android:layout_width="22dp"
+                android:layout_height="22dp"
+                android:layout_gravity="center"
+                android:src="@drawable/ic_edit"
+                app:tint="#FFFFFFFF"
+                android:contentDescription="图标" />
+        </FrameLayout>
 
         <TextView
+            android:id="@+id/dialog_title"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:text="数量与单位"
-            android:textColor="@color/text_primary"
+            android:layout_marginStart="12dp"
+            android:text="记一笔"
+            android:textSize="18sp"
             android:textStyle="bold"
-            android:textSize="14sp" />
+            android:textColor="@color/text_primary"
+            android:fontFamily="sans-serif-medium" />
 
-        <TextView
-            android:id="@+id/unit_selector_hint"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="单位可下拉或自定"
-            android:textSize="11sp"
-            android:textColor="@color/text_secondary" />
+        <ImageView
+            android:id="@+id/dialog_close_btn"
+            android:layout_width="36dp"
+            android:layout_height="36dp"
+            android:src="@drawable/ic_close"
+            android:padding="8dp"
+            app:tint="@color/text_secondary"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:contentDescription="关闭" />
     </LinearLayout>
 
-    <LinearLayout
+    <ScrollView
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="8dp"
-        android:orientation="horizontal"
-        android:gravity="center_vertical">
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:maxHeight="440dp"
+        android:scrollbars="none"
+        android:overScrollMode="never">
 
-        <!-- 减少按钮 -->
-        <com.google.android.material.button.MaterialButton
-            android:id="@+id/minusBtn"
-            style="?attr/materialButtonOutlinedStyle"
-            android:layout_width="50dp"
-            android:layout_height="52dp"
-            android:text="-"
-            android:textSize="24sp"
-            app:cornerRadius="12dp" />
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
 
-        <!-- 数量输入框 -->
-        <EditText
-            android:id="@+id/qtyInput"
-            android:layout_width="0dp"
-            android:layout_height="52dp"
-            android:layout_weight="1"
-            android:layout_marginStart="8dp"
-            android:layout_marginEnd="8dp"
-            android:background="@drawable/bg_qty"
-            android:gravity="center"
-            android:inputType="number"
-            android:maxLength="6"
-            android:text="1"
-            android:textColor="@color/text_primary"
-            android:textSize="22sp"
-            android:textStyle="bold" />
+            <!-- 增加 / 减少 模式切换 (默认增加/入库) -->
+            <com.google.android.material.button.MaterialButtonToggleGroup
+                android:id="@+id/modeGroup"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                app:selectionRequired="true"
+                app:singleSelection="true">
 
-        <!-- 增加按钮 -->
-        <com.google.android.material.button.MaterialButton
-            android:id="@+id/plusBtn"
-            style="?attr/materialButtonOutlinedStyle"
-            android:layout_width="50dp"
-            android:layout_height="52dp"
-            android:text="+"
-            android:textSize="24sp"
-            app:cornerRadius="12dp" />
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/modeBuy"
+                    style="?attr/materialButtonOutlinedStyle"
+                    android:layout_width="0dp"
+                    android:layout_height="46dp"
+                    android:layout_weight="1"
+                    android:text="➕ 增加 / 购入"
+                    android:textSize="13sp"
+                    android:textStyle="bold"
+                    android:checked="true"
+                    app:cornerRadius="12dp" />
 
-        <!-- 单位选择下拉框 (片/件/包/个/箱/瓶等) -->
-        <com.google.android.material.textfield.TextInputLayout
-            android:id="@+id/unitDropdownLayout"
-            style="@style/Widget.Material3.TextInputLayout.OutlinedBox.Dense.ExposedDropdownMenu"
-            android:layout_width="88dp"
-            android:layout_height="52dp"
-            android:layout_marginStart="8dp"
-            app:boxCornerRadiusTopStart="12dp"
-            app:boxCornerRadiusTopEnd="12dp"
-            app:boxCornerRadiusBottomStart="12dp"
-            app:boxCornerRadiusBottomEnd="12dp">
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/modeUse"
+                    style="?attr/materialButtonOutlinedStyle"
+                    android:layout_width="0dp"
+                    android:layout_height="46dp"
+                    android:layout_weight="1"
+                    android:text="➖ 减少 / 消耗"
+                    android:textSize="13sp"
+                    android:textStyle="bold"
+                    app:cornerRadius="12dp" />
+            </com.google.android.material.button.MaterialButtonToggleGroup>
+
+            <!-- 分类选择 -->
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="14dp"
+                android:text="🏷️ 选择分类"
+                android:textColor="@color/text_primary"
+                android:textStyle="bold"
+                android:textSize="13sp" />
+
+            <HorizontalScrollView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:scrollbars="none"
+                android:overScrollMode="never"
+                android:layout_marginTop="8dp">
+
+                <LinearLayout
+                    android:id="@+id/dialog_category_chips"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical" />
+            </HorizontalScrollView>
+
+            <!-- 物品/品牌名称 (独立清爽输入框，彻底杜绝浮动标签穿模遮挡) -->
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="14dp"
+                android:text="📦 物品 / 品牌名称"
+                android:textColor="@color/text_primary"
+                android:textStyle="bold"
+                android:textSize="13sp" />
 
             <AutoCompleteTextView
-                android:id="@+id/unitDropdown"
+                android:id="@+id/brandInput"
                 android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:inputType="text"
-                android:text="片"
+                android:layout_height="48dp"
+                android:layout_marginTop="6dp"
+                android:background="@drawable/bg_input_box"
+                android:hint="例如：好奇小森林、iPhone、可乐"
+                android:textColorHint="@color/text_hint"
+                android:textColor="@color/text_primary"
                 android:textSize="14sp"
-                android:textStyle="bold"
+                android:paddingHorizontal="14dp"
+                android:inputType="text"
+                android:maxLines="1"
+                android:completionThreshold="1" />
+
+            <!-- 数量与单位 -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:layout_marginTop="14dp">
+
+                <TextView
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="🔢 数量与单位"
+                    android:textColor="@color/text_primary"
+                    android:textStyle="bold"
+                    android:textSize="13sp" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="单位可下拉或自定"
+                    android:textSize="11sp"
+                    android:textColor="@color/text_secondary" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="6dp"
+                android:orientation="horizontal"
+                android:gravity="center_vertical">
+
+                <!-- 减少按钮 (-) -->
+                <TextView
+                    android:id="@+id/minusBtn"
+                    android:layout_width="48dp"
+                    android:layout_height="48dp"
+                    android:background="@drawable/bg_stepper_btn"
+                    android:text="−"
+                    android:textSize="22sp"
+                    android:textStyle="bold"
+                    android:textColor="@color/text_primary"
+                    android:gravity="center"
+                    android:clickable="true"
+                    android:focusable="true" />
+
+                <!-- 数量输入框 -->
+                <EditText
+                    android:id="@+id/qtyInput"
+                    android:layout_width="0dp"
+                    android:layout_height="48dp"
+                    android:layout_weight="1"
+                    android:layout_marginStart="8dp"
+                    android:layout_marginEnd="8dp"
+                    android:background="@drawable/bg_input_box"
+                    android:gravity="center"
+                    android:inputType="number"
+                    android:maxLength="6"
+                    android:text="1"
+                    android:textColor="@color/text_primary"
+                    android:textSize="20sp"
+                    android:textStyle="bold" />
+
+                <!-- 增加按钮 (+) -->
+                <TextView
+                    android:id="@+id/plusBtn"
+                    android:layout_width="48dp"
+                    android:layout_height="48dp"
+                    android:background="@drawable/bg_stepper_btn"
+                    android:text="+"
+                    android:textSize="22sp"
+                    android:textStyle="bold"
+                    android:textColor="@color/text_primary"
+                    android:gravity="center"
+                    android:clickable="true"
+                    android:focusable="true" />
+
+                <!-- 单位下拉/输入框 -->
+                <AutoCompleteTextView
+                    android:id="@+id/unitDropdown"
+                    android:layout_width="88dp"
+                    android:layout_height="48dp"
+                    android:layout_marginStart="8dp"
+                    android:background="@drawable/bg_input_box"
+                    android:gravity="center"
+                    android:inputType="text"
+                    android:text="片"
+                    android:textSize="14sp"
+                    android:textStyle="bold"
+                    android:textColor="@color/primary"
+                    android:paddingHorizontal="6dp" />
+            </LinearLayout>
+
+            <!-- 快捷数量药丸 -->
+            <HorizontalScrollView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:scrollbars="none"
+                android:overScrollMode="never"
+                android:layout_marginTop="8dp">
+
+                <LinearLayout
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal">
+
+                    <TextView
+                        android:id="@+id/quick1"
+                        android:layout_width="wrap_content"
+                        android:layout_height="34dp"
+                        android:layout_marginEnd="6dp"
+                        android:paddingHorizontal="14dp"
+                        android:background="@drawable/bg_chip_inactive"
+                        android:textColor="@color/text_primary"
+                        android:textSize="12sp"
+                        android:textStyle="bold"
+                        android:gravity="center"
+                        android:text="1"
+                        android:clickable="true"
+                        android:focusable="true" />
+
+                    <TextView
+                        android:id="@+id/quick10"
+                        android:layout_width="wrap_content"
+                        android:layout_height="34dp"
+                        android:layout_marginEnd="6dp"
+                        android:paddingHorizontal="14dp"
+                        android:background="@drawable/bg_chip_inactive"
+                        android:textColor="@color/text_primary"
+                        android:textSize="12sp"
+                        android:textStyle="bold"
+                        android:gravity="center"
+                        android:text="10"
+                        android:clickable="true"
+                        android:focusable="true" />
+
+                    <TextView
+                        android:id="@+id/quick20"
+                        android:layout_width="wrap_content"
+                        android:layout_height="34dp"
+                        android:layout_marginEnd="6dp"
+                        android:paddingHorizontal="14dp"
+                        android:background="@drawable/bg_chip_inactive"
+                        android:textColor="@color/text_primary"
+                        android:textSize="12sp"
+                        android:textStyle="bold"
+                        android:gravity="center"
+                        android:text="20"
+                        android:clickable="true"
+                        android:focusable="true" />
+
+                    <TextView
+                        android:id="@+id/quick50"
+                        android:layout_width="wrap_content"
+                        android:layout_height="34dp"
+                        android:layout_marginEnd="6dp"
+                        android:paddingHorizontal="14dp"
+                        android:background="@drawable/bg_chip_inactive"
+                        android:textColor="@color/text_primary"
+                        android:textSize="12sp"
+                        android:textStyle="bold"
+                        android:gravity="center"
+                        android:text="50"
+                        android:clickable="true"
+                        android:focusable="true" />
+
+                    <TextView
+                        android:id="@+id/quick100"
+                        android:layout_width="wrap_content"
+                        android:layout_height="34dp"
+                        android:paddingHorizontal="14dp"
+                        android:background="@drawable/bg_chip_inactive"
+                        android:textColor="@color/text_primary"
+                        android:textSize="12sp"
+                        android:textStyle="bold"
+                        android:gravity="center"
+                        android:text="100"
+                        android:clickable="true"
+                        android:focusable="true" />
+                </LinearLayout>
+            </HorizontalScrollView>
+
+            <!-- 金额/价格输入模式切换 -->
+            <LinearLayout
+                android:id="@+id/price_section_container"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:layout_marginTop="14dp">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical">
+
+                    <TextView
+                        android:id="@+id/price_mode_label"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="💰 实付总金额（元，可选）"
+                        android:textColor="@color/text_primary"
+                        android:textStyle="bold"
+                        android:textSize="13sp" />
+
+                    <TextView
+                        android:id="@+id/btn_toggle_price_mode"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="🔄 切换为按单价输入"
+                        android:textSize="12sp"
+                        android:textColor="@color/primary"
+                        android:padding="4dp"
+                        android:clickable="true"
+                        android:focusable="true"
+                        android:background="?attr/selectableItemBackgroundBorderless" />
+                </LinearLayout>
+
+                <EditText
+                    android:id="@+id/priceInput"
+                    android:layout_width="match_parent"
+                    android:layout_height="48dp"
+                    android:layout_marginTop="6dp"
+                    android:background="@drawable/bg_input_box"
+                    android:gravity="center_vertical"
+                    android:hint="例如：120.00 (出库可不填)"
+                    android:textColorHint="@color/text_hint"
+                    android:textColor="@color/text_primary"
+                    android:importantForAutofill="no"
+                    android:inputType="numberDecimal"
+                    android:maxLines="1"
+                    android:paddingHorizontal="14dp"
+                    android:textSize="14sp" />
+            </LinearLayout>
+
+            <!-- 备注信息 -->
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="14dp"
+                android:text="📝 备注信息（可选）"
                 android:textColor="@color/text_primary"
-                android:gravity="center"
-                android:paddingHorizontal="4dp" />
-        </com.google.android.material.textfield.TextInputLayout>
-    </LinearLayout>
+                android:textStyle="bold"
+                android:textSize="13sp" />
 
-    <!-- 快捷数量药丸 -->
-    <HorizontalScrollView
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:scrollbars="none"
-        android:overScrollMode="never"
-        android:layout_marginTop="10dp">
+            <EditText
+                android:id="@+id/notesInput"
+                android:layout_width="match_parent"
+                android:layout_height="46dp"
+                android:layout_marginTop="6dp"
+                android:background="@drawable/bg_input_box"
+                android:hint="例如：618自营购入、放次卧衣柜"
+                android:textColorHint="@color/text_hint"
+                android:textColor="@color/text_primary"
+                android:paddingHorizontal="14dp"
+                android:inputType="text"
+                android:maxLines="1"
+                android:textSize="13sp" />
 
-        <LinearLayout
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal">
+            <!-- 实时换算与单价/总价计算明细预览条 -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="14dp"
+                android:background="@drawable/bg_changelog_box"
+                android:paddingHorizontal="14dp"
+                android:paddingVertical="10dp"
+                android:gravity="center">
 
-            <com.google.android.material.button.MaterialButton
-                android:id="@+id/quick1"
-                style="?attr/materialButtonOutlinedStyle"
-                android:layout_width="wrap_content"
-                android:layout_height="36dp"
-                android:layout_marginEnd="6dp"
-                android:paddingHorizontal="12dp"
-                app:cornerRadius="10dp"
-                android:text="1" />
+                <TextView
+                    android:id="@+id/amountPreview"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="本次入库：+ 1 片"
+                    android:textColor="@color/primary"
+                    android:textSize="13sp"
+                    android:textStyle="bold" />
+            </LinearLayout>
 
-            <com.google.android.material.button.MaterialButton
-                android:id="@+id/quick10"
-                style="?attr/materialButtonOutlinedStyle"
-                android:layout_width="wrap_content"
-                android:layout_height="36dp"
-                android:layout_marginEnd="6dp"
-                android:paddingHorizontal="12dp"
-                app:cornerRadius="10dp"
-                android:text="10" />
-
-            <com.google.android.material.button.MaterialButton
-                android:id="@+id/quick20"
-                style="?attr/materialButtonOutlinedStyle"
-                android:layout_width="wrap_content"
-                android:layout_height="36dp"
-                android:layout_marginEnd="6dp"
-                android:paddingHorizontal="12dp"
-                app:cornerRadius="10dp"
-                android:text="20" />
-
-            <com.google.android.material.button.MaterialButton
-                android:id="@+id/quick50"
-                style="?attr/materialButtonOutlinedStyle"
-                android:layout_width="wrap_content"
-                android:layout_height="36dp"
-                android:layout_marginEnd="6dp"
-                android:paddingHorizontal="12dp"
-                app:cornerRadius="10dp"
-                android:text="50" />
-
-            <com.google.android.material.button.MaterialButton
-                android:id="@+id/quick100"
-                style="?attr/materialButtonOutlinedStyle"
-                android:layout_width="wrap_content"
-                android:layout_height="36dp"
-                android:paddingHorizontal="12dp"
-                app:cornerRadius="10dp"
-                android:text="100" />
         </LinearLayout>
-    </HorizontalScrollView>
+    </ScrollView>
 
-    <!-- 金额/价格输入模式切换（按实付总额 / 按单价） -->
+    <!-- 底部操作双按钮（高定自定按钮，绝不遮挡，保证100%全端可视） -->
     <LinearLayout
-        android:id="@+id/price_section_container"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="vertical"
-        android:layout_marginTop="14dp">
+        android:orientation="horizontal"
+        android:layout_marginTop="16dp">
 
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:gravity="center_vertical">
-
-            <TextView
-                android:id="@+id/price_mode_label"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:text="实付总金额（元，可选）"
-                android:textColor="@color/text_primary"
-                android:textStyle="bold"
-                android:textSize="14sp" />
-
-            <!-- 按总额 / 按单价 切换开关 -->
-            <TextView
-                android:id="@+id/btn_toggle_price_mode"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="🔄 切换为按单价输入"
-                android:textSize="12sp"
-                android:textColor="@color/primary"
-                android:padding="4dp"
-                android:clickable="true"
-                android:focusable="true"
-                android:background="?attr/selectableItemBackgroundBorderless" />
-        </LinearLayout>
-
-        <EditText
-            android:id="@+id/priceInput"
-            android:layout_width="match_parent"
+        <Button
+            android:id="@+id/btn_dialog_cancel"
+            android:layout_width="0dp"
             android:layout_height="48dp"
-            android:layout_marginTop="6dp"
-            android:background="@drawable/bg_qty"
-            android:gravity="center_vertical"
-            android:hint="输入实付总金额，如 120.00"
-            android:importantForAutofill="no"
-            android:inputType="numberDecimal"
-            android:maxLines="1"
-            android:paddingHorizontal="14dp"
-            android:textColor="@color/text_primary"
-            android:textSize="15sp" />
-    </LinearLayout>
+            android:layout_weight="1"
+            android:layout_marginEnd="10dp"
+            android:text="取消"
+            android:textSize="14sp"
+            android:textColor="@color/text_secondary"
+            android:background="@drawable/bg_btn_secondary"
+            style="?android:attr/borderlessButtonStyle" />
 
-    <!-- 备注 -->
-    <com.google.android.material.textfield.TextInputLayout
-        style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="12dp"
-        android:hint="@string/label_notes"
-        app:boxCornerRadiusTopStart="12dp"
-        app:boxCornerRadiusTopEnd="12dp"
-        app:boxCornerRadiusBottomStart="12dp"
-        app:boxCornerRadiusBottomEnd="12dp">
-
-        <com.google.android.material.textfield.TextInputEditText
-            android:id="@+id/notesInput"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:inputType="text"
-            android:maxLines="2"
-            android:textSize="14sp" />
-    </com.google.android.material.textfield.TextInputLayout>
-
-    <!-- 实时换算与单价/总价计算明细预览条 -->
-    <com.google.android.material.card.MaterialCardView
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="14dp"
-        app:cardCornerRadius="12dp"
-        app:cardElevation="0dp"
-        app:cardBackgroundColor="@color/primary_surface"
-        app:strokeColor="@color/primary_surface_stroke"
-        app:strokeWidth="1dp">
-
-        <TextView
-            android:id="@+id/amountPreview"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:paddingHorizontal="14dp"
-            android:paddingVertical="10dp"
-            android:text="本次实付：¥0.00 · 折合单价：¥0.00/片"
-            android:textColor="@color/primary"
-            android:textSize="13sp"
+        <Button
+            android:id="@+id/btn_dialog_confirm"
+            android:layout_width="0dp"
+            android:layout_height="48dp"
+            android:layout_weight="1.6"
+            android:text="确认添加"
+            android:textSize="14sp"
             android:textStyle="bold"
-            android:gravity="center" />
-    </com.google.android.material.card.MaterialCardView>
+            android:textColor="#FFFFFFFF"
+            android:background="@drawable/bg_btn_primary"
+            style="?android:attr/borderlessButtonStyle" />
+    </LinearLayout>
 
 </LinearLayout>
-</ScrollView>

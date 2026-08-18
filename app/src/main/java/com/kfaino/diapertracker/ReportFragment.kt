@@ -90,7 +90,7 @@ class ReportFragment : Fragment() {
             val shareText = """
                 📊 【Collecter 资产数据报表】
                 · 净资产估值：¥${String.format(Locale.getDefault(), "%.2f", totalSpent)}
-                · 在库总件数：$inStock 件 (累计入库: $totalInCount, 累计消耗: $totalOutCount)
+                · 在库总数量：$inStock (累计入库: $totalInCount, 累计消耗: $totalOutCount)
                 · 分类总数：${store.getCategories().size} 类
                 
                 记录时间：${SimpleDateFormat("yyyy-MM-dd HH:mm", Locale.getDefault()).format(Date())}
@@ -116,7 +116,7 @@ class ReportFragment : Fragment() {
         val totalSpent = entries.filter { it.isIn }.sumOf { it.qty * it.price }
 
         binding.statNetWorth.text = "¥ ${String.format(Locale.getDefault(), "%.2f", totalSpent)}"
-        binding.statDailyHold.text = "$currentStock 件"
+        binding.statDailyHold.text = "$currentStock"
 
         // 2. 资产版图（按分类统计）
         val catMap = LinkedHashMap<String, CategoryStat>()
@@ -198,12 +198,12 @@ class ReportFragment : Fragment() {
 
         binding.monthEntryBadge.text = "${monthNum}月 · ${monthEntries.size} 笔"
         binding.monthExpense.text = "¥${String.format(Locale.getDefault(), "%.2f", monthSpent)}"
-        binding.monthIncome.text = "+$monthInQty 件"
-        binding.monthBalance.text = "-$monthOutQty 件"
+        binding.monthIncome.text = "+$monthInQty"
+        binding.monthBalance.text = "-$monthOutQty"
 
         val overallAvg = if (totalInCount > 0) totalSpent / totalInCount else 0.0
         binding.structureInvest.text = "在库 ¥${String.format(Locale.getDefault(), "%.2f", currentStock * overallAvg)}"
-        binding.structureConsume.text = "消耗 $totalOutCount 件"
+        binding.structureConsume.text = "消耗 $totalOutCount"
         binding.structureAvg.text = "均价 ¥${String.format(Locale.getDefault(), "%.2f", overallAvg)}"
 
         // 4. 历史月度列表

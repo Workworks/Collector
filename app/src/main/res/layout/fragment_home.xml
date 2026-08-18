@@ -85,10 +85,11 @@
                     android:fontFamily="sans-serif-medium" />
 
                 <TextView
+                    android:id="@+id/total_count_unit"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginStart="6dp"
-                    android:text="件在库"
+                    android:text="在库总数"
                     android:textColor="#E0FFFFFF"
                     android:textSize="15sp"
                     android:fontFamily="sans-serif-medium" />

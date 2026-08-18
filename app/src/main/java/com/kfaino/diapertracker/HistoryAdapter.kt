@@ -64,6 +64,10 @@ class HistoryAdapter(
         }
 
         // 点击编辑
+        holder.itemView.applyPressScaleAnimation(0.96f)
+        b.editBtn.applyPressScaleAnimation(0.88f)
+        b.deleteBtn.applyPressScaleAnimation(0.88f)
+
         holder.itemView.setOnClickListener { onEdit?.invoke(entry, position) }
         b.editBtn.setOnClickListener { onEdit?.invoke(entry, position) }
 

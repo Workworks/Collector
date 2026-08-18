@@ -17,7 +17,7 @@ object CategoryManagerDialog {
         onAdded: (String) -> Unit
     ) {
         val binding = DialogInputCategoryBinding.inflate(LayoutInflater.from(context))
-        MaterialAlertDialogBuilder(context)
+        val dialog = MaterialAlertDialogBuilder(context)
             .setTitle("新增分类")
             .setView(binding.root)
             .setNegativeButton(R.string.cancel, null)
@@ -35,7 +35,10 @@ object CategoryManagerDialog {
                     Toast.makeText(context, "该分类已存在", Toast.LENGTH_SHORT).show()
                 }
             }
-            .show()
+            .create()
+
+        dialog.window?.attributes?.windowAnimations = R.style.CustomDialogAnimation
+        dialog.show()
     }
 
     /** 弹出分类管理及排序对话框 */
@@ -76,7 +79,7 @@ object CategoryManagerDialog {
                     "确定要删除分类【$cat】吗？"
                 }
 
-                MaterialAlertDialogBuilder(context)
+                val delDialog = MaterialAlertDialogBuilder(context)
                     .setTitle("删除分类")
                     .setMessage(msg)
                     .setNegativeButton(R.string.cancel, null)
@@ -87,13 +90,18 @@ object CategoryManagerDialog {
                         Toast.makeText(context, "已删除分类: $cat", Toast.LENGTH_SHORT).show()
                         onUpdated()
                     }
-                    .show()
+                    .create()
+                delDialog.window?.attributes?.windowAnimations = R.style.CustomDialogAnimation
+                delDialog.show()
             }
         )
 
         binding.categoryRecyclerView.layoutManager = LinearLayoutManager(context)
         binding.categoryRecyclerView.adapter = adapter
         adapter.submit(categories.toList())
+
+        binding.btnAddCategory.applyPressScaleAnimation(0.94f)
+        binding.btnResetPreset.applyPressScaleAnimation(0.94f)
 
         // 新增分类
         binding.btnAddCategory.setOnClickListener {
@@ -106,7 +114,7 @@ object CategoryManagerDialog {
 
         // 恢复默认
         binding.btnResetPreset.setOnClickListener {
-            MaterialAlertDialogBuilder(context)
+            val resetDialog = MaterialAlertDialogBuilder(context)
                 .setTitle("恢复默认推荐")
                 .setMessage("确定要恢复默认推荐分类列表吗？")
                 .setNegativeButton(R.string.cancel, null)
@@ -116,13 +124,17 @@ object CategoryManagerDialog {
                     Toast.makeText(context, "已恢复推荐分类", Toast.LENGTH_SHORT).show()
                     onUpdated()
                 }
-                .show()
+                .create()
+            resetDialog.window?.attributes?.windowAnimations = R.style.CustomDialogAnimation
+            resetDialog.show()
         }
 
-        MaterialAlertDialogBuilder(context)
+        val manageDialog = MaterialAlertDialogBuilder(context)
             .setTitle("分类管理")
             .setView(binding.root)
             .setPositiveButton("完成", null)
-            .show()
+            .create()
+        manageDialog.window?.attributes?.windowAnimations = R.style.CustomDialogAnimation
+        manageDialog.show()
     }
 }

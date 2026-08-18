@@ -15,4 +15,10 @@
     <style name="FabShape" parent="">
         <item name="cornerSize">50%</item>
     </style>
+
+    <!-- 高定弹窗轻盈缩放淡入淡出动画 -->
+    <style name="CustomDialogAnimation">
+        <item name="android:windowEnterAnimation">@anim/anim_dialog_enter</item>
+        <item name="android:windowExitAnimation">@anim/anim_dialog_exit</item>
+    </style>
 </resources>

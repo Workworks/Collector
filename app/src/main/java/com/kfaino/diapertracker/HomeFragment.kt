@@ -74,6 +74,7 @@ class HomeFragment : Fragment() {
     }
 
     private fun setupSortButton() {
+        binding.btnSortSelector.applyPressScaleAnimation(0.92f)
         binding.btnSortSelector.text = SORT_LABELS[sortMode]
         binding.btnSortSelector.setOnClickListener {
             MaterialAlertDialogBuilder(requireContext())
@@ -90,6 +91,7 @@ class HomeFragment : Fragment() {
     }
 
     private fun setupActions() {
+        binding.btnManageCategories.applyPressScaleAnimation(0.92f)
         binding.btnManageCategories.setOnClickListener {
             CategoryManagerDialog.showManageDialog(requireContext(), store) {
                 renderCategoryChips()
@@ -126,8 +128,7 @@ class HomeFragment : Fragment() {
                     setTextColor(ContextCompat.getColor(context, R.color.text_primary))
                 }
 
-                isClickable = true
-                isFocusable = true
+                applyPressScaleAnimation(0.92f)
                 val params = LinearLayout.LayoutParams(
                     LinearLayout.LayoutParams.WRAP_CONTENT,
                     LinearLayout.LayoutParams.WRAP_CONTENT
@@ -155,6 +156,7 @@ class HomeFragment : Fragment() {
             setTextColor(ContextCompat.getColor(context, R.color.primary))
             isClickable = true
             isFocusable = true
+            applyPressScaleAnimation(0.92f)
             setOnClickListener {
                 CategoryManagerDialog.showAddCategoryDialog(requireContext(), store) {
                     renderCategoryChips()

@@ -23,8 +23,8 @@ class MonthStatAdapter : RecyclerView.Adapter<MonthStatAdapter.VH>() {
     override fun onBindViewHolder(holder: VH, position: Int) {
         val m = items[position]
         holder.binding.monthLabel.text = String.format(Locale.getDefault(), "%d年%d月", m.year, m.month)
-        holder.binding.monthAdd.text = "+${m.addCount}件"
-        holder.binding.monthReduce.text = "-${m.reduceCount}件"
+        holder.binding.monthAdd.text = "+${m.addCount}"
+        holder.binding.monthReduce.text = "-${m.reduceCount}"
         holder.binding.monthAmount.text = "¥${String.format(Locale.getDefault(), "%.2f", m.addAmount)}"
     }
 

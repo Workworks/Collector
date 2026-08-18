@@ -110,6 +110,7 @@ class CategoryAdapter(
                 val progressVal = (brand.count * 100 / max).coerceIn(0, 100)
                 b.shareBar.progress = progressVal
 
+                vh.itemView.applyPressScaleAnimation(0.96f)
                 vh.itemView.setOnClickListener { onBrandClick?.invoke(brand, item.category) }
             }
         }
