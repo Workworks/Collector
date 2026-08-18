@@ -34,7 +34,10 @@ class ProfileFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        binding.aboutVersionCode.text = "2.2.0:260818"
+        val verName = try {
+            requireContext().packageManager.getPackageInfo(requireContext().packageName, 0).versionName
+        } catch (_: Exception) { "2.2.1" }
+        binding.aboutVersionCode.text = "$verName:260818"
 
         setupClicks()
     }
