@@ -136,29 +136,47 @@ object UpdateManager {
     }
 
     /**
-     * 请求 GitHub Releases API
+     * 请求 GitHub Releases API（支持多镜像备用通道）
      */
     private fun fetchLatestRelease(repo: String): ReleaseInfo? {
-        val apiUrl = "https://api.github.com/repos/$repo/releases/latest"
-        val url = URL(apiUrl)
-        val conn = (url.openConnection() as HttpURLConnection).apply {
-            requestMethod = "GET"
-            connectTimeout = 10000
-            readTimeout = 10000
-            setRequestProperty("Accept", "application/vnd.github.v3+json")
-            setRequestProperty("User-Agent", "DiaperTracker-App")
+        val apiUrls = listOf(
+            "https://api.github.com/repos/$repo/releases/latest",
+            "https://ghfast.top/https://api.github.com/repos/$repo/releases/latest",
+            "https://ghproxy.net/https://api.github.com/repos/$repo/releases/latest"
+        )
+
+        var lastException: Exception? = null
+        var jsonText = ""
+
+        for (apiUrl in apiUrls) {
+            try {
+                val url = URL(apiUrl)
+                val conn = (url.openConnection() as HttpURLConnection).apply {
+                    requestMethod = "GET"
+                    connectTimeout = 8000
+                    readTimeout = 8000
+                    setRequestProperty("Accept", "application/vnd.github.v3+json")
+                    setRequestProperty("User-Agent", "Mozilla/5.0 DiaperTracker")
+                }
+
+                val code = conn.responseCode
+                if (code == 404) {
+                    throw Exception("GitHub 仓库【$repo】未找到或尚无公开的 Release 版本")
+                }
+                if (code in 200..299) {
+                    jsonText = conn.inputStream.bufferedReader().use { it.readText() }
+                    if (jsonText.isNotBlank()) break
+                }
+            } catch (e: Exception) {
+                lastException = e
+            }
         }
 
-        val code = conn.responseCode
-        if (code == 404) {
-            throw Exception("GitHub 仓库【$repo】未找到或尚无公开的 Release 版本")
-        }
-        if (code !in 200..299) {
-            throw Exception("GitHub API 响应异常: HTTP $code")
+        if (jsonText.isEmpty()) {
+            throw lastException ?: Exception("连接 GitHub 失败，请检查网络")
         }
 
-        val text = conn.inputStream.bufferedReader().use { it.readText() }
-        val json = JSONObject(text)
+        val json = JSONObject(jsonText)
 
         val tagName = json.optString("tag_name", "")
         val versionName = tagName.removePrefix("v").removePrefix("V")
