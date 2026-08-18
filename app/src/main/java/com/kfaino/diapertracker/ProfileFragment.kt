@@ -34,15 +34,23 @@ class ProfileFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        val verName = try {
-            requireContext().packageManager.getPackageInfo(requireContext().packageName, 0).versionName
-        } catch (_: Exception) { "2.2.1" }
-        binding.aboutVersionCode.text = "$verName:260818"
+        val verName = UpdateManager.getAppVersionName(requireContext())
+        binding.currentVersionBadge.text = "v$verName"
 
         setupClicks()
     }
 
     private fun setupClicks() {
+        binding.btnCategoryManage.applyPressScaleAnimation(0.94f)
+        binding.btnFloorplanManage.applyPressScaleAnimation(0.94f)
+        binding.btnMoreSettings.applyPressScaleAnimation(0.94f)
+        binding.btnBackupRestore.applyPressScaleAnimation(0.94f)
+        binding.btnFeedback.applyPressScaleAnimation(0.94f)
+        binding.btnTerms.applyPressScaleAnimation(0.94f)
+        binding.btnPrivacy.applyPressScaleAnimation(0.94f)
+        binding.btnUpdateVersion.applyPressScaleAnimation(0.94f)
+        binding.btnAbout.applyPressScaleAnimation(0.94f)
+
         // 1. 分类管理
         binding.btnCategoryManage.setOnClickListener {
             CategoryManagerDialog.showManageDialog(requireContext(), store) {
@@ -50,37 +58,42 @@ class ProfileFragment : Fragment() {
             }
         }
 
-        // 2. 更多设置（主题设置、GitHub 仓库配置）
+        // 2. 空间平面图与寻物地图
+        binding.btnFloorplanManage.setOnClickListener {
+            FloorPlanDialog.show(requireActivity(), store, isSelectMode = false)
+        }
+
+        // 3. 更多设置（主题设置、GitHub 仓库配置）
         binding.btnMoreSettings.setOnClickListener {
             showMoreSettingsDialog()
         }
 
-        // 3. 数据备份恢复（导出、导入、清空）
+        // 4. 数据备份恢复（导出、导入、清空）
         binding.btnBackupRestore.setOnClickListener {
             showBackupRestoreDialog()
         }
 
-        // 4. 意见反馈
+        // 5. 意见反馈
         binding.btnFeedback.setOnClickListener {
             showFeedbackDialog()
         }
 
-        // 5. 用户使用条款
+        // 6. 用户使用条款
         binding.btnTerms.setOnClickListener {
-            showDocDialog("用户使用条款", "欢迎使用 Collecter。\n\n1. 本应用为本地离线与 GitHub 开源版本，数据完全存储在您的本地设备中。\n2. 您可以自由管理个人收藏品、日用品及资产收纳记录。\n3. 请定期使用【数据备份恢复】功能备份您的重要数据。")
+            showDocDialog("用户使用条款", "欢迎使用 Collecter。\n\n1. 本应用为本地离线与 GitHub 开源版本，数据完全存储在您的本地设备中。\n2. 您可以自由管理个人收藏品、日用品、贵重物品及多空间平面图收纳记录。\n3. 请定期使用【数据备份恢复】功能备份您的重要数据。")
         }
 
-        // 6. 隐私政策
+        // 7. 隐私政策
         binding.btnPrivacy.setOnClickListener {
-            showDocDialog("隐私政策", "Collecter 尊重并严格保护所有用户的个人隐私。\n\n1. 本应用不会在后台收集、上传任何个人隐私敏感数据。\n2. 检查更新功能仅与公开的 GitHub Releases API 通信，用于获取最新版本信息。\n3. 所有出入库与资产记录仅保存在本地设备应用沙盒中。")
+            showDocDialog("隐私政策", "Collecter 尊重并严格保护所有用户的个人隐私。\n\n1. 本应用不会在后台收集、上传任何个人隐私敏感数据。\n2. 检查更新功能仅与公开的 GitHub Releases API 通信，用于获取最新版本信息。\n3. 所有空间平面图与资产记录仅保存在本地设备应用沙盒中。")
         }
 
-        // 7. 更新最新版本 (GitHub Releases)
+        // 8. 更新最新版本 (GitHub Releases)
         binding.btnUpdateVersion.setOnClickListener {
             UpdateManager.checkUpdate(requireActivity(), isManual = true)
         }
 
-        // 8. 关于
+        // 9. 关于
         binding.btnAbout.setOnClickListener {
             showAboutDialog()
         }
@@ -115,8 +128,9 @@ class ProfileFragment : Fragment() {
     }
 
     private fun showRepoEditDialog() {
+        val currentRepo = store.getGithubRepo()
         val input = EditText(requireContext()).apply {
-            setText(store.getGithubRepo())
+            setText(currentRepo)
             setSelection(text.length)
             setPadding(48, 36, 48, 36)
         }
@@ -174,19 +188,18 @@ class ProfileFragment : Fragment() {
         }
         MaterialAlertDialogBuilder(requireContext())
             .setTitle("导入数据备份")
-            .setMessage("导入将合并备份中的分类与记录，请谨慎操作：")
+            .setMessage("导入将合并备份中的分类、空间与记录，请谨慎操作：")
             .setView(input)
             .setPositiveButton("导入恢复") { _, _ ->
                 val text = input.text.toString().trim()
-                if (text.isEmpty()) {
-                    Toast.makeText(requireContext(), "内容不能为空", Toast.LENGTH_SHORT).show()
-                    return@setPositiveButton
-                }
-                val success = store.importBackupJson(text)
-                if (success) {
-                    Toast.makeText(requireContext(), "数据恢复成功！", Toast.LENGTH_SHORT).show()
-                } else {
-                    Toast.makeText(requireContext(), "JSON 数据格式不正确，恢复失败", Toast.LENGTH_SHORT).show()
+                if (text.isNotEmpty()) {
+                    val ok = store.importBackupJson(text)
+                    if (ok) {
+                        Toast.makeText(requireContext(), "数据恢复成功！", Toast.LENGTH_SHORT).show()
+                        (activity as? MainActivity)?.refreshCurrentFragment()
+                    } else {
+                        Toast.makeText(requireContext(), "备份解析失败，请检查格式", Toast.LENGTH_SHORT).show()
+                    }
                 }
             }
             .setNegativeButton(R.string.cancel, null)
@@ -195,11 +208,12 @@ class ProfileFragment : Fragment() {
 
     private fun showClearDataDialog() {
         MaterialAlertDialogBuilder(requireContext())
-            .setTitle("清空所有记录")
-            .setMessage("此操作将清空所有出入库流水记录，分类设置将被保留。此操作不可逆，确定继续吗？")
+            .setTitle("警告：清空全部数据")
+            .setMessage("确定要清空所有物品记录与位置历史吗？此操作不可逆！")
             .setPositiveButton("确定清空") { _, _ ->
                 store.clearAllData()
                 Toast.makeText(requireContext(), "记录已全部清空", Toast.LENGTH_SHORT).show()
+                (activity as? MainActivity)?.refreshCurrentFragment()
             }
             .setNegativeButton(R.string.cancel, null)
             .show()

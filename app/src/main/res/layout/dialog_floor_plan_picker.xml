@@ -1,0 +1,98 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:background="@drawable/bg_dialog_card"
+    android:padding="18dp">
+
+    <!-- 顶栏：空间切换器 + 关闭 -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:layout_marginBottom="12dp">
+
+        <TextView
+            android:id="@+id/floorplan_title"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="🗺️ 空间平面图与位置标记"
+            android:textSize="17sp"
+            android:textStyle="bold"
+            android:textColor="@color/text_primary"
+            android:fontFamily="sans-serif-medium" />
+
+        <ImageView
+            android:id="@+id/btn_close_floorplan"
+            android:layout_width="36dp"
+            android:layout_height="36dp"
+            android:src="@drawable/ic_close"
+            android:padding="8dp"
+            app:tint="@color/text_secondary"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:contentDescription="关闭" />
+    </LinearLayout>
+
+    <!-- 空间横向切换药丸 (自己的家/父母家/办公室/+) -->
+    <HorizontalScrollView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:scrollbars="none"
+        android:overScrollMode="never"
+        android:layout_marginBottom="10dp">
+
+        <LinearLayout
+            android:id="@+id/house_tabs_container"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal" />
+    </HorizontalScrollView>
+
+    <!-- 提示信息 -->
+    <TextView
+        android:id="@+id/floorplan_hint"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="👉 点击任意房间或位置即可快速标记落点"
+        android:textSize="12sp"
+        android:textColor="@color/primary"
+        android:layout_marginBottom="8dp" />
+
+    <!-- 交互式平面图画布 -->
+    <com.kfaino.diapertracker.FloorPlanView
+        android:id="@+id/interactive_floor_plan"
+        android:layout_width="match_parent"
+        android:layout_height="240dp"
+        android:layout_marginBottom="12dp" />
+
+    <!-- 选中的房间/点位信息展示 -->
+    <TextView
+        android:id="@+id/selected_room_info"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="当前选中：未选择具体房间"
+        android:textSize="13sp"
+        android:textColor="@color/text_secondary"
+        android:background="@drawable/bg_changelog_box"
+        android:paddingHorizontal="12dp"
+        android:paddingVertical="8dp"
+        android:layout_marginBottom="14dp" />
+
+    <!-- 底部按钮 (完成标记 / 确定) -->
+    <Button
+        android:id="@+id/btn_confirm_floorplan"
+        android:layout_width="match_parent"
+        android:layout_height="48dp"
+        android:text="确认此位置标记"
+        android:textSize="14sp"
+        android:textStyle="bold"
+        android:textColor="#FFFFFFFF"
+        android:background="@drawable/bg_btn_primary"
+        style="?android:attr/borderlessButtonStyle" />
+
+</LinearLayout>

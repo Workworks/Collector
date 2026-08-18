@@ -5,20 +5,20 @@ import androidx.appcompat.app.AppCompatDelegate
 import org.json.JSONArray
 import org.json.JSONObject
 
-/** 基于 SharedPreferences 的持久化层，管理收纳记账记录、通用分类和主题外观 */
+/** 基于 SharedPreferences 的高可用持久化层，管理收纳记账、多家庭空间平面图、移动轨迹溯源与重要物品订阅提醒 */
 class DataStore(ctx: Context) {
     private val prefs = ctx.getSharedPreferences("collector_data", Context.MODE_PRIVATE)
-    private val legacyPrefs = ctx.getSharedPreferences("diaper_data", Context.MODE_PRIVATE)
-    private val keyEntries = "entries_v2"
+    private val keyEntries = "entries_v3"
+    private val keyHouses = "houses_v1"
     private val keyCategories = "custom_categories_v2"
     private val keyTheme = "app_theme_mode"
 
     companion object {
-        // 通用默认分类（数码、日用品、零食、耗材）
-        val DEFAULT_CATEGORIES = listOf("数码", "日用品", "零食", "耗材")
+        // 通用默认分类
+        val DEFAULT_CATEGORIES = listOf("数码", "日用品", "零食", "耗材", "贵重证件")
 
         // 常用快捷数量单位
-        val COMMON_UNITS = listOf("片", "件", "包", "个", "箱", "瓶", "盒", "本")
+        val COMMON_UNITS = listOf("片", "件", "包", "个", "箱", "瓶", "盒", "本", "套", "张")
 
         const val THEME_SYSTEM = 0
         const val THEME_LIGHT = 1
@@ -33,19 +33,86 @@ class DataStore(ctx: Context) {
         }
     }
 
-    // ==================== 记录存取 ====================
+    // ==================== 物品出入库与位置记录 ====================
 
     fun loadAll(): List<Entry> {
-        val v2 = loadV2()
-        if (v2.isNotEmpty()) return v2
-        return loadLegacyMigration()
+        val raw = prefs.getString(keyEntries, null) ?: prefs.getString("entries_v2", null) ?: return emptyList()
+        return try {
+            val arr = JSONArray(raw)
+            val result = mutableListOf<Entry>()
+            for (i in 0 until arr.length()) {
+                val o = arr.getJSONObject(i)
+                val histArr = o.optJSONArray("loc_hist")
+                val histList = mutableListOf<LocationMovement>()
+                if (histArr != null) {
+                    for (h in 0 until histArr.length()) {
+                        val ho = histArr.getJSONObject(h)
+                        histList.add(
+                            LocationMovement(
+                                location = ho.optString("loc", ""),
+                                houseName = ho.optString("h_name", "我的家"),
+                                roomName = ho.optString("r_name", ""),
+                                pinX = ho.optDouble("px", -1.0).toFloat(),
+                                pinY = ho.optDouble("py", -1.0).toFloat(),
+                                movedAt = ho.optLong("ts", System.currentTimeMillis()),
+                                note = ho.optString("note", "")
+                            )
+                        )
+                    }
+                }
+
+                result.add(
+                    Entry(
+                        id = o.optString("id", java.util.UUID.randomUUID().toString()),
+                        category = o.optString("cat", "数码"),
+                        brand = o.optString("brand", "物品"),
+                        qty = o.optInt("qty", 1),
+                        price = o.optDouble("price", 0.0),
+                        ts = o.optLong("ts", System.currentTimeMillis()),
+                        isIn = o.optBoolean("in", true),
+                        notes = o.optString("notes", ""),
+                        unit = o.optString("unit", "片"),
+                        location = o.optString("loc", ""),
+                        houseId = o.optString("h_id", "default_house"),
+                        houseName = o.optString("h_name", "我的家"),
+                        roomName = o.optString("r_name", ""),
+                        pinX = o.optDouble("px", -1.0).toFloat(),
+                        pinY = o.optDouble("py", -1.0).toFloat(),
+                        locationHistory = histList,
+                        isImportant = o.optBoolean("imp", false),
+                        reminderEnabled = o.optBoolean("rem_en", false),
+                        reminderIntervalDays = o.optInt("rem_int", 1),
+                        reminderTime = o.optString("rem_tm", "09:00"),
+                        lastCheckedAt = o.optLong("chk_ts", 0L)
+                    )
+                )
+            }
+            result
+        } catch (_: Exception) {
+            emptyList()
+        }
     }
 
     fun saveAll(entries: List<Entry>) {
         val arr = JSONArray()
         for (e in entries) {
+            val histArr = JSONArray()
+            for (h in e.locationHistory) {
+                histArr.put(
+                    JSONObject()
+                        .put("loc", h.location)
+                        .put("h_name", h.houseName)
+                        .put("r_name", h.roomName)
+                        .put("px", h.pinX.toDouble())
+                        .put("py", h.pinY.toDouble())
+                        .put("ts", h.movedAt)
+                        .put("note", h.note)
+                )
+            }
+
             arr.put(
                 JSONObject()
+                    .put("id", e.id)
                     .put("cat", e.category)
                     .put("brand", e.brand)
                     .put("qty", e.qty)
@@ -54,6 +121,18 @@ class DataStore(ctx: Context) {
                     .put("in", e.isIn)
                     .put("notes", e.notes)
                     .put("unit", e.unit)
+                    .put("loc", e.location)
+                    .put("h_id", e.houseId)
+                    .put("h_name", e.houseName)
+                    .put("r_name", e.roomName)
+                    .put("px", e.pinX.toDouble())
+                    .put("py", e.pinY.toDouble())
+                    .put("loc_hist", histArr)
+                    .put("imp", e.isImportant)
+                    .put("rem_en", e.reminderEnabled)
+                    .put("rem_int", e.reminderIntervalDays)
+                    .put("rem_tm", e.reminderTime)
+                    .put("chk_ts", e.lastCheckedAt)
             )
         }
         prefs.edit().putString(keyEntries, arr.toString()).apply()
@@ -62,7 +141,28 @@ class DataStore(ctx: Context) {
     fun updateEntry(index: Int, newEntry: Entry): Boolean {
         val list = loadAll().toMutableList()
         if (index in 0 until list.size) {
-            list[index] = newEntry
+            val oldEntry = list[index]
+            // 如果位置发生了挪动，自动追加位置历史记录
+            val finalEntry = if (oldEntry.location.isNotBlank() && oldEntry.location != newEntry.location) {
+                val newHist = oldEntry.locationHistory.toMutableList()
+                newHist.add(
+                    0,
+                    LocationMovement(
+                        location = oldEntry.location,
+                        houseName = oldEntry.houseName,
+                        roomName = oldEntry.roomName,
+                        pinX = oldEntry.pinX,
+                        pinY = oldEntry.pinY,
+                        movedAt = System.currentTimeMillis(),
+                        note = "原位置变更为【${newEntry.location}】"
+                    )
+                )
+                newEntry.copy(locationHistory = newHist)
+            } else {
+                newEntry
+            }
+
+            list[index] = finalEntry
             saveAll(list)
             return true
         }
@@ -94,133 +194,129 @@ class DataStore(ctx: Context) {
         }
     }
 
-    /** 导出全部数据为 JSON 字符串 */
-    fun exportBackupJson(): String {
-        val root = JSONObject()
-        root.put("version", 2)
-        root.put("timestamp", System.currentTimeMillis())
+    // ==================== 重要物品与订阅提醒 ====================
 
-        val catArr = JSONArray()
-        for (c in getCategories()) {
-            catArr.put(c)
-        }
-        root.put("categories", catArr)
-
-        val entryArr = JSONArray()
-        for (e in loadAll()) {
-            entryArr.put(
-                JSONObject()
-                    .put("cat", e.category)
-                    .put("brand", e.brand)
-                    .put("qty", e.qty)
-                    .put("price", e.price)
-                    .put("ts", e.ts)
-                    .put("in", e.isIn)
-                    .put("notes", e.notes)
-                    .put("unit", e.unit)
-            )
-        }
-        root.put("entries", entryArr)
-        return root.toString(2)
+    fun getImportantEntries(): List<Entry> {
+        return loadAll().filter { it.isImportant || it.reminderEnabled }
     }
 
-    /** 导入 JSON 备份数据 */
-    fun importBackupJson(jsonStr: String): Boolean {
+    fun confirmItemChecked(entryId: String) {
+        val list = loadAll().toMutableList()
+        val idx = list.indexOfFirst { it.id == entryId }
+        if (idx != -1) {
+            list[idx] = list[idx].copy(lastCheckedAt = System.currentTimeMillis())
+            saveAll(list)
+        }
+    }
+
+    // ==================== 多空间/家庭空间管理 ====================
+
+    fun getHouses(): List<HouseSpace> {
+        val raw = prefs.getString(keyHouses, null)
+        if (raw == null) {
+            val defaultList = listOf(
+                HouseSpace(id = "house_default", name = "🏠 自己的家", type = "住宅", isDefault = true),
+                HouseSpace(id = "house_parents", name = "🏡 父母家", type = "住宅", isDefault = false),
+                HouseSpace(id = "house_office", name = "🏢 办公室", type = "办公", isDefault = false)
+            )
+            saveHouses(defaultList)
+            return defaultList
+        }
+
         return try {
-            val root = JSONObject(jsonStr)
-            val catArr = root.optJSONArray("categories")
-            if (catArr != null) {
-                val cats = mutableListOf<String>()
-                for (i in 0 until catArr.length()) {
-                    val c = catArr.optString(i).trim()
-                    if (c.isNotEmpty() && !cats.contains(c)) {
-                        cats.add(c)
+            val arr = JSONArray(raw)
+            val result = mutableListOf<HouseSpace>()
+            for (i in 0 until arr.length()) {
+                val o = arr.getJSONObject(i)
+                val roomArr = o.optJSONArray("rooms")
+                val rooms = mutableListOf<HouseRoom>()
+                if (roomArr != null) {
+                    for (r in 0 until roomArr.length()) {
+                        val ro = roomArr.getJSONObject(r)
+                        rooms.add(
+                            HouseRoom(
+                                id = ro.optString("id", java.util.UUID.randomUUID().toString()),
+                                name = ro.optString("name", "房间"),
+                                icon = ro.optString("icon", "🚪"),
+                                colorHex = ro.optString("color", "#10B981"),
+                                xPct = ro.optDouble("x", 0.1).toFloat(),
+                                yPct = ro.optDouble("y", 0.1).toFloat(),
+                                widthPct = ro.optDouble("w", 0.35).toFloat(),
+                                heightPct = ro.optDouble("h", 0.35).toFloat()
+                            )
+                        )
                     }
                 }
-                if (cats.isNotEmpty()) {
-                    saveCategories(cats)
-                }
-            }
-
-            val entryArr = root.optJSONArray("entries")
-            if (entryArr != null) {
-                val list = mutableListOf<Entry>()
-                for (i in 0 until entryArr.length()) {
-                    val o = entryArr.getJSONObject(i)
-                    list.add(
-                        Entry(
-                            category = o.optString("cat", "默认分类"),
-                            brand = o.optString("brand", "未知"),
-                            qty = o.optInt("qty", 1),
-                            price = o.optDouble("price", 0.0),
-                            ts = o.optLong("ts", System.currentTimeMillis()),
-                            isIn = o.optBoolean("in", true),
-                            notes = o.optString("notes", ""),
-                            unit = o.optString("unit", "片")
-                        )
-                    )
-                }
-                saveAll(list)
-            }
-            true
-        } catch (_: Exception) {
-            false
-        }
-    }
-
-    /** 加载 v2 格式 */
-    private fun loadV2(): List<Entry> {
-        val raw = prefs.getString(keyEntries, null) ?: return emptyList()
-        return try {
-            val arr = JSONArray(raw)
-            val result = mutableListOf<Entry>()
-            for (i in 0 until arr.length()) {
-                val o = arr.getJSONObject(i)
                 result.add(
-                    Entry(
-                        category = o.optString("cat", "默认分类"),
-                        brand = o.optString("brand"),
-                        qty = o.optInt("qty", 1),
-                        price = o.optDouble("price", 0.0),
-                        ts = o.optLong("ts", 0L),
-                        isIn = o.optBoolean("in", true),
-                        notes = o.optString("notes", ""),
-                        unit = o.optString("unit", "片")
+                    HouseSpace(
+                        id = o.optString("id", "house_$i"),
+                        name = o.optString("name", "我的家"),
+                        type = o.optString("type", "住宅"),
+                        rooms = if (rooms.isNotEmpty()) rooms else HouseSpace.defaultRooms(),
+                        isDefault = o.optBoolean("is_def", i == 0)
                     )
                 )
             }
+            if (result.isEmpty()) HouseSpace.defaultRooms()
             result
         } catch (_: Exception) {
-            emptyList()
+            listOf(HouseSpace(id = "house_default", name = "🏠 自己的家", type = "住宅", isDefault = true))
         }
     }
 
-    /** 迁移旧版数据 */
-    private fun loadLegacyMigration(): List<Entry> {
-        val raw = legacyPrefs.getString("entries_v2", null) ?: legacyPrefs.getString("entries", null) ?: return emptyList()
-        return try {
-            val arr = JSONArray(raw)
-            val result = mutableListOf<Entry>()
-            for (i in 0 until arr.length()) {
-                val o = arr.getJSONObject(i)
-                result.add(
-                    Entry(
-                        category = o.optString("cat", "默认分类"),
-                        brand = o.optString("brand"),
-                        qty = o.optInt("qty", 1),
-                        price = o.optDouble("price", 0.0),
-                        ts = o.optLong("ts", 0L),
-                        isIn = o.optBoolean("in", true),
-                        notes = o.optString("notes", ""),
-                        unit = o.optString("unit", "片")
-                    )
+    fun saveHouses(houses: List<HouseSpace>) {
+        val arr = JSONArray()
+        for (h in houses) {
+            val roomArr = JSONArray()
+            for (r in h.rooms) {
+                roomArr.put(
+                    JSONObject()
+                        .put("id", r.id)
+                        .put("name", r.name)
+                        .put("icon", r.icon)
+                        .put("color", r.colorHex)
+                        .put("x", r.xPct.toDouble())
+                        .put("y", r.yPct.toDouble())
+                        .put("w", r.widthPct.toDouble())
+                        .put("h", r.heightPct.toDouble())
                 )
             }
-            saveAll(result)
-            result
-        } catch (_: Exception) {
-            emptyList()
+            arr.put(
+                JSONObject()
+                    .put("id", h.id)
+                    .put("name", h.name)
+                    .put("type", h.type)
+                    .put("rooms", roomArr)
+                    .put("is_def", h.isDefault)
+            )
         }
+        prefs.edit().putString(keyHouses, arr.toString()).apply()
+    }
+
+    fun addHouse(name: String, type: String = "住宅"): HouseSpace {
+        val houses = getHouses().toMutableList()
+        val newHouse = HouseSpace(
+            id = "house_" + System.currentTimeMillis(),
+            name = name,
+            type = type,
+            rooms = HouseSpace.defaultRooms(),
+            isDefault = houses.isEmpty()
+        )
+        houses.add(newHouse)
+        saveHouses(houses)
+        return newHouse
+    }
+
+    fun deleteHouse(houseId: String): Boolean {
+        val houses = getHouses().toMutableList()
+        val removed = houses.removeAll { it.id == houseId }
+        if (removed && houses.isNotEmpty()) {
+            if (houses.none { it.isDefault }) {
+                houses[0] = houses[0].copy(isDefault = true)
+            }
+            saveHouses(houses)
+        }
+        return removed
     }
 
     // ==================== 通用分类分组管理 ====================
@@ -322,5 +418,131 @@ class DataStore(ctx: Context) {
 
     fun setGithubRepo(repo: String) {
         prefs.edit().putString("github_repo", repo.trim()).apply()
+    }
+
+    // ==================== 备份与恢复 ====================
+
+    fun exportBackupJson(): String {
+        val root = JSONObject()
+        root.put("version", 3)
+        root.put("timestamp", System.currentTimeMillis())
+
+        val catArr = JSONArray()
+        for (c in getCategories()) catArr.put(c)
+        root.put("categories", catArr)
+
+        val entryArr = JSONArray()
+        for (e in loadAll()) {
+            val histArr = JSONArray()
+            for (h in e.locationHistory) {
+                histArr.put(
+                    JSONObject()
+                        .put("loc", h.location)
+                        .put("h_name", h.houseName)
+                        .put("r_name", h.roomName)
+                        .put("ts", h.movedAt)
+                        .put("note", h.note)
+                )
+            }
+
+            entryArr.put(
+                JSONObject()
+                    .put("id", e.id)
+                    .put("cat", e.category)
+                    .put("brand", e.brand)
+                    .put("qty", e.qty)
+                    .put("price", e.price)
+                    .put("ts", e.ts)
+                    .put("in", e.isIn)
+                    .put("notes", e.notes)
+                    .put("unit", e.unit)
+                    .put("loc", e.location)
+                    .put("h_id", e.houseId)
+                    .put("h_name", e.houseName)
+                    .put("r_name", e.roomName)
+                    .put("px", e.pinX.toDouble())
+                    .put("py", e.pinY.toDouble())
+                    .put("loc_hist", histArr)
+                    .put("imp", e.isImportant)
+                    .put("rem_en", e.reminderEnabled)
+                    .put("rem_int", e.reminderIntervalDays)
+                    .put("chk_ts", e.lastCheckedAt)
+            )
+        }
+        root.put("entries", entryArr)
+        return root.toString(2)
+    }
+
+    fun importBackupJson(jsonStr: String): Boolean {
+        return try {
+            val root = JSONObject(jsonStr)
+            val catArr = root.optJSONArray("categories")
+            if (catArr != null) {
+                val cats = mutableListOf<String>()
+                for (i in 0 until catArr.length()) {
+                    val c = catArr.optString(i).trim()
+                    if (c.isNotEmpty() && !cats.contains(c)) {
+                        cats.add(c)
+                    }
+                }
+                if (cats.isNotEmpty()) {
+                    saveCategories(cats)
+                }
+            }
+
+            val entryArr = root.optJSONArray("entries")
+            if (entryArr != null) {
+                val list = mutableListOf<Entry>()
+                for (i in 0 until entryArr.length()) {
+                    val o = entryArr.getJSONObject(i)
+                    val histArr = o.optJSONArray("loc_hist")
+                    val histList = mutableListOf<LocationMovement>()
+                    if (histArr != null) {
+                        for (h in 0 until histArr.length()) {
+                            val ho = histArr.getJSONObject(h)
+                            histList.add(
+                                LocationMovement(
+                                    location = ho.optString("loc", ""),
+                                    houseName = ho.optString("h_name", "我的家"),
+                                    roomName = ho.optString("r_name", ""),
+                                    movedAt = ho.optLong("ts", System.currentTimeMillis()),
+                                    note = ho.optString("note", "")
+                                )
+                            )
+                        }
+                    }
+
+                    list.add(
+                        Entry(
+                            id = o.optString("id", java.util.UUID.randomUUID().toString()),
+                            category = o.optString("cat", "数码"),
+                            brand = o.optString("brand", "物品"),
+                            qty = o.optInt("qty", 1),
+                            price = o.optDouble("price", 0.0),
+                            ts = o.optLong("ts", System.currentTimeMillis()),
+                            isIn = o.optBoolean("in", true),
+                            notes = o.optString("notes", ""),
+                            unit = o.optString("unit", "片"),
+                            location = o.optString("loc", ""),
+                            houseId = o.optString("h_id", "default_house"),
+                            houseName = o.optString("h_name", "我的家"),
+                            roomName = o.optString("r_name", ""),
+                            pinX = o.optDouble("px", -1.0).toFloat(),
+                            pinY = o.optDouble("py", -1.0).toFloat(),
+                            locationHistory = histList,
+                            isImportant = o.optBoolean("imp", false),
+                            reminderEnabled = o.optBoolean("rem_en", false),
+                            reminderIntervalDays = o.optInt("rem_int", 1),
+                            reminderTime = o.optString("rem_tm", "09:00"),
+                            lastCheckedAt = o.optLong("chk_ts", 0L)
+                        )
+                    )
+                }
+                saveAll(list)
+            }
+            true
+        } catch (_: Exception) {
+            false
+        }
     }
 }

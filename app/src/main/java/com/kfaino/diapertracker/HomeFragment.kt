@@ -1,10 +1,12 @@
 package com.kfaino.diapertracker
 
+import android.graphics.Color
 import android.os.Bundle
 import android.view.Gravity
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.Button
 import android.widget.LinearLayout
 import android.widget.TextView
 import android.widget.Toast
@@ -13,6 +15,8 @@ import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.kfaino.diapertracker.databinding.FragmentHomeBinding
+import java.text.SimpleDateFormat
+import java.util.Date
 import java.util.Locale
 
 class HomeFragment : Fragment() {
@@ -30,11 +34,11 @@ class HomeFragment : Fragment() {
 
     companion object {
         val SORT_LABELS = arrayOf(
-            "⚡ 默认分组排序",
-            "📉 按库存从高到低",
-            "📈 按库存从低到高",
+            "⚡ 智能分组排序",
+            "📉 按在库数量从多到少",
+            "📈 按在库数量从少到多",
             "💰 按花费金额从多到少",
-            "🔤 按名称排序"
+            "🔤 按名称字母排序"
         )
     }
 
@@ -55,8 +59,8 @@ class HomeFragment : Fragment() {
                 showBrandActionSheet(brand, category)
             }
         )
-        binding.categoryList.layoutManager = LinearLayoutManager(requireContext())
-        binding.categoryList.adapter = adapter
+        binding.brandRecycler.layoutManager = LinearLayoutManager(requireContext())
+        binding.brandRecycler.adapter = adapter
 
         setupSortButton()
         setupActions()
@@ -74,14 +78,14 @@ class HomeFragment : Fragment() {
     }
 
     private fun setupSortButton() {
-        binding.btnSortSelector.applyPressScaleAnimation(0.92f)
-        binding.btnSortSelector.text = SORT_LABELS[sortMode]
-        binding.btnSortSelector.setOnClickListener {
+        binding.btnSortOrder.applyPressScaleAnimation(0.92f)
+        binding.btnSortOrder.text = SORT_LABELS[sortMode] + " ▾"
+        binding.btnSortOrder.setOnClickListener {
             MaterialAlertDialogBuilder(requireContext())
                 .setTitle("选择排序方式")
                 .setSingleChoiceItems(SORT_LABELS, sortMode) { dialog, which ->
                     sortMode = which
-                    binding.btnSortSelector.text = SORT_LABELS[sortMode]
+                    binding.btnSortOrder.text = SORT_LABELS[sortMode] + " ▾"
                     refresh()
                     dialog.dismiss()
                 }
@@ -91,6 +95,11 @@ class HomeFragment : Fragment() {
     }
 
     private fun setupActions() {
+        binding.btnOpenFloorplanMap.applyPressScaleAnimation(0.92f)
+        binding.btnOpenFloorplanMap.setOnClickListener {
+            FloorPlanDialog.show(requireActivity(), store, isSelectMode = false)
+        }
+
         binding.btnManageCategories.applyPressScaleAnimation(0.92f)
         binding.btnManageCategories.setOnClickListener {
             CategoryManagerDialog.showManageDialog(requireContext(), store) {
@@ -103,6 +112,87 @@ class HomeFragment : Fragment() {
     private fun loadData() {
         entries.clear()
         entries.addAll(store.loadAll())
+    }
+
+    /** 渲染重要物品与防丢订阅核对卡片 */
+    private fun renderImportantItems() {
+        val importantEntries = store.getImportantEntries()
+        if (importantEntries.isEmpty()) {
+            binding.cardImportantItemsTracker.visibility = View.GONE
+            return
+        }
+
+        binding.cardImportantItemsTracker.visibility = View.VISIBLE
+        binding.importantCountBadge.text = "共 ${importantEntries.size} 项关注"
+
+        val container = binding.importantItemsListContainer
+        container.removeAllViews()
+
+        val now = System.currentTimeMillis()
+        val dayMs = 24L * 60 * 60 * 1000
+
+        for (e in importantEntries) {
+            val row = LinearLayout(requireContext()).apply {
+                orientation = LinearLayout.HORIZONTAL
+                gravity = Gravity.CENTER_VERTICAL
+                setPadding(0, dpToPx(6), 0, dpToPx(6))
+            }
+
+            val iconTv = TextView(requireContext()).apply {
+                text = "⭐"
+                textSize = 14f
+                setPadding(0, 0, dpToPx(8), 0)
+            }
+
+            val infoLayout = LinearLayout(requireContext()).apply {
+                orientation = LinearLayout.VERTICAL
+                layoutParams = LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f)
+            }
+
+            val nameTv = TextView(requireContext()).apply {
+                text = e.brand
+                textSize = 13f
+                setTextColor(ContextCompat.getColor(context, R.color.text_primary))
+                paint.isFakeBoldText = true
+            }
+
+            val locText = if (e.location.isNotBlank()) "📍 ${e.houseName} · ${e.location}" else "📍 未标记放置位置"
+            val lastCheckedText = if (e.lastCheckedAt > 0) {
+                val daysAgo = ((now - e.lastCheckedAt) / dayMs).toInt()
+                if (daysAgo == 0) "✅ 今日已核对" else "⚠️ 已 $daysAgo 天未核对"
+            } else {
+                "⚠️ 尚未核对位置"
+            }
+
+            val locTv = TextView(requireContext()).apply {
+                text = "$locText  ($lastCheckedText)"
+                textSize = 11f
+                setTextColor(if (lastCheckedText.startsWith("✅")) Color.parseColor("#10B981") else Color.parseColor("#F59E0B"))
+            }
+
+            infoLayout.addView(nameTv)
+            infoLayout.addView(locTv)
+
+            val checkBtn = TextView(requireContext()).apply {
+                text = "✅ 确认在位"
+                textSize = 11f
+                setTextColor(Color.WHITE)
+                setBackgroundResource(R.drawable.bg_chip_active)
+                setPadding(dpToPx(8), dpToPx(4), dpToPx(8), dpToPx(4))
+                applyPressScaleAnimation(0.90f)
+                setOnClickListener {
+                    store.confirmItemChecked(e.id)
+                    Toast.makeText(requireContext(), "已确认【${e.brand}】位置在位！", Toast.LENGTH_SHORT).show()
+                    loadData()
+                    renderImportantItems()
+                }
+            }
+
+            row.addView(iconTv)
+            row.addView(infoLayout)
+            row.addView(checkBtn)
+            container.addView(row)
+        }
     }
 
     /** 动态渲染横向滑动的分类筛选药丸 (Chips) */
@@ -183,6 +273,9 @@ class HomeFragment : Fragment() {
             if (!brands.containsKey(e.brand)) brands[e.brand] = BrandData()
             val bd = brands[e.brand]!!
             bd.unit = e.unit.ifEmpty { "片" }
+            bd.location = e.location
+            bd.houseName = e.houseName
+            bd.isImportant = e.isImportant
             if (e.isIn) {
                 bd.addCount += e.qty
                 bd.addAmount += e.qty * e.price
@@ -197,7 +290,16 @@ class HomeFragment : Fragment() {
             val brandList = brands.entries.map { (name, bd) ->
                 val stock = bd.addCount - bd.reduceCount
                 val avg = if (bd.addCount > 0) bd.addAmount / bd.addCount else 0.0
-                BrandSummary(name, stock, bd.addAmount, avg, bd.unit)
+                BrandSummary(
+                    name = name,
+                    count = stock,
+                    amount = bd.addAmount,
+                    avgPrice = avg,
+                    unit = bd.unit,
+                    location = bd.location,
+                    houseName = bd.houseName,
+                    isImportant = bd.isImportant
+                )
             }.sortedWith(when (sortMode) {
                 1 -> compareByDescending<BrandSummary> { it.count }
                 2 -> compareBy<BrandSummary> { it.count }
@@ -239,30 +341,35 @@ class HomeFragment : Fragment() {
 
         binding.totalCount.text = grandCount.coerceAtLeast(0).toString()
         binding.totalAmount.text = "¥${String.format(Locale.getDefault(), "%.2f", totalSpent)}"
-        binding.brandCoverageText.text = "$distinctBrands 个品牌"
+        binding.brandCoverageText.text = "$distinctBrands 种"
 
-        binding.filterSummaryText.text = if (selectedCategory == "全部") {
-            "全部库存明细 (共 ${groups.sumOf { it.brands.size }} 个品牌项)"
+        val totalBrandsCount = groups.sumOf { it.brands.size }
+        binding.groupCountText.text = if (selectedCategory == "全部") {
+            "共 ${groups.size} 个分类，共 $totalBrandsCount 种物品"
         } else {
-            "【$selectedCategory】分类下共 ${groups.find { it.name == selectedCategory }?.brands?.size ?: 0} 个品牌"
+            "【$selectedCategory】分类下共 ${groups.find { it.name == selectedCategory }?.brands?.size ?: 0} 种物品"
         }
 
-        binding.emptyState.visibility = if (groups.isEmpty()) View.VISIBLE else View.GONE
-        binding.categoryList.visibility = if (groups.isEmpty()) View.GONE else View.VISIBLE
+        binding.emptyLayout.visibility = if (groups.isEmpty()) View.VISIBLE else View.GONE
+        binding.brandRecycler.visibility = if (groups.isEmpty()) View.GONE else View.VISIBLE
 
         adapter.submit(groups)
+        renderImportantItems()
     }
 
-    /** 品牌快捷操作弹窗 */
+    /** 品牌/物品快捷操作弹窗 */
     private fun showBrandActionSheet(brand: BrandSummary, category: String) {
         val u = brand.unit.ifEmpty { "片" }
+        val locInfo = if (brand.location.isNotBlank()) "📍 放置于: ${brand.houseName} · ${brand.location}" else "📍 放置位置未填"
         val options = arrayOf(
-            "➕ 极速补货 (+1 $u)",
+            "➕ 极速入库 (+1 $u)",
             "➖ 极速消耗 (-1 $u)",
-            "📝 自定义数量记一笔"
+            "📍 查看该物品位置变迁时光轴",
+            "🗺️ 在空间平面图上查看定位",
+            "📝 自定义记一笔"
         )
         MaterialAlertDialogBuilder(requireContext())
-            .setTitle("【$category】${brand.name} (当前: ${brand.count} $u)")
+            .setTitle("【$category】${brand.name} (当前: ${brand.count} $u)\n$locInfo")
             .setItems(options) { _, which ->
                 when (which) {
                     0 -> {
@@ -273,35 +380,46 @@ class HomeFragment : Fragment() {
                             price = brand.avgPrice,
                             ts = System.currentTimeMillis(),
                             isIn = true,
-                            notes = "快捷补货",
-                            unit = u
+                            notes = "快捷入库",
+                            unit = u,
+                            location = brand.location,
+                            houseName = brand.houseName
                         )
                         entries.add(newEntry)
                         store.saveAll(entries)
                         refresh()
-                        Toast.makeText(requireContext(), "已为【${brand.name}】补货 +1 $u", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(requireContext(), "已成功补货 +1 $u", Toast.LENGTH_SHORT).show()
                     }
                     1 -> {
+                        if (brand.count <= 0) {
+                            Toast.makeText(requireContext(), "当前在库已为 0，消耗记录将使在库变为负数", Toast.LENGTH_SHORT).show()
+                        }
                         val newEntry = Entry(
                             category = category,
                             brand = brand.name,
                             qty = 1,
-                            price = 0.0,
+                            price = brand.avgPrice,
                             ts = System.currentTimeMillis(),
                             isIn = false,
-                            notes = "快捷消耗",
-                            unit = u
+                            notes = "快捷出库消耗",
+                            unit = u,
+                            location = brand.location,
+                            houseName = brand.houseName
                         )
                         entries.add(newEntry)
                         store.saveAll(entries)
                         refresh()
-                        Toast.makeText(requireContext(), "已记录【${brand.name}】消耗 -1 $u", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(requireContext(), "已成功消耗 -1 $u", Toast.LENGTH_SHORT).show()
                     }
                     2 -> {
-                        (activity as? MainActivity)?.showAddDialog(
-                            prefillBrand = brand.name,
-                            prefillCategory = category
-                        )
+                        val entry = entries.lastOrNull { it.brand == brand.name && it.category == category } ?: Entry(category = category, brand = brand.name, qty = brand.count)
+                        LocationHistoryDialog.show(requireActivity(), entry)
+                    }
+                    3 -> {
+                        FloorPlanDialog.show(requireActivity(), store, isSelectMode = false, currentHouseName = brand.houseName)
+                    }
+                    4 -> {
+                        (activity as? MainActivity)?.showAddDialogWithInitial(category, brand.name, u)
                     }
                 }
             }
@@ -318,10 +436,13 @@ class HomeFragment : Fragment() {
         _binding = null
     }
 
-    private data class BrandData(
-        var addCount: Int = 0,
-        var addAmount: Double = 0.0,
-        var reduceCount: Int = 0,
+    private class BrandData {
+        var addCount: Int = 0
+        var addAmount: Double = 0.0
+        var reduceCount: Int = 0
         var unit: String = "片"
-    )
+        var location: String = ""
+        var houseName: String = "我的家"
+        var isImportant: Boolean = false
+    }
 }

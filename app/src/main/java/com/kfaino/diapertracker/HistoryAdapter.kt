@@ -1,5 +1,6 @@
 package com.kfaino.diapertracker
 
+import android.app.Activity
 import android.content.res.ColorStateList
 import android.view.LayoutInflater
 import android.view.View
@@ -35,7 +36,7 @@ class HistoryAdapter(
         val unit = entry.unit.ifEmpty { "片" }
 
         b.categoryTag.text = entry.category
-        b.brand.text = entry.brand
+        b.brand.text = (if (entry.isImportant) "⭐ " else "") + entry.brand
         b.time.text = SimpleDateFormat("yyyy-MM-dd HH:mm", Locale.getDefault()).format(Date(entry.ts))
 
         if (entry.isIn) {
@@ -54,6 +55,20 @@ class HistoryAdapter(
             b.amount.text = "- ${entry.qty}$unit"
             b.amount.setTextColor(ContextCompat.getColor(ctx, R.color.danger))
             b.qtyInfo.text = "出库消耗"
+        }
+
+        // 空间与位置信息绑定
+        if (entry.location.isNotBlank()) {
+            b.locationBadgeContainer.visibility = View.VISIBLE
+            b.locationText.text = "📍 ${entry.houseName} · ${entry.location}"
+            b.btnLocHistoryBadge.applyPressScaleAnimation(0.90f)
+            b.btnLocHistoryBadge.setOnClickListener {
+                if (ctx is Activity) {
+                    LocationHistoryDialog.show(ctx, entry)
+                }
+            }
+        } else {
+            b.locationBadgeContainer.visibility = View.GONE
         }
 
         if (entry.notes.isNotBlank()) {

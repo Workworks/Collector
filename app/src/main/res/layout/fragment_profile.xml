@@ -7,7 +7,7 @@
     android:orientation="vertical"
     android:background="@color/background">
 
-    <!-- 顶部标题栏 -->
+    <!-- 顶部应用标题栏 -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="52dp"
@@ -40,7 +40,7 @@
             android:paddingTop="16dp"
             android:paddingBottom="40dp">
 
-            <!-- 第一个分组卡片 (分类管理 / 更多设置 / 数据备份恢复) -->
+            <!-- 第一个分组卡片 (分类管理 / 空间平面图 / 更多设置 / 数据备份恢复) -->
             <com.google.android.material.card.MaterialCardView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -81,6 +81,49 @@
                             android:layout_weight="1"
                             android:layout_marginStart="16dp"
                             android:text="分类管理"
+                            android:textSize="16sp"
+                            android:textColor="@color/text_primary"
+                            android:fontFamily="sans-serif-medium" />
+
+                        <ImageView
+                            android:layout_width="16dp"
+                            android:layout_height="16dp"
+                            android:src="@drawable/ic_arrow_right"
+                            app:tint="@color/text_hint"
+                            android:contentDescription="进入" />
+                    </LinearLayout>
+
+                    <View
+                        android:layout_width="match_parent"
+                        android:layout_height="1dp"
+                        android:layout_marginStart="56dp"
+                        android:background="@color/card_border" />
+
+                    <!-- 空间与平面图管理 -->
+                    <LinearLayout
+                        android:id="@+id/btn_floorplan_manage"
+                        android:layout_width="match_parent"
+                        android:layout_height="58dp"
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical"
+                        android:paddingHorizontal="18dp"
+                        android:clickable="true"
+                        android:focusable="true"
+                        android:background="?attr/selectableItemBackground">
+
+                        <ImageView
+                            android:layout_width="22dp"
+                            android:layout_height="22dp"
+                            android:src="@drawable/ic_edit"
+                            app:tint="@color/primary"
+                            android:contentDescription="空间平面图管理" />
+
+                        <TextView
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:layout_marginStart="16dp"
+                            android:text="🗺️ 空间平面图与寻物地图"
                             android:textSize="16sp"
                             android:textColor="@color/text_primary"
                             android:fontFamily="sans-serif-medium" />
@@ -190,7 +233,8 @@
                 app:cardElevation="0dp"
                 app:cardBackgroundColor="@color/card"
                 app:strokeColor="@color/card_border"
-                app:strokeWidth="1dp">
+                app:strokeWidth="1dp"
+                android:layout_marginBottom="16dp">
 
                 <LinearLayout
                     android:layout_width="match_parent"
@@ -326,7 +370,7 @@
                         android:layout_marginStart="56dp"
                         android:background="@color/card_border" />
 
-                    <!-- 更新最新版本 -->
+                    <!-- 更新最新版本 (GitHub Releases) -->
                     <LinearLayout
                         android:id="@+id/btn_update_version"
                         android:layout_width="match_parent"
@@ -341,19 +385,28 @@
                         <ImageView
                             android:layout_width="22dp"
                             android:layout_height="22dp"
-                            android:src="@drawable/ic_download"
-                            app:tint="@color/text_secondary"
-                            android:contentDescription="更新最新版本" />
+                            android:src="@drawable/ic_update"
+                            app:tint="@color/primary"
+                            android:contentDescription="检查最新版本" />
 
                         <TextView
                             android:layout_width="0dp"
                             android:layout_height="wrap_content"
                             android:layout_weight="1"
                             android:layout_marginStart="16dp"
-                            android:text="更新最新版本"
+                            android:text="检查更新"
                             android:textSize="16sp"
                             android:textColor="@color/text_primary"
                             android:fontFamily="sans-serif-medium" />
+
+                        <TextView
+                            android:id="@+id/current_version_badge"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="v2.3.0"
+                            android:textSize="13sp"
+                            android:textColor="@color/primary"
+                            android:layout_marginEnd="8dp" />
 
                         <ImageView
                             android:layout_width="16dp"
@@ -384,7 +437,7 @@
                         <ImageView
                             android:layout_width="22dp"
                             android:layout_height="22dp"
-                            android:src="@drawable/ic_info"
+                            android:src="@drawable/ic_about"
                             app:tint="@color/text_secondary"
                             android:contentDescription="关于" />
 
@@ -398,17 +451,27 @@
                             android:textColor="@color/text_primary"
                             android:fontFamily="sans-serif-medium" />
 
-                        <TextView
-                            android:id="@+id/about_version_code"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="2.2.0:260818"
-                            android:textSize="14sp"
-                            android:textColor="@color/text_secondary" />
+                        <ImageView
+                            android:layout_width="16dp"
+                            android:layout_height="16dp"
+                            android:src="@drawable/ic_arrow_right"
+                            app:tint="@color/text_hint"
+                            android:contentDescription="进入" />
                     </LinearLayout>
 
                 </LinearLayout>
             </com.google.android.material.card.MaterialCardView>
+
+            <!-- 底部安全保障说明 -->
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="center"
+                android:text="🔒 数据完全离线存储于本地设备沙盒中\nCollecter · 智能收纳与资产追踪"
+                android:textSize="12sp"
+                android:textColor="@color/text_hint"
+                android:lineSpacingExtra="4dp"
+                android:layout_marginTop="8dp" />
 
         </LinearLayout>
     </ScrollView>

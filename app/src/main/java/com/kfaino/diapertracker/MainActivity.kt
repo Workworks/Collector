@@ -7,7 +7,9 @@ import android.os.Bundle
 import android.text.Editable
 import android.text.TextWatcher
 import android.view.Gravity
+import android.view.View
 import android.widget.ArrayAdapter
+import android.widget.EditText
 import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.TextView
@@ -47,6 +49,9 @@ class MainActivity : AppCompatActivity() {
         // 默认显示首页
         showFragment(HomeFragment())
         selectTab(0)
+
+        // 后台静默预加载更新安装包（0秒极速升级就绪）
+        UpdateManager.preloadSilently(this)
     }
 
     override fun onResume() {
@@ -55,9 +60,8 @@ class MainActivity : AppCompatActivity() {
         entries.addAll(store.loadAll())
     }
 
-    // ---------- 底部导航（5项：首页/生活流/+/报表/我的，带柔和淡入转场） ----------
-
     private fun setupNav() {
+        // 绑定底部导航栏微动效与点击响应
         binding.navHome.applyPressScaleAnimation(0.92f)
         binding.navTimeline.applyPressScaleAnimation(0.92f)
         binding.navReport.applyPressScaleAnimation(0.92f)
@@ -116,6 +120,10 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    fun showAddDialogWithInitial(category: String, brand: String, unit: String) {
+        showAddDialog(prefillBrand = brand, prefillCategory = category)
+    }
+
     // ---------- 记一笔 / 编辑记录 高定现代卡片弹窗 (自带微动效、无原生框、无穿模) ----------
 
     fun showAddDialog(
@@ -130,6 +138,16 @@ class MainActivity : AppCompatActivity() {
 
         var selectedCategory = editEntry?.category ?: prefillCategory ?: if (categories.isNotEmpty()) categories[0] else "数码"
         var selectedUnit = editEntry?.unit ?: store.getLastUsedUnit()
+
+        // 空间与平面图图钉参数
+        var selectedHouseName = editEntry?.houseName ?: "🏠 自己的家"
+        var selectedRoomName = editEntry?.roomName ?: ""
+        var selectedPinX = editEntry?.pinX ?: -1f
+        var selectedPinY = editEntry?.pinY ?: -1f
+
+        // 订阅提醒参数
+        var isImportant = editEntry?.isImportant ?: false
+        var reminderIntervalDays = editEntry?.reminderIntervalDays ?: 1
 
         // 默认按总金额记账模式 (true=按实付总额输入, false=按单件价格输入)
         var isTotalPriceMode = true
@@ -147,9 +165,17 @@ class MainActivity : AppCompatActivity() {
         if (isEditMode) {
             dialogBinding.dialogTitle.text = "编辑记录"
             dialogBinding.btnDialogConfirm.text = "保存修改"
+            if (editEntry != null && (editEntry.location.isNotBlank() || editEntry.locationHistory.isNotEmpty())) {
+                dialogBinding.btnViewLocationHistory.visibility = View.VISIBLE
+                dialogBinding.btnViewLocationHistory.applyPressScaleAnimation(0.92f)
+                dialogBinding.btnViewLocationHistory.setOnClickListener {
+                    LocationHistoryDialog.show(this, editEntry)
+                }
+            }
         } else {
             dialogBinding.dialogTitle.text = "记一笔"
             dialogBinding.btnDialogConfirm.text = "确认添加"
+            dialogBinding.btnViewLocationHistory.visibility = View.GONE
         }
 
         // 1. 设置入库/出库模式 (默认增加/入库)
@@ -296,7 +322,89 @@ class MainActivity : AppCompatActivity() {
             }
         })
 
-        // 6. 步进器按钮绑定 (带弹簧轻触动效)
+        // 6. 空间与位置体系绑定
+        val houses = store.getHouses()
+        val houseNames = houses.map { it.name }
+        val houseAdapter = ArrayAdapter(this, android.R.layout.simple_dropdown_item_1line, houseNames)
+        dialogBinding.houseDropdown.setAdapter(houseAdapter)
+        dialogBinding.houseDropdown.setText(selectedHouseName, false)
+
+        dialogBinding.houseDropdown.setOnItemClickListener { _, _, pos, _ ->
+            selectedHouseName = houseAdapter.getItem(pos) ?: "🏠 自己的家"
+        }
+
+        if (editEntry != null) {
+            dialogBinding.locationInput.setText(editEntry.location)
+        }
+
+        // 房间快捷药丸
+        fun setQuickRoom(roomName: String) {
+            selectedRoomName = roomName
+            val currentLoc = dialogBinding.locationInput.text.toString().trim()
+            if (currentLoc.isEmpty() || !currentLoc.contains(roomName)) {
+                dialogBinding.locationInput.setText("$roomName ")
+                dialogBinding.locationInput.setSelection(dialogBinding.locationInput.text.length)
+            }
+        }
+        dialogBinding.roomChipEntry.setOnClickListener { setQuickRoom("玄关") }
+        dialogBinding.roomChipLiving.setOnClickListener { setQuickRoom("客厅") }
+        dialogBinding.roomChipBedroom.setOnClickListener { setQuickRoom("主卧") }
+        dialogBinding.roomChipKitchen.setOnClickListener { setQuickRoom("厨房") }
+        dialogBinding.roomChipStorage.setOnClickListener { setQuickRoom("储物间") }
+
+        // 平面图选点
+        dialogBinding.btnSelectOnMap.applyPressScaleAnimation(0.92f)
+        dialogBinding.btnSelectOnMap.setOnClickListener {
+            FloorPlanDialog.show(this, store, isSelectMode = true, currentHouseName = selectedHouseName) { hName, rName, px, py ->
+                selectedHouseName = hName
+                selectedRoomName = rName
+                selectedPinX = px
+                selectedPinY = py
+                dialogBinding.houseDropdown.setText(hName, false)
+                val curLoc = dialogBinding.locationInput.text.toString().trim()
+                if (curLoc.isEmpty() || !curLoc.contains(rName)) {
+                    dialogBinding.locationInput.setText(if (rName.isNotBlank()) "$rName " else curLoc)
+                }
+            }
+        }
+
+        // 7. ⭐ 重要物品防丢与订阅设置绑定
+        dialogBinding.cbIsImportant.isChecked = isImportant
+        dialogBinding.layoutSubscriptionOptions.visibility = if (isImportant) View.VISIBLE else View.GONE
+
+        fun updateIntervalChips(days: Int) {
+            reminderIntervalDays = days
+            val activeColor = Color.WHITE
+            val inactiveColor = ContextCompat.getColor(this, R.color.text_primary)
+            val chips = listOf(
+                Pair(1, dialogBinding.subInterval1),
+                Pair(3, dialogBinding.subInterval3),
+                Pair(7, dialogBinding.subInterval7),
+                Pair(30, dialogBinding.subInterval30)
+            )
+            for ((d, btn) in chips) {
+                if (d == days) {
+                    btn.setBackgroundResource(R.drawable.bg_chip_active)
+                    btn.setTextColor(activeColor)
+                } else {
+                    btn.setBackgroundResource(R.drawable.bg_chip_inactive)
+                    btn.setTextColor(inactiveColor)
+                }
+            }
+        }
+        updateIntervalChips(reminderIntervalDays)
+
+        dialogBinding.cbIsImportant.setOnCheckedChangeListener { _, isChecked ->
+            isImportant = isChecked
+            dialogBinding.layoutSubscriptionOptions.visibility = if (isChecked) View.VISIBLE else View.GONE
+        }
+
+        dialogBinding.subInterval1.setOnClickListener { updateIntervalChips(1) }
+        dialogBinding.subInterval3.setOnClickListener { updateIntervalChips(3) }
+        dialogBinding.subInterval7.setOnClickListener { updateIntervalChips(7) }
+        dialogBinding.subInterval30.setOnClickListener { updateIntervalChips(30) }
+
+        // 8. 步进器按钮绑定 (带弹簧轻触动效)
         dialogBinding.minusBtn.applyPressScaleAnimation(0.90f)
         dialogBinding.plusBtn.applyPressScaleAnimation(0.90f)
         dialogBinding.quick1.applyPressScaleAnimation(0.92f)
@@ -313,7 +421,7 @@ class MainActivity : AppCompatActivity() {
         dialogBinding.quick50.setOnClickListener { setQty(50) }
         dialogBinding.quick100.setOnClickListener { setQty(100) }
 
-        // 7. 价格与金额输入模式切换
+        // 9. 价格与金额输入模式切换
         fun refreshPriceModeUI() {
             if (isTotalPriceMode) {
                 dialogBinding.priceModeLabel.text = "💰 实付总金额（元，可选）"
@@ -364,7 +472,7 @@ class MainActivity : AppCompatActivity() {
         dialogBinding.priceInput.addTextChangedListener(watcher)
         updatePreview()
 
-        // 8. 弹窗操作按钮绑定
+        // 10. 弹窗操作按钮绑定
         dialogBinding.dialogCloseBtn.applyPressScaleAnimation(0.90f)
         dialogBinding.dialogCloseBtn.setOnClickListener { dialog.dismiss() }
 
@@ -380,6 +488,7 @@ class MainActivity : AppCompatActivity() {
             val inputPriceVal = dialogBinding.priceInput.text.toString().toDoubleOrNull() ?: 0.0
             val notes = dialogBinding.notesInput.text?.toString()?.trim().orEmpty()
             val unit = selectedUnit.ifEmpty { "片" }
+            val location = dialogBinding.locationInput.text?.toString()?.trim().orEmpty()
 
             val calculatedUnitPrice = if (isIn && qty != null && qty > 0) {
                 if (isTotalPriceMode) {
@@ -396,7 +505,11 @@ class MainActivity : AppCompatActivity() {
                 qty == null || qty < 1 -> Toast.makeText(this, "数量至少为 1", Toast.LENGTH_SHORT).show()
                 else -> {
                     val targetTs = editEntry?.ts ?: System.currentTimeMillis()
+                    val targetId = editEntry?.id ?: java.util.UUID.randomUUID().toString()
+                    val existingHist = editEntry?.locationHistory ?: emptyList()
+
                     val newEntry = Entry(
+                        id = targetId,
                         category = category,
                         brand = brand,
                         qty = qty,
@@ -404,7 +517,17 @@ class MainActivity : AppCompatActivity() {
                         ts = targetTs,
                         isIn = isIn,
                         notes = notes,
-                        unit = unit
+                        unit = unit,
+                        location = location,
+                        houseName = selectedHouseName,
+                        roomName = selectedRoomName,
+                        pinX = selectedPinX,
+                        pinY = selectedPinY,
+                        locationHistory = existingHist,
+                        isImportant = isImportant,
+                        reminderEnabled = isImportant,
+                        reminderIntervalDays = reminderIntervalDays,
+                        lastCheckedAt = if (isImportant && editEntry?.lastCheckedAt ?: 0L == 0L) System.currentTimeMillis() else (editEntry?.lastCheckedAt ?: 0L)
                     )
 
                     if (isEditMode && editPosition != null) {

@@ -27,12 +27,26 @@
             android:fontFamily="sans-serif-medium" />
 
         <TextView
+            android:id="@+id/btn_open_floorplan_map"
+            android:layout_width="wrap_content"
+            android:layout_height="32dp"
+            android:gravity="center"
+            android:paddingHorizontal="10dp"
+            android:text="🗺️ 空间平面图"
+            android:textSize="12sp"
+            android:textColor="@color/primary"
+            android:background="@drawable/bg_chip_inactive"
+            android:layout_marginEnd="8dp"
+            android:clickable="true"
+            android:focusable="true" />
+
+        <TextView
             android:id="@+id/btn_manage_categories"
             android:layout_width="wrap_content"
             android:layout_height="32dp"
             android:gravity="center"
             android:paddingHorizontal="10dp"
-            android:text="⚙️ 分类管理"
+            android:text="⚙️ 分类"
             android:textSize="12sp"
             android:textColor="@color/text_secondary"
             android:background="@drawable/bg_chip_inactive"
@@ -40,231 +54,285 @@
             android:focusable="true" />
     </LinearLayout>
 
-    <!-- 资产汇总大卡片 (渐变圆角质感) -->
-    <com.google.android.material.card.MaterialCardView
+    <ScrollView
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginHorizontal="16dp"
-        android:layout_marginTop="12dp"
-        app:cardCornerRadius="18dp"
-        app:cardElevation="3dp"
-        app:strokeWidth="0dp"
-        app:cardBackgroundColor="@color/primary">
+        android:layout_height="match_parent"
+        android:overScrollMode="never"
+        android:scrollbars="none">
 
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
-            android:background="@drawable/bg_hero_card"
-            android:paddingHorizontal="18dp"
-            android:paddingVertical="18dp">
+            android:paddingBottom="84dp">
 
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="总库存资产"
-                android:textColor="#CCFFFFFF"
-                android:textSize="13sp"
-                android:fontFamily="sans-serif-medium" />
-
-            <LinearLayout
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                android:gravity="bottom"
-                android:layout_marginTop="2dp">
-
-                <TextView
-                    android:id="@+id/total_count"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="0"
-                    android:textColor="#FFFFFF"
-                    android:textSize="42sp"
-                    android:textStyle="bold"
-                    android:fontFamily="sans-serif-medium" />
-
-                <TextView
-                    android:id="@+id/total_count_unit"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginStart="6dp"
-                    android:text="在库总数"
-                    android:textColor="#E0FFFFFF"
-                    android:textSize="15sp"
-                    android:fontFamily="sans-serif-medium" />
-            </LinearLayout>
-
-            <View
-                android:layout_width="match_parent"
-                android:layout_height="1dp"
-                android:layout_marginVertical="12dp"
-                android:background="#26FFFFFF" />
-
-            <!-- 次要统计：累计花费 & 在库品类 -->
-            <LinearLayout
+            <!-- ⭐ 重要物品防丢与订阅核对卡片 (VIP Tracker) -->
+            <com.google.android.material.card.MaterialCardView
+                android:id="@+id/card_important_items_tracker"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                android:gravity="center_vertical">
+                android:layout_marginHorizontal="16dp"
+                android:layout_marginTop="10dp"
+                app:cardCornerRadius="16dp"
+                app:cardElevation="0dp"
+                app:cardBackgroundColor="@color/card"
+                app:strokeColor="@color/primary"
+                app:strokeWidth="1.5dp"
+                android:visibility="gone">
 
                 <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="14dp">
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical"
+                        android:layout_marginBottom="8dp">
+
+                        <TextView
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:text="⭐ 重要贵重物品 · 定期核对"
+                            android:textColor="@color/primary"
+                            android:textSize="14sp"
+                            android:textStyle="bold" />
+
+                        <TextView
+                            android:id="@+id/important_count_badge"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="0 项待确认"
+                            android:textSize="11sp"
+                            android:textColor="@color/text_secondary" />
+                    </LinearLayout>
+
+                    <LinearLayout
+                        android:id="@+id/important_items_list_container"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical" />
+                </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
+
+            <!-- 资产汇总大卡片 (渐变圆角质感) -->
+            <com.google.android.material.card.MaterialCardView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginHorizontal="16dp"
+                android:layout_marginTop="10dp"
+                app:cardCornerRadius="18dp"
+                app:cardElevation="2dp"
+                app:strokeWidth="0dp"
+                app:cardBackgroundColor="@color/primary">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:background="@drawable/bg_hero_card"
+                    android:paddingHorizontal="18dp"
+                    android:paddingVertical="16dp">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="总库存资产"
+                        android:textColor="#CCFFFFFF"
+                        android:textSize="13sp"
+                        android:fontFamily="sans-serif-medium" />
+
+                    <LinearLayout
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:gravity="bottom"
+                        android:layout_marginTop="2dp">
+
+                        <TextView
+                            android:id="@+id/total_count"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="0"
+                            android:textColor="#FFFFFF"
+                            android:textSize="40sp"
+                            android:textStyle="bold"
+                            android:fontFamily="sans-serif-medium" />
+
+                        <TextView
+                            android:id="@+id/total_count_unit"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginStart="6dp"
+                            android:text="在库总数"
+                            android:textColor="#E0FFFFFF"
+                            android:textSize="15sp"
+                            android:fontFamily="sans-serif-medium" />
+                    </LinearLayout>
+
+                    <View
+                        android:layout_width="match_parent"
+                        android:layout_height="1dp"
+                        android:layout_marginVertical="10dp"
+                        android:background="#26FFFFFF" />
+
+                    <!-- 次要统计：累计花费 & 在库品类 -->
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical">
+
+                        <LinearLayout
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:orientation="vertical">
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="累计投入金额"
+                                android:textColor="#B3FFFFFF"
+                                android:textSize="11sp" />
+
+                            <TextView
+                                android:id="@+id/total_amount"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="¥0.00"
+                                android:textColor="#FFFFFF"
+                                android:textSize="16sp"
+                                android:textStyle="bold"
+                                android:fontFamily="sans-serif-medium"
+                                android:layout_marginTop="2dp" />
+                        </LinearLayout>
+
+                        <View
+                            android:layout_width="1dp"
+                            android:layout_height="26dp"
+                            android:background="#26FFFFFF"
+                            android:layout_marginHorizontal="10dp" />
+
+                        <LinearLayout
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:orientation="vertical">
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="覆盖品牌/物品"
+                                android:textColor="#B3FFFFFF"
+                                android:textSize="11sp" />
+
+                            <TextView
+                                android:id="@+id/brand_coverage_text"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="0 种"
+                                android:textColor="#FFFFFF"
+                                android:textSize="16sp"
+                                android:textStyle="bold"
+                                android:fontFamily="sans-serif-medium"
+                                android:layout_marginTop="2dp" />
+                        </LinearLayout>
+                    </LinearLayout>
+
+                </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
+
+            <!-- 横向滚动的分类筛选药丸条 (Filter Chips) -->
+            <HorizontalScrollView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:scrollbars="none"
+                android:overScrollMode="never"
+                android:paddingTop="10dp"
+                android:paddingBottom="4dp">
+
+                <LinearLayout
+                    android:id="@+id/category_chips_container"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:paddingHorizontal="16dp"
+                    android:gravity="center_vertical" />
+            </HorizontalScrollView>
+
+            <!-- 排序选择与状态提示行 -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:paddingHorizontal="16dp"
+                android:paddingVertical="4dp">
+
+                <TextView
+                    android:id="@+id/group_count_text"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
-                    android:orientation="vertical">
+                    android:text="共 0 个分类，0 种物品"
+                    android:textColor="@color/text_secondary"
+                    android:textSize="12sp" />
 
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="累计投入金额"
-                        android:textColor="#B3FFFFFF"
-                        android:textSize="11sp" />
-
-                    <TextView
-                        android:id="@+id/total_amount"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="¥0.00"
-                        android:textColor="#FFFFFF"
-                        android:textSize="17sp"
-                        android:textStyle="bold"
-                        android:fontFamily="sans-serif-medium"
-                        android:layout_marginTop="2dp" />
-                </LinearLayout>
-
-                <View
-                    android:layout_width="1dp"
-                    android:layout_height="28dp"
-                    android:background="#26FFFFFF"
-                    android:layout_marginHorizontal="12dp" />
-
-                <LinearLayout
-                    android:layout_width="0dp"
+                <TextView
+                    android:id="@+id/btn_sort_order"
+                    android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:orientation="vertical">
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="覆盖品牌"
-                        android:textColor="#B3FFFFFF"
-                        android:textSize="11sp" />
-
-                    <TextView
-                        android:id="@+id/brand_coverage_text"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="0 个品牌"
-                        android:textColor="#FFFFFF"
-                        android:textSize="17sp"
-                        android:textStyle="bold"
-                        android:fontFamily="sans-serif-medium"
-                        android:layout_marginTop="2dp" />
-                </LinearLayout>
+                    android:text="⚡ 智能排序 ▾"
+                    android:textSize="12sp"
+                    android:textColor="@color/primary"
+                    android:padding="6dp"
+                    android:clickable="true"
+                    android:focusable="true" />
             </LinearLayout>
 
+            <!-- 物品列表 / 空状态 -->
+            <FrameLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:paddingHorizontal="16dp">
+
+                <androidx.recyclerview.widget.RecyclerView
+                    android:id="@+id/brand_recycler"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:nestedScrollingEnabled="false"
+                    android:overScrollMode="never" />
+
+                <LinearLayout
+                    android:id="@+id/empty_layout"
+                    android:layout_width="match_parent"
+                    android:layout_height="220dp"
+                    android:orientation="vertical"
+                    android:gravity="center"
+                    android:visibility="gone">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="📦"
+                        android:textSize="44sp" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="暂无记录，点击右下角 ＋ 立即开始记一笔"
+                        android:textColor="@color/text_secondary"
+                        android:textSize="14sp"
+                        android:layout_marginTop="8dp" />
+                </LinearLayout>
+            </FrameLayout>
+
         </LinearLayout>
-    </com.google.android.material.card.MaterialCardView>
-
-    <!-- 横向滚动的分类筛选药丸条 (Filter Chips) -->
-    <HorizontalScrollView
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:scrollbars="none"
-        android:overScrollMode="never"
-        android:paddingTop="12dp"
-        android:paddingBottom="6dp">
-
-        <LinearLayout
-            android:id="@+id/category_chips_container"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:paddingHorizontal="16dp"
-            android:gravity="center_vertical">
-            <!-- 动态添加各类分类药丸 -->
-        </LinearLayout>
-    </HorizontalScrollView>
-
-    <!-- 排序选择与状态提示行 -->
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:gravity="center_vertical"
-        android:paddingHorizontal="16dp"
-        android:paddingVertical="6dp">
-
-        <TextView
-            android:id="@+id/filter_summary_text"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:text="全部库存明细"
-            android:textSize="12sp"
-            android:textColor="@color/text_secondary" />
-
-        <!-- 排序下拉/弹窗选择按钮 -->
-        <TextView
-            android:id="@+id/btn_sort_selector"
-            android:layout_width="wrap_content"
-            android:layout_height="30dp"
-            android:gravity="center_vertical"
-            android:paddingHorizontal="10dp"
-            android:text="⚡ 按分组排序 ▾"
-            android:textSize="12sp"
-            android:textColor="@color/primary"
-            android:textStyle="bold"
-            android:background="@drawable/bg_btn_custom_add"
-            android:clickable="true"
-            android:focusable="true" />
-    </LinearLayout>
-
-    <!-- 空状态 -->
-    <LinearLayout
-        android:id="@+id/empty_state"
-        android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_weight="1"
-        android:orientation="vertical"
-        android:gravity="center"
-        android:visibility="gone">
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="📦"
-            android:textSize="44sp" />
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="暂无匹配的库存记录"
-            android:textSize="16sp"
-            android:textStyle="bold"
-            android:textColor="@color/text_secondary"
-            android:layout_marginTop="10dp" />
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="点击下方绿色 + 记录第一笔耗材"
-            android:textSize="13sp"
-            android:textColor="@color/text_hint"
-            android:layout_marginTop="4dp" />
-    </LinearLayout>
-
-    <!-- 分类与品牌列表 -->
-    <androidx.recyclerview.widget.RecyclerView
-        android:id="@+id/category_list"
-        android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_weight="1"
-        android:clipToPadding="false"
-        android:overScrollMode="never"
-        android:scrollbars="none"
-        android:paddingBottom="84dp" />
+    </ScrollView>
 
 </LinearLayout>

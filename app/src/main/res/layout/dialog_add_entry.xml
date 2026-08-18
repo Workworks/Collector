@@ -8,23 +8,23 @@
     android:background="@drawable/bg_dialog_card"
     android:padding="20dp">
 
-    <!-- 弹窗顶栏：图标徽章 + 标题 + 关闭按钮 -->
+    <!-- 弹窗顶栏：图标徽章 + 标题 + 轨迹按钮 + 关闭按钮 -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
         android:gravity="center_vertical"
-        android:layout_marginBottom="16dp">
+        android:layout_marginBottom="14dp">
 
         <FrameLayout
-            android:layout_width="42dp"
-            android:layout_height="42dp"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
             android:background="@drawable/bg_icon_circle">
 
             <ImageView
                 android:id="@+id/dialog_icon"
-                android:layout_width="22dp"
-                android:layout_height="22dp"
+                android:layout_width="20dp"
+                android:layout_height="20dp"
                 android:layout_gravity="center"
                 android:src="@drawable/ic_edit"
                 app:tint="#FFFFFFFF"
@@ -36,12 +36,27 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:layout_marginStart="12dp"
+            android:layout_marginStart="10dp"
             android:text="记一笔"
             android:textSize="18sp"
             android:textStyle="bold"
             android:textColor="@color/text_primary"
             android:fontFamily="sans-serif-medium" />
+
+        <TextView
+            android:id="@+id/btn_view_location_history"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="📍 位置轨迹"
+            android:textSize="12sp"
+            android:textColor="@color/primary"
+            android:paddingHorizontal="8dp"
+            android:paddingVertical="4dp"
+            android:background="@drawable/bg_chip_inactive"
+            android:layout_marginEnd="6dp"
+            android:visibility="gone"
+            android:clickable="true"
+            android:focusable="true" />
 
         <ImageView
             android:id="@+id/dialog_close_btn"
@@ -79,7 +94,7 @@
                     android:id="@+id/modeBuy"
                     style="?attr/materialButtonOutlinedStyle"
                     android:layout_width="0dp"
-                    android:layout_height="46dp"
+                    android:layout_height="44dp"
                     android:layout_weight="1"
                     android:text="➕ 增加 / 购入"
                     android:textSize="13sp"
@@ -91,7 +106,7 @@
                     android:id="@+id/modeUse"
                     style="?attr/materialButtonOutlinedStyle"
                     android:layout_width="0dp"
-                    android:layout_height="46dp"
+                    android:layout_height="44dp"
                     android:layout_weight="1"
                     android:text="➖ 减少 / 消耗"
                     android:textSize="13sp"
@@ -103,7 +118,7 @@
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="14dp"
+                android:layout_marginTop="12dp"
                 android:text="🏷️ 选择分类"
                 android:textColor="@color/text_primary"
                 android:textStyle="bold"
@@ -114,7 +129,7 @@
                 android:layout_height="wrap_content"
                 android:scrollbars="none"
                 android:overScrollMode="never"
-                android:layout_marginTop="8dp">
+                android:layout_marginTop="6dp">
 
                 <LinearLayout
                     android:id="@+id/dialog_category_chips"
@@ -124,11 +139,11 @@
                     android:gravity="center_vertical" />
             </HorizontalScrollView>
 
-            <!-- 物品/品牌名称 (独立清爽输入框，彻底杜绝浮动标签穿模遮挡) -->
+            <!-- 物品/品牌名称 (独立清爽输入框) -->
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="14dp"
+                android:layout_marginTop="12dp"
                 android:text="📦 物品 / 品牌名称"
                 android:textColor="@color/text_primary"
                 android:textStyle="bold"
@@ -137,10 +152,10 @@
             <AutoCompleteTextView
                 android:id="@+id/brandInput"
                 android:layout_width="match_parent"
-                android:layout_height="48dp"
-                android:layout_marginTop="6dp"
+                android:layout_height="46dp"
+                android:layout_marginTop="5dp"
                 android:background="@drawable/bg_input_box"
-                android:hint="例如：好奇小森林、iPhone、可乐"
+                android:hint="例如：好奇小森林、房门钥匙、身份证"
                 android:textColorHint="@color/text_hint"
                 android:textColor="@color/text_primary"
                 android:textSize="14sp"
@@ -155,7 +170,7 @@
                 android:layout_height="wrap_content"
                 android:orientation="horizontal"
                 android:gravity="center_vertical"
-                android:layout_marginTop="14dp">
+                android:layout_marginTop="12dp">
 
                 <TextView
                     android:layout_width="0dp"
@@ -169,7 +184,7 @@
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="单位可下拉或自定"
+                    android:text="单位可自定"
                     android:textSize="11sp"
                     android:textColor="@color/text_secondary" />
             </LinearLayout>
@@ -177,15 +192,14 @@
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="6dp"
+                android:layout_marginTop="5dp"
                 android:orientation="horizontal"
                 android:gravity="center_vertical">
 
-                <!-- 减少按钮 (-) -->
                 <TextView
                     android:id="@+id/minusBtn"
-                    android:layout_width="48dp"
-                    android:layout_height="48dp"
+                    android:layout_width="46dp"
+                    android:layout_height="46dp"
                     android:background="@drawable/bg_stepper_btn"
                     android:text="−"
                     android:textSize="22sp"
@@ -195,11 +209,10 @@
                     android:clickable="true"
                     android:focusable="true" />
 
-                <!-- 数量输入框 -->
                 <EditText
                     android:id="@+id/qtyInput"
                     android:layout_width="0dp"
-                    android:layout_height="48dp"
+                    android:layout_height="46dp"
                     android:layout_weight="1"
                     android:layout_marginStart="8dp"
                     android:layout_marginEnd="8dp"
@@ -209,14 +222,13 @@
                     android:maxLength="6"
                     android:text="1"
                     android:textColor="@color/text_primary"
-                    android:textSize="20sp"
+                    android:textSize="19sp"
                     android:textStyle="bold" />
 
-                <!-- 增加按钮 (+) -->
                 <TextView
                     android:id="@+id/plusBtn"
-                    android:layout_width="48dp"
-                    android:layout_height="48dp"
+                    android:layout_width="46dp"
+                    android:layout_height="46dp"
                     android:background="@drawable/bg_stepper_btn"
                     android:text="+"
                     android:textSize="22sp"
@@ -226,11 +238,10 @@
                     android:clickable="true"
                     android:focusable="true" />
 
-                <!-- 单位下拉/输入框 -->
                 <AutoCompleteTextView
                     android:id="@+id/unitDropdown"
-                    android:layout_width="88dp"
-                    android:layout_height="48dp"
+                    android:layout_width="86dp"
+                    android:layout_height="46dp"
                     android:layout_marginStart="8dp"
                     android:background="@drawable/bg_input_box"
                     android:gravity="center"
@@ -248,7 +259,7 @@
                 android:layout_height="wrap_content"
                 android:scrollbars="none"
                 android:overScrollMode="never"
-                android:layout_marginTop="8dp">
+                android:layout_marginTop="6dp">
 
                 <LinearLayout
                     android:layout_width="wrap_content"
@@ -258,7 +269,7 @@
                     <TextView
                         android:id="@+id/quick1"
                         android:layout_width="wrap_content"
-                        android:layout_height="34dp"
+                        android:layout_height="32dp"
                         android:layout_marginEnd="6dp"
                         android:paddingHorizontal="14dp"
                         android:background="@drawable/bg_chip_inactive"
@@ -273,7 +284,7 @@
                     <TextView
                         android:id="@+id/quick10"
                         android:layout_width="wrap_content"
-                        android:layout_height="34dp"
+                        android:layout_height="32dp"
                         android:layout_marginEnd="6dp"
                         android:paddingHorizontal="14dp"
                         android:background="@drawable/bg_chip_inactive"
@@ -288,7 +299,7 @@
                     <TextView
                         android:id="@+id/quick20"
                         android:layout_width="wrap_content"
-                        android:layout_height="34dp"
+                        android:layout_height="32dp"
                         android:layout_marginEnd="6dp"
                         android:paddingHorizontal="14dp"
                         android:background="@drawable/bg_chip_inactive"
@@ -303,7 +314,7 @@
                     <TextView
                         android:id="@+id/quick50"
                         android:layout_width="wrap_content"
-                        android:layout_height="34dp"
+                        android:layout_height="32dp"
                         android:layout_marginEnd="6dp"
                         android:paddingHorizontal="14dp"
                         android:background="@drawable/bg_chip_inactive"
@@ -318,7 +329,7 @@
                     <TextView
                         android:id="@+id/quick100"
                         android:layout_width="wrap_content"
-                        android:layout_height="34dp"
+                        android:layout_height="32dp"
                         android:paddingHorizontal="14dp"
                         android:background="@drawable/bg_chip_inactive"
                         android:textColor="@color/text_primary"
@@ -331,13 +342,257 @@
                 </LinearLayout>
             </HorizontalScrollView>
 
+            <!-- 📍 空间与放置位置 (选填/支持平面图定位) -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:layout_marginTop="14dp">
+
+                <TextView
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="📍 空间与放置位置（选填）"
+                    android:textColor="@color/text_primary"
+                    android:textStyle="bold"
+                    android:textSize="13sp" />
+
+                <TextView
+                    android:id="@+id/btn_select_on_map"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="🗺️ 平面图点位"
+                    android:textSize="11sp"
+                    android:textColor="@color/primary"
+                    android:padding="4dp"
+                    android:clickable="true"
+                    android:focusable="true" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:layout_marginTop="5dp">
+
+                <AutoCompleteTextView
+                    android:id="@+id/houseDropdown"
+                    android:layout_width="110dp"
+                    android:layout_height="46dp"
+                    android:background="@drawable/bg_input_box"
+                    android:gravity="center"
+                    android:inputType="none"
+                    android:text="🏠 自己的家"
+                    android:textSize="13sp"
+                    android:textColor="@color/text_primary"
+                    android:paddingHorizontal="6dp" />
+
+                <AutoCompleteTextView
+                    android:id="@+id/locationInput"
+                    android:layout_width="0dp"
+                    android:layout_height="46dp"
+                    android:layout_weight="1"
+                    android:layout_marginStart="8dp"
+                    android:background="@drawable/bg_input_box"
+                    android:hint="如：主卧衣柜二层、玄关柜"
+                    android:textColorHint="@color/text_hint"
+                    android:textColor="@color/text_primary"
+                    android:textSize="13sp"
+                    android:paddingHorizontal="12dp"
+                    android:inputType="text"
+                    android:maxLines="1" />
+            </LinearLayout>
+
+            <!-- 常用房间快速填入药丸 -->
+            <HorizontalScrollView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:scrollbars="none"
+                android:overScrollMode="never"
+                android:layout_marginTop="5dp">
+
+                <LinearLayout
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal">
+
+                    <TextView
+                        android:id="@+id/room_chip_entry"
+                        android:layout_width="wrap_content"
+                        android:layout_height="28dp"
+                        android:layout_marginEnd="6dp"
+                        android:paddingHorizontal="10dp"
+                        android:background="@drawable/bg_chip_inactive"
+                        android:textColor="@color/text_secondary"
+                        android:textSize="11sp"
+                        android:gravity="center"
+                        android:text="🚪 玄关"
+                        android:clickable="true" />
+
+                    <TextView
+                        android:id="@+id/room_chip_living"
+                        android:layout_width="wrap_content"
+                        android:layout_height="28dp"
+                        android:layout_marginEnd="6dp"
+                        android:paddingHorizontal="10dp"
+                        android:background="@drawable/bg_chip_inactive"
+                        android:textColor="@color/text_secondary"
+                        android:textSize="11sp"
+                        android:gravity="center"
+                        android:text="🛋️ 客厅"
+                        android:clickable="true" />
+
+                    <TextView
+                        android:id="@+id/room_chip_bedroom"
+                        android:layout_width="wrap_content"
+                        android:layout_height="28dp"
+                        android:layout_marginEnd="6dp"
+                        android:paddingHorizontal="10dp"
+                        android:background="@drawable/bg_chip_inactive"
+                        android:textColor="@color/text_secondary"
+                        android:textSize="11sp"
+                        android:gravity="center"
+                        android:text="🛏️ 主卧"
+                        android:clickable="true" />
+
+                    <TextView
+                        android:id="@+id/room_chip_kitchen"
+                        android:layout_width="wrap_content"
+                        android:layout_height="28dp"
+                        android:layout_marginEnd="6dp"
+                        android:paddingHorizontal="10dp"
+                        android:background="@drawable/bg_chip_inactive"
+                        android:textColor="@color/text_secondary"
+                        android:textSize="11sp"
+                        android:gravity="center"
+                        android:text="🍳 厨房"
+                        android:clickable="true" />
+
+                    <TextView
+                        android:id="@+id/room_chip_storage"
+                        android:layout_width="wrap_content"
+                        android:layout_height="28dp"
+                        android:paddingHorizontal="10dp"
+                        android:background="@drawable/bg_chip_inactive"
+                        android:textColor="@color/text_secondary"
+                        android:textSize="11sp"
+                        android:gravity="center"
+                        android:text="📦 储物间"
+                        android:clickable="true" />
+                </LinearLayout>
+            </HorizontalScrollView>
+
+            <!-- ⭐ 重要物品防丢标记与订阅提醒 -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:layout_marginTop="12dp"
+                android:background="@drawable/bg_changelog_box"
+                android:padding="12dp">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical">
+
+                    <CheckBox
+                        android:id="@+id/cb_is_important"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="⭐ 设为重要贵重物品（钥匙/证件/存单）"
+                        android:textSize="12sp"
+                        android:textStyle="bold"
+                        android:textColor="@color/text_primary"
+                        android:buttonTint="@color/primary" />
+                </LinearLayout>
+
+                <LinearLayout
+                    android:id="@+id/layout_subscription_options"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:layout_marginTop="8dp"
+                    android:visibility="gone">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="⏰ 订阅定期位置核对提醒："
+                        android:textSize="12sp"
+                        android:textColor="@color/primary"
+                        android:textStyle="bold" />
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:layout_marginTop="6dp">
+
+                        <TextView
+                            android:id="@+id/sub_interval_1"
+                            android:layout_width="0dp"
+                            android:layout_height="32dp"
+                            android:layout_weight="1"
+                            android:layout_marginEnd="4dp"
+                            android:background="@drawable/bg_chip_active"
+                            android:textColor="#FFFFFFFF"
+                            android:textSize="11sp"
+                            android:gravity="center"
+                            android:text="每天"
+                            android:clickable="true" />
+
+                        <TextView
+                            android:id="@+id/sub_interval_3"
+                            android:layout_width="0dp"
+                            android:layout_height="32dp"
+                            android:layout_weight="1"
+                            android:layout_marginEnd="4dp"
+                            android:background="@drawable/bg_chip_inactive"
+                            android:textColor="@color/text_primary"
+                            android:textSize="11sp"
+                            android:gravity="center"
+                            android:text="每3天"
+                            android:clickable="true" />
+
+                        <TextView
+                            android:id="@+id/sub_interval_7"
+                            android:layout_width="0dp"
+                            android:layout_height="32dp"
+                            android:layout_weight="1"
+                            android:layout_marginEnd="4dp"
+                            android:background="@drawable/bg_chip_inactive"
+                            android:textColor="@color/text_primary"
+                            android:textSize="11sp"
+                            android:gravity="center"
+                            android:text="每周"
+                            android:clickable="true" />
+
+                        <TextView
+                            android:id="@+id/sub_interval_30"
+                            android:layout_width="0dp"
+                            android:layout_height="32dp"
+                            android:layout_weight="1"
+                            android:background="@drawable/bg_chip_inactive"
+                            android:textColor="@color/text_primary"
+                            android:textSize="11sp"
+                            android:gravity="center"
+                            android:text="每月"
+                            android:clickable="true" />
+                    </LinearLayout>
+                </LinearLayout>
+            </LinearLayout>
+
             <!-- 金额/价格输入模式切换 -->
             <LinearLayout
                 android:id="@+id/price_section_container"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="vertical"
-                android:layout_marginTop="14dp">
+                android:layout_marginTop="12dp">
 
                 <LinearLayout
                     android:layout_width="match_parent"
@@ -371,8 +626,8 @@
                 <EditText
                     android:id="@+id/priceInput"
                     android:layout_width="match_parent"
-                    android:layout_height="48dp"
-                    android:layout_marginTop="6dp"
+                    android:layout_height="46dp"
+                    android:layout_marginTop="5dp"
                     android:background="@drawable/bg_input_box"
                     android:gravity="center_vertical"
                     android:hint="例如：120.00 (出库可不填)"
@@ -389,7 +644,7 @@
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="14dp"
+                android:layout_marginTop="12dp"
                 android:text="📝 备注信息（可选）"
                 android:textColor="@color/text_primary"
                 android:textStyle="bold"
@@ -398,8 +653,8 @@
             <EditText
                 android:id="@+id/notesInput"
                 android:layout_width="match_parent"
-                android:layout_height="46dp"
-                android:layout_marginTop="6dp"
+                android:layout_height="44dp"
+                android:layout_marginTop="5dp"
                 android:background="@drawable/bg_input_box"
                 android:hint="例如：618自营购入、放次卧衣柜"
                 android:textColorHint="@color/text_hint"
@@ -413,7 +668,7 @@
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="14dp"
+                android:layout_marginTop="12dp"
                 android:background="@drawable/bg_changelog_box"
                 android:paddingHorizontal="14dp"
                 android:paddingVertical="10dp"
@@ -432,12 +687,12 @@
         </LinearLayout>
     </ScrollView>
 
-    <!-- 底部操作双按钮（高定自定按钮，绝不遮挡，保证100%全端可视） -->
+    <!-- 底部操作双按钮 -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
-        android:layout_marginTop="16dp">
+        android:layout_marginTop="14dp">
 
         <Button
             android:id="@+id/btn_dialog_cancel"

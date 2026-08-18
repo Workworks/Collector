@@ -3,6 +3,7 @@ package com.kfaino.diapertracker
 import android.app.Activity
 import android.content.Context
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.graphics.Color
 import android.graphics.drawable.ColorDrawable
 import android.net.Uri
@@ -32,7 +33,7 @@ import java.util.TimeZone
 import java.util.concurrent.Executors
 
 /**
- * 现代轻量化 GitHub Releases 在线热更新引擎
+ * 在线更新管理器（支持后台静默预下载、0秒极速秒装、高定弹窗、多镜像加速与断点校验）
  */
 object UpdateManager {
 
@@ -50,13 +51,18 @@ object UpdateManager {
         val htmlUrl: String
     )
 
-    /** 获取当前已安装应用 versionName */
+    /** 获取本地应用当前 VersionName */
     fun getAppVersionName(context: Context): String {
         return try {
-            val pInfo = context.packageManager.getPackageInfo(context.packageName, 0)
-            pInfo.versionName ?: "1.0.0"
+            val pInfo = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                context.packageManager.getPackageInfo(context.packageName, PackageManager.PackageInfoFlags.of(0))
+            } else {
+                @Suppress("DEPRECATION")
+                context.packageManager.getPackageInfo(context.packageName, 0)
+            }
+            pInfo.versionName ?: "2.2.6"
         } catch (_: Exception) {
-            "1.0.0"
+            "2.2.6"
         }
     }
 
@@ -87,6 +93,58 @@ object UpdateManager {
         dialog.window?.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
         dialog.window?.attributes?.windowAnimations = R.style.CustomDialogAnimation
         return dialog
+    }
+
+    /**
+     * 后台静默预下载（零感知将新版安装包拉取至本地缓存，用户点击升级时 0 秒直接秒装）
+     */
+    fun preloadSilently(context: Context) {
+        executor.execute {
+            try {
+                val store = DataStore(context)
+                val repo = store.getGithubRepo()
+                val currentVer = getAppVersionName(context)
+                val release = fetchLatestRelease(repo) ?: return@execute
+                if (!isNewerVersion(release.versionName, currentVer)) return@execute
+
+                val saveDir = context.getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS) ?: context.cacheDir
+                val apkFile = File(saveDir, "Collecter_${release.versionName}.apk")
+                if (apkFile.exists() && apkFile.length() > 0 && (release.apkSize == 0L || apkFile.length() == release.apkSize)) {
+                    return@execute // 已经静默下载完成
+                }
+
+                val tempFile = File(saveDir, "Collecter_${release.versionName}.apk.tmp")
+                val urlsToTry = listOf(
+                    release.apkDownloadUrl,
+                    "https://ghfast.top/${release.apkDownloadUrl}",
+                    "https://mirror.ghproxy.com/${release.apkDownloadUrl}"
+                )
+
+                for (currentUrl in urlsToTry) {
+                    try {
+                        val url = URL(currentUrl)
+                        val conn = (url.openConnection() as HttpURLConnection).apply {
+                            requestMethod = "GET"
+                            connectTimeout = 8000
+                            readTimeout = 8000
+                            setRequestProperty("User-Agent", "Mozilla/5.0 (Android; Mobile) CollecterApp")
+                        }
+                        if (conn.responseCode in 200..299) {
+                            conn.inputStream.use { input ->
+                                tempFile.outputStream().use { output ->
+                                    input.copyTo(output)
+                                }
+                            }
+                            if (tempFile.exists() && tempFile.length() > 0) {
+                                if (apkFile.exists()) apkFile.delete()
+                                tempFile.renameTo(apkFile)
+                                break
+                            }
+                        }
+                    } catch (_: Exception) {}
+                }
+            } catch (_: Exception) {}
+        }
     }
 
     /**
@@ -159,8 +217,8 @@ object UpdateManager {
                 val url = URL(apiUrl)
                 val conn = (url.openConnection() as HttpURLConnection).apply {
                     requestMethod = "GET"
-                    connectTimeout = 4000
-                    readTimeout = 4000
+                    connectTimeout = 5000
+                    readTimeout = 5000
                     setRequestProperty("Accept", "application/vnd.github.v3+json")
                     setRequestProperty("User-Agent", "Mozilla/5.0 (Android; Mobile) CollecterApp")
                 }
@@ -196,7 +254,7 @@ object UpdateManager {
         val assets = json.optJSONArray("assets")
         if (assets != null) {
             for (i in 0 until assets.length()) {
-                val asset = assets.getJSONObject(i)
+                val asset = assets.optJSONObject(i) ?: continue
                 val name = asset.optString("name", "")
                 if (name.endsWith(".apk", ignoreCase = true)) {
                     apkUrl = asset.optString("browser_download_url", "")
@@ -223,7 +281,7 @@ object UpdateManager {
     }
 
     /**
-     * 定制现代发现新版本弹窗
+     * 定制现代发现新版本弹窗 (支持秒装就绪判断)
      */
     private fun showUpdateAvailableDialog(
         activity: Activity,
@@ -236,6 +294,7 @@ object UpdateManager {
         binding.customVersionBadge.text = "${release.tagName} (当前 v$currentVer)"
         binding.customUpdateSize.text = if (release.apkSize > 0) formatFileSize(release.apkSize) else ""
         binding.customUpdateDate.text = release.publishedAt.ifEmpty { "最新构建" }
+        binding.customUpdateChangelog.text = release.changelog.ifEmpty { "优化部分体验与修复已知问题。" }
         binding.customBtnCancel.applyPressScaleAnimation(0.92f)
         binding.customBtnUpdate.applyPressScaleAnimation(0.92f)
 
@@ -243,9 +302,22 @@ object UpdateManager {
             dialog.dismiss()
         }
 
-        binding.customBtnUpdate.setOnClickListener {
-            dialog.dismiss()
-            startDownloadAndInstall(activity, release)
+        val saveDir = activity.getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS) ?: activity.cacheDir
+        val apkFile = File(saveDir, "Collecter_${release.versionName}.apk")
+        val isPreloaded = apkFile.exists() && apkFile.length() > 0 && (release.apkSize == 0L || apkFile.length() == release.apkSize)
+
+        if (isPreloaded) {
+            binding.customBtnUpdate.text = "⚡ 安装包已就绪，立即秒装"
+            binding.customBtnUpdate.setOnClickListener {
+                dialog.dismiss()
+                installApk(activity, apkFile)
+            }
+        } else {
+            binding.customBtnUpdate.text = "🚀 立即极速更新"
+            binding.customBtnUpdate.setOnClickListener {
+                dialog.dismiss()
+                startDownloadAndInstall(activity, release)
+            }
         }
 
         dialog.show()
@@ -256,7 +328,7 @@ object UpdateManager {
      */
     private fun startDownloadAndInstall(activity: Activity, release: ReleaseInfo) {
         val progressBinding = DialogCustomUpdateProgressBinding.inflate(LayoutInflater.from(activity))
-        progressBinding.customProgressStatus.text = "正在下载 ${release.tagName}..."
+        progressBinding.customProgressStatus.text = "正在极速下载 ${release.tagName}..."
         progressBinding.customDownloadProgressBar.progress = 0
         progressBinding.customProgressPercent.text = "0%"
         progressBinding.customProgressSize.text = "0.0 MB / ${formatFileSize(release.apkSize)}"
@@ -285,68 +357,56 @@ object UpdateManager {
         )
 
         downloadThread = Thread {
-            var success = false
             var lastError: Exception? = null
+            var success = false
 
-            for (downloadUrl in urlsToTry) {
+            for (currentUrl in urlsToTry) {
                 if (isCanceled) break
                 try {
-                    val conn = (URL(downloadUrl).openConnection() as HttpURLConnection).apply {
-                        connectTimeout = 15000
-                        readTimeout = 15000
-                        instanceFollowRedirects = true
+                    val url = URL(currentUrl)
+                    val conn = (url.openConnection() as HttpURLConnection).apply {
+                        requestMethod = "GET"
+                        connectTimeout = 8000
+                        readTimeout = 8000
                         setRequestProperty("User-Agent", "Mozilla/5.0 (Android; Mobile) CollecterApp")
                     }
 
-                    var responseCode = conn.responseCode
-                    var currentConn = conn
-                    if (responseCode == HttpURLConnection.HTTP_MOVED_TEMP ||
-                        responseCode == HttpURLConnection.HTTP_MOVED_PERM ||
-                        responseCode == 307 || responseCode == 308) {
-                        val newLocation = currentConn.getHeaderField("Location")
-                        if (!newLocation.isNullOrEmpty()) {
-                            currentConn = (URL(newLocation).openConnection() as HttpURLConnection).apply {
-                                connectTimeout = 15000
-                                readTimeout = 15000
-                                setRequestProperty("User-Agent", "Mozilla/5.0 (Android; Mobile) CollecterApp")
-                            }
-                            responseCode = currentConn.responseCode
-                        }
-                    }
-
+                    val responseCode = conn.responseCode
                     if (responseCode !in 200..299) {
                         throw Exception("HTTP $responseCode")
                     }
 
-                    val totalBytes = if (currentConn.contentLengthLong > 0) currentConn.contentLengthLong else release.apkSize
-                    val input = currentConn.inputStream
+                    val totalLength = conn.contentLength.toLong().let { if (it > 0) it else release.apkSize }
+                    val input = conn.inputStream
                     val output = FileOutputStream(apkFile)
 
                     val buffer = ByteArray(8192)
-                    var bytesRead: Int
-                    var downloadedBytes = 0L
-                    var lastUpdateTs = 0L
+                    var read: Int
+                    var downloaded = 0L
+                    var lastUiUpdate = 0L
 
-                    while (input.read(buffer).also { bytesRead = it } != -1) {
+                    while (input.read(buffer).also { read = it } != -1) {
                         if (isCanceled) {
                             output.close()
                             input.close()
                             apkFile.delete()
                             return@Thread
                         }
-                        output.write(buffer, 0, bytesRead)
-                        downloadedBytes += bytesRead
+                        output.write(buffer, 0, read)
+                        downloaded += read
 
                         val now = System.currentTimeMillis()
-                        if (now - lastUpdateTs > 80 || downloadedBytes == totalBytes) {
-                            lastUpdateTs = now
-                            val percent = if (totalBytes > 0) ((downloadedBytes * 100) / totalBytes).toInt().coerceIn(0, 100) else 0
+                        if (now - lastUiUpdate > 80 || downloaded == totalLength) {
+                            lastUiUpdate = now
+                            val percent = if (totalLength > 0) (downloaded * 100 / totalLength).toInt() else 0
+                            val dlMb = downloaded.toDouble() / (1024 * 1024)
+                            val totalMb = totalLength.toDouble() / (1024 * 1024)
+
                             mainHandler.post {
-                                if (!activity.isFinishing && !activity.isDestroyed) {
-                                    progressBinding.customDownloadProgressBar.progress = percent
-                                    progressBinding.customProgressPercent.text = "$percent%"
-                                    progressBinding.customProgressSize.text = "${formatFileSize(downloadedBytes)} / ${formatFileSize(totalBytes)}"
-                                }
+                                if (!progressDialog.isShowing) return@post
+                                progressBinding.customDownloadProgressBar.progress = percent
+                                progressBinding.customProgressPercent.text = "$percent%"
+                                progressBinding.customProgressSize.text = String.format(Locale.getDefault(), "%.1f MB / %.1f MB", dlMb, totalMb)
                             }
                         }
                     }
@@ -420,7 +480,7 @@ object UpdateManager {
                     val binding = DialogCustomResultBinding.inflate(LayoutInflater.from(context))
                     val dialog = MaterialAlertDialogBuilder(context)
                         .setView(binding.root)
-                        .setCancelable(false)
+                        .setCancelable(true)
                         .create()
                     dialog.window?.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
 

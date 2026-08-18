@@ -3,6 +3,7 @@ package com.kfaino.diapertracker
 import android.content.res.ColorStateList
 import android.graphics.Color
 import android.view.LayoutInflater
+import android.view.View
 import android.view.ViewGroup
 import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.RecyclerView
@@ -75,7 +76,16 @@ class CategoryAdapter(
                 val b = vh.binding
                 val u = brand.unit.ifEmpty { "片" }
 
-                b.brandName.text = brand.name
+                b.brandName.text = (if (brand.isImportant) "⭐ " else "") + brand.name
+
+                // 空间与位置信息
+                if (brand.location.isNotBlank()) {
+                    b.itemLocationTag.visibility = View.VISIBLE
+                    b.itemLocationTag.text = "📍 ${brand.houseName} · ${brand.location}"
+                } else {
+                    b.itemLocationTag.visibility = View.GONE
+                }
+
                 b.itemAvgPrice.text = if (brand.avgPrice > 0)
                     "均价 ¥${String.format(Locale.getDefault(), "%.2f", brand.avgPrice)}/$u"
                 else
@@ -101,42 +111,35 @@ class CategoryAdapter(
                     else -> {
                         b.stockBadgeLayout.setBackgroundResource(R.drawable.bg_stock_empty)
                         b.itemCount.setTextColor(ContextCompat.getColor(ctx, R.color.stock_empty_text))
-                        b.itemCount.text = "缺货 (${brand.count} $u)"
+                        b.itemCount.text = "${brand.count} $u (缺货)"
                     }
                 }
 
-                // 进度条
+                // 占比进度条
                 val max = maxPerCategory[item.category] ?: 1
-                val progressVal = (brand.count * 100 / max).coerceIn(0, 100)
-                b.shareBar.progress = progressVal
+                val progress = if (max > 0) (brand.count.coerceAtLeast(0) * 100 / max).coerceIn(0, 100) else 0
+                b.shareBar.progress = progress
 
-                vh.itemView.applyPressScaleAnimation(0.96f)
-                vh.itemView.setOnClickListener { onBrandClick?.invoke(brand, item.category) }
+                // 动效与交互
+                holder.itemView.applyPressScaleAnimation(0.96f)
+                holder.itemView.setOnClickListener {
+                    onBrandClick?.invoke(brand, item.category)
+                }
             }
         }
     }
 
     private fun colorFor(name: String): Int {
-        val palette = intArrayOf(
-            Color.parseColor("#059669"),
-            Color.parseColor("#2563EB"),
-            Color.parseColor("#7C3AED"),
-            Color.parseColor("#DB2777"),
-            Color.parseColor("#EA580C"),
-            Color.parseColor("#0D9488"),
-            Color.parseColor("#4F46E5"),
-            Color.parseColor("#65A30D"),
-            Color.parseColor("#DC2626"),
-            Color.parseColor("#0284C7"),
-            Color.parseColor("#D97706"),
-            Color.parseColor("#475569")
+        val colors = intArrayOf(
+            Color.parseColor("#10B981"), Color.parseColor("#3B82F6"),
+            Color.parseColor("#8B5CF6"), Color.parseColor("#F59E0B"),
+            Color.parseColor("#EC4899"), Color.parseColor("#06B6D4"),
+            Color.parseColor("#F97316"), Color.parseColor("#6366F1")
         )
-        return palette[(name.hashCode() and Int.MAX_VALUE) % palette.size]
+        val hash = Math.abs(name.hashCode())
+        return colors[hash % colors.size]
     }
 
-    class HeaderVH(val binding: ItemCategoryHeaderBinding) :
-        RecyclerView.ViewHolder(binding.root)
-
-    class BrandVH(val binding: ItemBrandSummaryBinding) :
-        RecyclerView.ViewHolder(binding.root)
+    class HeaderVH(val binding: ItemCategoryHeaderBinding) : RecyclerView.ViewHolder(binding.root)
+    class BrandVH(val binding: ItemBrandSummaryBinding) : RecyclerView.ViewHolder(binding.root)
 }

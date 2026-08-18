@@ -1,0 +1,101 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:background="@drawable/bg_dialog_card"
+    android:padding="20dp">
+
+    <!-- 顶栏：图标 + 标题 + 关闭按钮 -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:layout_marginBottom="16dp">
+
+        <FrameLayout
+            android:layout_width="42dp"
+            android:layout_height="42dp"
+            android:background="@drawable/bg_icon_circle">
+
+            <ImageView
+                android:layout_width="22dp"
+                android:layout_height="22dp"
+                android:layout_gravity="center"
+                android:src="@drawable/ic_edit"
+                app:tint="#FFFFFFFF"
+                android:contentDescription="位置" />
+        </FrameLayout>
+
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:layout_marginStart="12dp"
+            android:orientation="vertical">
+
+            <TextView
+                android:id="@+id/history_item_title"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="物品位置变迁时光轴"
+                android:textSize="17sp"
+                android:textStyle="bold"
+                android:textColor="@color/text_primary"
+                android:fontFamily="sans-serif-medium" />
+
+            <TextView
+                android:id="@+id/history_current_location"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="📍 当前位置: 主卧衣柜二层"
+                android:textSize="12sp"
+                android:textColor="@color/primary"
+                android:layout_marginTop="2dp" />
+        </LinearLayout>
+
+        <ImageView
+            android:id="@+id/btn_close_history"
+            android:layout_width="36dp"
+            android:layout_height="36dp"
+            android:src="@drawable/ic_close"
+            android:padding="8dp"
+            app:tint="@color/text_secondary"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:contentDescription="关闭" />
+    </LinearLayout>
+
+    <!-- 时光轴列表 -->
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="220dp"
+        android:background="@drawable/bg_changelog_box"
+        android:padding="12dp"
+        android:scrollbars="vertical"
+        android:fadeScrollbars="false"
+        android:overScrollMode="never">
+
+        <LinearLayout
+            android:id="@+id/history_timeline_container"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical" />
+    </ScrollView>
+
+    <!-- 底部确认按钮 -->
+    <Button
+        android:id="@+id/btn_history_done"
+        android:layout_width="match_parent"
+        android:layout_height="48dp"
+        android:layout_marginTop="16dp"
+        android:text="我知道了"
+        android:textSize="14sp"
+        android:textStyle="bold"
+        android:textColor="#FFFFFFFF"
+        android:background="@drawable/bg_btn_primary"
+        style="?android:attr/borderlessButtonStyle" />
+
+</LinearLayout>

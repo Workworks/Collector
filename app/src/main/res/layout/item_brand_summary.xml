@@ -22,7 +22,7 @@
         android:paddingHorizontal="16dp"
         android:paddingVertical="14dp">
 
-        <!-- 上半部分：头像、品牌名、均价、库存状态标签 -->
+        <!-- 上半部分：头像、品牌名、位置、均价、库存状态标签 -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -56,6 +56,17 @@
                     android:textStyle="bold"
                     android:textColor="@color/text_primary"
                     android:fontFamily="sans-serif-medium" />
+
+                <!-- 📍 放置位置标签 -->
+                <TextView
+                    android:id="@+id/item_location_tag"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="📍 自己的家 · 主卧衣柜二层"
+                    android:textSize="11sp"
+                    android:textColor="@color/primary"
+                    android:layout_marginTop="2dp"
+                    android:visibility="gone" />
 
                 <!-- 均价 & 累计花费 -->
                 <LinearLayout
@@ -114,7 +125,7 @@
 
         </LinearLayout>
 
-        <!-- 进度条（该品牌在当前尺码分类中的库存占比） -->
+        <!-- 进度条（该品牌在当前分类中的库存占比） -->
         <ProgressBar
             android:id="@+id/share_bar"
             style="@android:style/Widget.Material.ProgressBar.Horizontal"
