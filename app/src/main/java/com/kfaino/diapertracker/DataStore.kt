@@ -207,7 +207,7 @@ class DataStore(ctx: Context) {
     // ==================== GitHub 更新仓库设置 ====================
 
     fun getGithubRepo(): String {
-        return prefs.getString("github_repo", "Workworks/DiaperTracker") ?: "Workworks/DiaperTracker"
+        return prefs.getString("github_repo", "Workworks/Collector") ?: "Workworks/Collector"
     }
 
     fun setGithubRepo(repo: String) {
