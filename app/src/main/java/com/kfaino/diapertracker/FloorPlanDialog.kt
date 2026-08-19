@@ -5,24 +5,29 @@ import android.graphics.Color
 import android.graphics.drawable.ColorDrawable
 import android.view.Gravity
 import android.view.LayoutInflater
+import android.view.View
 import android.widget.EditText
+import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.TextView
 import android.widget.Toast
 import androidx.core.content.ContextCompat
+import com.google.android.material.card.MaterialCardView
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.kfaino.diapertracker.databinding.DialogFloorPlanPickerBinding
+import java.util.Locale
 
 object FloorPlanDialog {
 
     /**
-     * 弹出平面图选点或查看房间物品弹窗
+     * 弹出平面图选点、查看房间物品或从物品一键穿梭高亮
      */
     fun show(
         activity: Activity,
         store: DataStore,
         isSelectMode: Boolean = true,
         currentHouseName: String? = null,
+        targetEntry: Entry? = null,
         onLocationSelected: ((houseName: String, roomName: String, pinX: Float, pinY: Float) -> Unit)? = null
     ) {
         val binding = DialogFloorPlanPickerBinding.inflate(LayoutInflater.from(activity))
@@ -35,15 +40,141 @@ object FloorPlanDialog {
         dialog.window?.attributes?.windowAnimations = R.style.CustomDialogAnimation
 
         var houses = store.getHouses()
-        var selectedHouse = houses.find { it.name == currentHouseName } ?: houses.firstOrNull() ?: store.addHouse("🏠 自己的家")
+        val defaultHouseName = targetEntry?.houseName ?: currentHouseName
+        var selectedHouse = houses.find { it.name == defaultHouseName } ?: houses.firstOrNull() ?: store.addHouse("🏠 自己的家")
 
-        var selectedRoomName = ""
-        var selectedPx = -1f
-        var selectedPy = -1f
+        var selectedRoomName = targetEntry?.roomName ?: ""
+        var selectedPx = targetEntry?.pinX ?: -1f
+        var selectedPy = targetEntry?.pinY ?: -1f
 
         binding.interactiveFloorPlan.isPinSelectionMode = isSelectMode
         binding.interactiveFloorPlan.houseSpace = selectedHouse
-        binding.interactiveFloorPlan.entries = store.loadAll()
+        val allEntries = store.loadAll()
+        binding.interactiveFloorPlan.entries = allEntries
+
+        // 若是由特定物品穿梭进入
+        if (targetEntry != null) {
+            binding.floorplanTitle.text = "🎯 物品位置穿梭定位"
+            binding.floorplanHint.text = "正在定位【${targetEntry.brand}】所在空间与房间"
+            binding.interactiveFloorPlan.highlightedRoomName = targetEntry.roomName
+            binding.interactiveFloorPlan.highlightedPinX = targetEntry.pinX
+            binding.interactiveFloorPlan.highlightedPinY = targetEntry.pinY
+            binding.selectedRoomInfo.text = "📍 ${targetEntry.houseName} · 【${targetEntry.roomName.ifEmpty { "房间未设" }}】 ${targetEntry.location}"
+            binding.btnConfirmFloorplan.text = "关闭定位"
+        } else if (!isSelectMode) {
+            binding.floorplanTitle.text = "🗺️ 家庭空间平面图全景"
+            binding.floorplanHint.text = "👉 点击任意房间可展开查看该房间内的所有在库物品"
+            binding.btnConfirmFloorplan.text = "我知道了"
+        } else {
+            binding.btnConfirmFloorplan.text = "确认此位置标记"
+        }
+
+        fun showRoomItemsDrawer(roomName: String, items: List<Entry>) {
+            binding.roomAssetsContainer.removeAllViews()
+            if (items.isEmpty()) {
+                binding.roomAssetsScroll.visibility = View.GONE
+                return
+            }
+
+            binding.roomAssetsScroll.visibility = View.VISIBLE
+
+            // 头部标题
+            val headerTv = TextView(activity).apply {
+                text = "📦 【$roomName】存放的在库物品 (共 ${items.size} 种):"
+                textSize = 12f
+                setTextColor(ContextCompat.getColor(context, R.color.primary))
+                paint.isFakeBoldText = true
+                setPadding(0, 4, 0, 8)
+            }
+            binding.roomAssetsContainer.addView(headerTv)
+
+            for (item in items) {
+                val card = MaterialCardView(activity).apply {
+                    radius = activity.dpToPx(10).toFloat()
+                    cardElevation = 0f
+                    strokeWidth = activity.dpToPx(1)
+                    setStrokeColor(ContextCompat.getColor(context, R.color.card_border))
+                    setCardBackgroundColor(ContextCompat.getColor(context, R.color.input_bg))
+                    layoutParams = LinearLayout.LayoutParams(
+                        LinearLayout.LayoutParams.MATCH_PARENT,
+                        LinearLayout.LayoutParams.WRAP_CONTENT
+                    ).apply { bottomMargin = activity.dpToPx(6) }
+                }
+
+                val row = LinearLayout(activity).apply {
+                    orientation = LinearLayout.HORIZONTAL
+                    gravity = Gravity.CENTER_VERTICAL
+                    setPadding(activity.dpToPx(10), activity.dpToPx(8), activity.dpToPx(10), activity.dpToPx(8))
+                }
+
+                // 缩略图或 Emoji
+                val iconView: View = if (item.photoPath.isNotBlank()) {
+                    val bm = ImageVaultHelper.loadSampledBitmap(activity, item.photoPath, 80, 80)
+                    if (bm != null) {
+                        ImageView(activity).apply {
+                            setImageBitmap(bm)
+                            scaleType = ImageView.ScaleType.CENTER_CROP
+                            layoutParams = LinearLayout.LayoutParams(activity.dpToPx(28), activity.dpToPx(28)).apply {
+                                marginEnd = activity.dpToPx(8)
+                            }
+                        }
+                    } else {
+                        TextView(activity).apply {
+                            text = "📦"
+                            textSize = 16f
+                            layoutParams = LinearLayout.LayoutParams(LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.WRAP_CONTENT).apply {
+                                marginEnd = activity.dpToPx(8)
+                            }
+                        }
+                    }
+                } else {
+                    TextView(activity).apply {
+                        text = "📦"
+                        textSize = 16f
+                        layoutParams = LinearLayout.LayoutParams(LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.WRAP_CONTENT).apply {
+                            marginEnd = activity.dpToPx(8)
+                        }
+                    }
+                }
+
+                val titleTv = TextView(activity).apply {
+                    text = item.brand
+                    textSize = 13f
+                    setTextColor(ContextCompat.getColor(context, R.color.text_primary))
+                    paint.isFakeBoldText = true
+                    layoutParams = LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f)
+                }
+
+                val priceTv = TextView(activity).apply {
+                    text = "¥${String.format(Locale.getDefault(), "%.2f", item.price * item.qty)}"
+                    textSize = 12f
+                    setTextColor(ContextCompat.getColor(context, R.color.text_secondary))
+                    setPadding(0, 0, activity.dpToPx(8), 0)
+                }
+
+                val qtyBadge = TextView(activity).apply {
+                    text = "${item.qty} ${item.unit}"
+                    textSize = 11f
+                    setTextColor(ContextCompat.getColor(context, R.color.stock_healthy_text))
+                    setBackgroundResource(R.drawable.bg_stock_healthy)
+                    setPadding(activity.dpToPx(6), activity.dpToPx(2), activity.dpToPx(6), activity.dpToPx(2))
+                }
+
+                row.addView(iconView)
+                row.addView(titleTv)
+                row.addView(priceTv)
+                row.addView(qtyBadge)
+                card.addView(row)
+
+                card.applyPressScaleAnimation(0.95f)
+                card.setOnClickListener {
+                    dialog.dismiss()
+                    (activity as? MainActivity)?.showEditDialog(item)
+                }
+
+                binding.roomAssetsContainer.addView(card)
+            }
+        }
 
         fun refreshHouseTabs() {
             binding.houseTabsContainer.removeAllViews()
@@ -102,6 +233,12 @@ object FloorPlanDialog {
 
         refreshHouseTabs()
 
+        // 初始若有 targetEntry 或已选房间，展示该房间物品抽屉
+        if (targetEntry != null && targetEntry.roomName.isNotBlank()) {
+            val roomItems = allEntries.filter { it.roomName == targetEntry.roomName && !it.isRetired }
+            showRoomItemsDrawer(targetEntry.roomName, roomItems)
+        }
+
         binding.interactiveFloorPlan.onPinPlaced = { px, py, rName ->
             selectedPx = px
             selectedPy = py
@@ -110,13 +247,18 @@ object FloorPlanDialog {
         }
 
         binding.interactiveFloorPlan.onRoomClicked = { room, items ->
-            val summary = if (items.isNotEmpty()) {
-                val names = items.map { "${it.brand} (${it.qty}${it.unit})" }.joinToString("、")
-                "【${room.name}】共 ${items.size} 种物品：$names"
+            selectedRoomName = room.name
+            binding.interactiveFloorPlan.highlightedRoomName = room.name
+            binding.interactiveFloorPlan.invalidate()
+            val activeItems = items.filter { !it.isRetired }
+            val summary = if (activeItems.isNotEmpty()) {
+                val names = activeItems.map { "${it.brand} (${it.qty}${it.unit})" }.joinToString("、")
+                "【${room.name}】共 ${activeItems.size} 种物品：$names"
             } else {
                 "【${room.name}】暂无存放物品"
             }
             binding.selectedRoomInfo.text = "🏠 $summary"
+            showRoomItemsDrawer(room.name, activeItems)
         }
 
         binding.btnManageRoomsTop.applyPressScaleAnimation(0.92f)
@@ -134,7 +276,7 @@ object FloorPlanDialog {
 
         binding.btnCloseFloorplan.setOnClickListener { dialog.dismiss() }
         binding.btnConfirmFloorplan.setOnClickListener {
-            if (selectedRoomName.isNotBlank() || selectedPx >= 0f) {
+            if (isSelectMode && (selectedRoomName.isNotBlank() || selectedPx >= 0f)) {
                 onLocationSelected?.invoke(selectedHouse.name, selectedRoomName, selectedPx, selectedPy)
             }
             dialog.dismiss()

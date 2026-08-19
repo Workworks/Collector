@@ -70,6 +70,20 @@ class HomeFragment : Fragment() {
             },
             onMoreClick = { entry, anchorView ->
                 showAssetMoreMenu(entry, anchorView)
+            },
+            onLocationClick = { entry ->
+                FloorPlanDialog.show(
+                    activity = requireActivity(),
+                    store = store,
+                    isSelectMode = false,
+                    targetEntry = entry
+                )
+            },
+            onPhotoClick = { entry ->
+                PhotoPreviewDialog.show(requireActivity(), "${entry.brand} · 实物照片", entry.photoPath)
+            },
+            onReceiptClick = { entry ->
+                PhotoPreviewDialog.show(requireActivity(), "${entry.brand} · 购买发票/保修卡凭证", entry.receiptPath)
             }
         )
 

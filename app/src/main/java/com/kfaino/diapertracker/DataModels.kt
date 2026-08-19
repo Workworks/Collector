@@ -59,7 +59,11 @@ data class Entry(
     // 4. 纠正需求：细分物品类型 (折旧资产, 保质期物品, 长期使用耐用品, 日常消耗品)
     val assetType: String = "consumable",           // "depreciating" (折旧资产), "expiring" (保质期物品), "durable" (长期使用), "consumable" (日常消耗品)
     val manufactureDate: Long = 0L,                 // 生产日期
-    val expiryDate: Long = 0L                       // 到期日期
+    val expiryDate: Long = 0L,                      // 到期日期
+
+    // 5. 实物照片与购买发票/保修卡留存 (沙盒私有路径)
+    val photoPath: String = "",                     // 物品实物照片文件名/相对路径
+    val receiptPath: String = ""                    // 购买发票/凭证/保修卡照片文件名/相对路径
 ) {
     /** 获取到期状态描述 */
     fun getExpiryStatusText(): String {

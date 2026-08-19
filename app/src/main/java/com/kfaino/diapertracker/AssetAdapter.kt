@@ -1,5 +1,6 @@
 package com.kfaino.diapertracker
 
+import android.app.Activity
 import android.content.Context
 import android.graphics.Color
 import android.view.LayoutInflater
@@ -14,7 +15,10 @@ import java.util.Locale
 
 class AssetAdapter(
     private val onEntryClick: (Entry) -> Unit,
-    private val onMoreClick: (Entry, View) -> Unit
+    private val onMoreClick: (Entry, View) -> Unit,
+    private val onLocationClick: ((Entry) -> Unit)? = null,
+    private val onPhotoClick: ((Entry) -> Unit)? = null,
+    private val onReceiptClick: ((Entry) -> Unit)? = null
 ) : RecyclerView.Adapter<AssetAdapter.VH>() {
 
     private var items: List<Entry> = emptyList()
@@ -38,9 +42,28 @@ class AssetAdapter(
         holder.itemView.setOnClickListener { onEntryClick(entry) }
         b.btnItemMore.setOnClickListener { onMoreClick(entry, it) }
 
-        // 1. 图标/首字徽章
+        // 1. 图标/实物缩略图
         val emoji = getCategoryEmoji(entry.category)
         b.itemIconBadge.text = emoji
+
+        if (entry.photoPath.isNotBlank()) {
+            val thumb = ImageVaultHelper.loadSampledBitmap(ctx, entry.photoPath, 120, 120)
+            if (thumb != null) {
+                b.itemPhotoThumbnail.visibility = View.VISIBLE
+                b.itemPhotoThumbnail.setImageBitmap(thumb)
+                b.itemPhotoThumbnail.setOnClickListener {
+                    onPhotoClick?.invoke(entry) ?: run {
+                        (ctx as? Activity)?.let { act ->
+                            PhotoPreviewDialog.show(act, "${entry.brand} · 实物照片", entry.photoPath)
+                        }
+                    }
+                }
+            } else {
+                b.itemPhotoThumbnail.visibility = View.GONE
+            }
+        } else {
+            b.itemPhotoThumbnail.visibility = View.GONE
+        }
 
         // 2. 物品名称与星标
         b.itemName.text = entry.brand
@@ -97,15 +120,34 @@ class AssetAdapter(
             }
         }
 
-        // 5. 空间位置标签
+        // 5. 发票凭证快捷徽章
+        if (entry.receiptPath.isNotBlank()) {
+            b.itemReceiptBadge.visibility = View.VISIBLE
+            b.itemReceiptBadge.applyPressScaleAnimation(0.92f)
+            b.itemReceiptBadge.setOnClickListener {
+                onReceiptClick?.invoke(entry) ?: run {
+                    (ctx as? Activity)?.let { act ->
+                        PhotoPreviewDialog.show(act, "${entry.brand} · 购买发票/保修卡凭证", entry.receiptPath)
+                    }
+                }
+            }
+        } else {
+            b.itemReceiptBadge.visibility = View.GONE
+        }
+
+        // 6. 空间位置标签 (点击可穿梭至平面图)
         if (entry.location.isNotBlank()) {
             b.itemLocationTag.visibility = View.VISIBLE
             b.itemLocationTag.text = "📍 ${entry.location}"
+            b.itemLocationTag.applyPressScaleAnimation(0.92f)
+            b.itemLocationTag.setOnClickListener {
+                onLocationClick?.invoke(entry)
+            }
         } else {
             b.itemLocationTag.visibility = View.GONE
         }
 
-        // 6. 在库数量
+        // 7. 在库数量
         b.itemStockBadge.text = "${entry.qty} ${entry.unit}"
     }
 

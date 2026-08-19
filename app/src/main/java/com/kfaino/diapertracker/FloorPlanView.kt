@@ -36,9 +36,36 @@ class FloorPlanView @JvmOverloads constructor(
     var selectedPinX: Float = -1f
     var selectedPinY: Float = -1f
 
+    // 高亮聚焦目标（用于从物品卡片一键穿梭定位）
+    var highlightedRoomName: String? = null
+    var highlightedPinX: Float = -1f
+    var highlightedPinY: Float = -1f
+
     var onRoomClicked: ((HouseRoom, List<Entry>) -> Unit)? = null
     var onPinPlaced: ((Float, Float, String) -> Unit)? = null
     var onPinClicked: ((Entry) -> Unit)? = null
+
+    private val highlightRoomFillPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+        style = Paint.Style.FILL
+        color = Color.parseColor("#33F59E0B") // 琥珀金半透明高亮
+    }
+
+    private val highlightRoomStrokePaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+        style = Paint.Style.STROKE
+        strokeWidth = 6f
+        color = Color.parseColor("#F59E0B") // 琥珀金高亮边框
+    }
+
+    private val highlightPulsePaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+        style = Paint.Style.STROKE
+        strokeWidth = 4f
+        color = Color.parseColor("#F59E0B")
+    }
+
+    private val highlightPulseFill = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+        style = Paint.Style.FILL
+        color = Color.parseColor("#44F59E0B")
+    }
 
     private val bgPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
         color = Color.parseColor("#131926")
@@ -121,14 +148,22 @@ class FloorPlanView @JvmOverloads constructor(
             roomFillPaint.color = fillColor
             roomStrokePaint.color = baseColor
 
-            canvas.drawRoundRect(roomRect, 16f, 16f, roomFillPaint)
-            canvas.drawRoundRect(roomRect, 16f, 16f, roomStrokePaint)
+            val isHighlightedRoom = (highlightedRoomName != null && highlightedRoomName == room.name)
+            if (isHighlightedRoom) {
+                canvas.drawRoundRect(roomRect, 16f, 16f, highlightRoomFillPaint)
+                canvas.drawRoundRect(roomRect, 16f, 16f, highlightRoomStrokePaint)
+            } else {
+                canvas.drawRoundRect(roomRect, 16f, 16f, roomFillPaint)
+                canvas.drawRoundRect(roomRect, 16f, 16f, roomStrokePaint)
+            }
 
             // 房间图标与名称
             val centerX = roomRect.centerX()
             val centerY = roomRect.centerY()
             textPaint.textSize = (Math.min(rw, rh) * 0.22f).coerceIn(22f, 38f)
+            textPaint.color = if (isHighlightedRoom) Color.parseColor("#F59E0B") else Color.WHITE
             canvas.drawText("${room.icon} ${room.name}", centerX, centerY + (textPaint.textSize / 3), textPaint)
+            textPaint.color = Color.WHITE
 
             // 统计该房间内的物品数量
             val itemsInRoom = entries.filter { it.roomName == room.name || it.location.contains(room.name) }
@@ -157,6 +192,15 @@ class FloorPlanView @JvmOverloads constructor(
             val py = selectedPinY * h
             canvas.drawCircle(px, py, 28f, pinSelectedPaint)
             canvas.drawCircle(px, py, 14f, pinPaint)
+        }
+
+        // 5. 焦点高亮寻物图钉 (Pulsing Focus Pin)
+        if (highlightedPinX in 0f..1f && highlightedPinY in 0f..1f) {
+            val px = highlightedPinX * w
+            val py = highlightedPinY * h
+            canvas.drawCircle(px, py, 42f, highlightPulseFill)
+            canvas.drawCircle(px, py, 30f, highlightPulsePaint)
+            canvas.drawCircle(px, py, 15f, highlightRoomStrokePaint)
         }
     }
 

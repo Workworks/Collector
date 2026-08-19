@@ -110,7 +110,9 @@ class DataStore(ctx: Context) {
                         subAutoRenew = o.optBoolean("sub_rnw", true),
                         assetType = o.optString("a_type", if (o.optBoolean("is_sub", false)) "subscription" else "consumable"),
                         manufactureDate = o.optLong("m_date", 0L),
-                        expiryDate = o.optLong("e_date", 0L)
+                        expiryDate = o.optLong("e_date", 0L),
+                        photoPath = o.optString("img_p", ""),
+                        receiptPath = o.optString("rec_p", "")
                     )
                 )
             }
@@ -174,6 +176,8 @@ class DataStore(ctx: Context) {
                     .put("a_type", e.assetType)
                     .put("m_date", e.manufactureDate)
                     .put("e_date", e.expiryDate)
+                    .put("img_p", e.photoPath)
+                    .put("rec_p", e.receiptPath)
             )
         }
         prefs.edit().putString(keyEntries, arr.toString()).apply()
@@ -724,7 +728,9 @@ class DataStore(ctx: Context) {
                             subAutoRenew = o.optBoolean("sub_rnw", true),
                             assetType = o.optString("a_type", if (o.optBoolean("is_sub", false)) "subscription" else "consumable"),
                             manufactureDate = o.optLong("m_date", 0L),
-                            expiryDate = o.optLong("e_date", 0L)
+                            expiryDate = o.optLong("e_date", 0L),
+                            photoPath = o.optString("img_p", ""),
+                            receiptPath = o.optString("rec_p", "")
                         )
                     )
                 }

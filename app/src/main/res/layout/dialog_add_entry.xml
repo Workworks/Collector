@@ -948,6 +948,152 @@
                 android:maxLines="1"
                 android:textSize="13sp" />
 
+            <!-- 📷 实物照片与 🧾 发票/保修卡留存 -->
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="12dp"
+                android:text="📷 物品实物照片与发票凭证（选填）"
+                android:textColor="@color/text_primary"
+                android:textStyle="bold"
+                android:textSize="13sp" />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="6dp"
+                android:orientation="horizontal">
+
+                <!-- 1. 实物照片槽位 -->
+                <com.google.android.material.card.MaterialCardView
+                    android:id="@+id/card_photo_slot"
+                    android:layout_width="0dp"
+                    android:layout_height="84dp"
+                    android:layout_weight="1"
+                    android:layout_marginEnd="6dp"
+                    app:cardCornerRadius="12dp"
+                    app:cardElevation="0dp"
+                    app:cardBackgroundColor="@color/input_bg"
+                    app:strokeColor="@color/card_border"
+                    app:strokeWidth="1dp"
+                    android:clickable="true"
+                    android:focusable="true">
+
+                    <FrameLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent">
+
+                        <!-- 空状态提示 -->
+                        <LinearLayout
+                            android:id="@+id/layout_photo_empty"
+                            android:layout_width="match_parent"
+                            android:layout_height="match_parent"
+                            android:orientation="vertical"
+                            android:gravity="center">
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="📷"
+                                android:textSize="20sp" />
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="+ 实物照片"
+                                android:textSize="11sp"
+                                android:textColor="@color/text_secondary"
+                                android:layout_marginTop="2dp" />
+                        </LinearLayout>
+
+                        <!-- 有图缩略图 -->
+                        <ImageView
+                            android:id="@+id/iv_photo_preview"
+                            android:layout_width="match_parent"
+                            android:layout_height="match_parent"
+                            android:scaleType="centerCrop"
+                            android:visibility="gone" />
+
+                        <!-- 删除按钮 -->
+                        <ImageView
+                            android:id="@+id/btn_delete_photo"
+                            android:layout_width="24dp"
+                            android:layout_height="24dp"
+                            android:layout_gravity="top|end"
+                            android:padding="4dp"
+                            android:src="@drawable/ic_close"
+                            android:background="#99000000"
+                            app:tint="#FFFFFF"
+                            android:visibility="gone" />
+                    </FrameLayout>
+                </com.google.android.material.card.MaterialCardView>
+
+                <!-- 2. 发票凭证槽位 -->
+                <com.google.android.material.card.MaterialCardView
+                    android:id="@+id/card_receipt_slot"
+                    android:layout_width="0dp"
+                    android:layout_height="84dp"
+                    android:layout_weight="1"
+                    android:layout_marginStart="6dp"
+                    app:cardCornerRadius="12dp"
+                    app:cardElevation="0dp"
+                    app:cardBackgroundColor="@color/input_bg"
+                    app:strokeColor="@color/card_border"
+                    app:strokeWidth="1dp"
+                    android:clickable="true"
+                    android:focusable="true">
+
+                    <FrameLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent">
+
+                        <!-- 空状态提示 -->
+                        <LinearLayout
+                            android:id="@+id/layout_receipt_empty"
+                            android:layout_width="match_parent"
+                            android:layout_height="match_parent"
+                            android:orientation="vertical"
+                            android:gravity="center">
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="🧾"
+                                android:textSize="20sp" />
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="+ 发票/保修卡"
+                                android:textSize="11sp"
+                                android:textColor="@color/text_secondary"
+                                android:layout_marginTop="2dp" />
+                        </LinearLayout>
+
+                        <!-- 有图缩略图 -->
+                        <ImageView
+                            android:id="@+id/iv_receipt_preview"
+                            android:layout_width="match_parent"
+                            android:layout_height="match_parent"
+                            android:scaleType="centerCrop"
+                            android:visibility="gone" />
+
+                        <!-- 删除按钮 -->
+                        <ImageView
+                            android:id="@+id/btn_delete_receipt"
+                            android:layout_width="24dp"
+                            android:layout_height="24dp"
+                            android:layout_gravity="top|end"
+                            android:padding="4dp"
+                            android:src="@drawable/ic_close"
+                            android:background="#99000000"
+                            app:tint="#FFFFFF"
+                            android:visibility="gone" />
+                    </FrameLayout>
+                </com.google.android.material.card.MaterialCardView>
+
+            </LinearLayout>
+
             <!-- 实时换算与单价/总价计算明细预览条 -->
             <LinearLayout
                 android:layout_width="match_parent"

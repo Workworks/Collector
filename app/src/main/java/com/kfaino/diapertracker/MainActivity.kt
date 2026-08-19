@@ -13,6 +13,8 @@ import android.widget.ArrayAdapter
 import android.widget.ImageView
 import android.widget.TextView
 import android.widget.Toast
+import android.net.Uri
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
@@ -31,6 +33,31 @@ class MainActivity : AppCompatActivity() {
     private val entries = mutableListOf<Entry>()
 
     private var currentTab = 0
+
+    // 图片选择回调
+    private var onPhotoPickedCallback: ((String) -> Unit)? = null
+
+    private val pickPhotoLauncher = registerForActivityResult(ActivityResultContracts.GetContent()) { uri: Uri? ->
+        if (uri != null) {
+            val filename = ImageVaultHelper.saveUriToVault(this, uri, prefix = "photo")
+            if (filename != null) {
+                onPhotoPickedCallback?.invoke(filename)
+            } else {
+                Toast.makeText(this, "图片处理失败，请重试", Toast.LENGTH_SHORT).show()
+            }
+        }
+    }
+
+    private val pickReceiptLauncher = registerForActivityResult(ActivityResultContracts.GetContent()) { uri: Uri? ->
+        if (uri != null) {
+            val filename = ImageVaultHelper.saveUriToVault(this, uri, prefix = "receipt")
+            if (filename != null) {
+                onPhotoPickedCallback?.invoke(filename)
+            } else {
+                Toast.makeText(this, "凭证处理失败，请重试", Toast.LENGTH_SHORT).show()
+            }
+        }
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         // 应用用户主题设置
@@ -180,6 +207,10 @@ class MainActivity : AppCompatActivity() {
         var selectedAssetType = editEntry?.assetType ?: "depreciating"
         var selectedMfgDate = editEntry?.manufactureDate ?: 0L
         var selectedExpDate = editEntry?.expiryDate ?: 0L
+
+        // 实物照片与发票凭证
+        var currentPhotoPath = editEntry?.photoPath ?: ""
+        var currentReceiptPath = editEntry?.receiptPath ?: ""
 
         // 重要物品防丢
         var isImportant = editEntry?.isImportant ?: false
@@ -620,7 +651,89 @@ class MainActivity : AppCompatActivity() {
         dialogBinding.priceInput.addTextChangedListener(watcher)
         updatePreview()
 
-        // 11. 弹窗操作按钮绑定
+        // 11. 实物照片与购买发票/保修凭证插槽绑定
+        fun updatePhotoSlotUI() {
+            if (currentPhotoPath.isNotBlank()) {
+                val bm = ImageVaultHelper.loadSampledBitmap(this, currentPhotoPath, 200, 200)
+                if (bm != null) {
+                    dialogBinding.layoutPhotoEmpty.visibility = View.GONE
+                    dialogBinding.ivPhotoPreview.visibility = View.VISIBLE
+                    dialogBinding.ivPhotoPreview.setImageBitmap(bm)
+                    dialogBinding.btnDeletePhoto.visibility = View.VISIBLE
+                } else {
+                    dialogBinding.layoutPhotoEmpty.visibility = View.VISIBLE
+                    dialogBinding.ivPhotoPreview.visibility = View.GONE
+                    dialogBinding.btnDeletePhoto.visibility = View.GONE
+                }
+            } else {
+                dialogBinding.layoutPhotoEmpty.visibility = View.VISIBLE
+                dialogBinding.ivPhotoPreview.visibility = View.GONE
+                dialogBinding.btnDeletePhoto.visibility = View.GONE
+            }
+        }
+
+        fun updateReceiptSlotUI() {
+            if (currentReceiptPath.isNotBlank()) {
+                val bm = ImageVaultHelper.loadSampledBitmap(this, currentReceiptPath, 200, 200)
+                if (bm != null) {
+                    dialogBinding.layoutReceiptEmpty.visibility = View.GONE
+                    dialogBinding.ivReceiptPreview.visibility = View.VISIBLE
+                    dialogBinding.ivReceiptPreview.setImageBitmap(bm)
+                    dialogBinding.btnDeleteReceipt.visibility = View.VISIBLE
+                } else {
+                    dialogBinding.layoutReceiptEmpty.visibility = View.VISIBLE
+                    dialogBinding.ivReceiptPreview.visibility = View.GONE
+                    dialogBinding.btnDeleteReceipt.visibility = View.GONE
+                }
+            } else {
+                dialogBinding.layoutReceiptEmpty.visibility = View.VISIBLE
+                dialogBinding.ivReceiptPreview.visibility = View.GONE
+                dialogBinding.btnDeleteReceipt.visibility = View.GONE
+            }
+        }
+
+        updatePhotoSlotUI()
+        updateReceiptSlotUI()
+
+        dialogBinding.cardPhotoSlot.applyPressScaleAnimation(0.94f)
+        dialogBinding.cardPhotoSlot.setOnClickListener {
+            if (currentPhotoPath.isBlank()) {
+                onPhotoPickedCallback = { filename ->
+                    currentPhotoPath = filename
+                    updatePhotoSlotUI()
+                }
+                pickPhotoLauncher.launch("image/*")
+            } else {
+                PhotoPreviewDialog.show(this, "${dialogBinding.brandInput.text} · 实物照片", currentPhotoPath)
+            }
+        }
+
+        dialogBinding.btnDeletePhoto.applyPressScaleAnimation(0.90f)
+        dialogBinding.btnDeletePhoto.setOnClickListener {
+            currentPhotoPath = ""
+            updatePhotoSlotUI()
+        }
+
+        dialogBinding.cardReceiptSlot.applyPressScaleAnimation(0.94f)
+        dialogBinding.cardReceiptSlot.setOnClickListener {
+            if (currentReceiptPath.isBlank()) {
+                onPhotoPickedCallback = { filename ->
+                    currentReceiptPath = filename
+                    updateReceiptSlotUI()
+                }
+                pickReceiptLauncher.launch("image/*")
+            } else {
+                PhotoPreviewDialog.show(this, "${dialogBinding.brandInput.text} · 发票/保修卡凭证", currentReceiptPath)
+            }
+        }
+
+        dialogBinding.btnDeleteReceipt.applyPressScaleAnimation(0.90f)
+        dialogBinding.btnDeleteReceipt.setOnClickListener {
+            currentReceiptPath = ""
+            updateReceiptSlotUI()
+        }
+
+        // 12. 弹窗操作按钮绑定
         dialogBinding.dialogCloseBtn.applyPressScaleAnimation(0.90f)
         dialogBinding.dialogCloseBtn.setOnClickListener { dialog.dismiss() }
 
@@ -692,7 +805,9 @@ class MainActivity : AppCompatActivity() {
                         subAutoRenew = true,
                         assetType = selectedAssetType,
                         manufactureDate = selectedMfgDate,
-                        expiryDate = selectedExpDate
+                        expiryDate = selectedExpDate,
+                        photoPath = currentPhotoPath,
+                        receiptPath = currentReceiptPath
                     )
 
                     if (isEditMode && editPosition != null) {

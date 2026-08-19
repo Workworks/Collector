@@ -11,8 +11,8 @@ android {
         applicationId = "com.kfaino.diapertracker"
         minSdk = 26
         targetSdk = 34
-        versionCode = 17
-        versionName = "2.5.3"
+        versionCode = 18
+        versionName = "2.6.0"
     }
 
     buildTypes {
@@ -41,4 +41,5 @@ dependencies {
     implementation("com.google.android.material:material:1.11.0")
     implementation("androidx.constraintlayout:constraintlayout:2.1.4")
     implementation("androidx.recyclerview:recyclerview:1.3.2")
+    implementation("androidx.exifinterface:exifinterface:1.3.7")
 }
