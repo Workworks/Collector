@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:background="@drawable/bg_dialog_card"
+    android:backgroundTint="@color/card"
+    android:padding="20dp">
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="📥 导入数据备份"
+        android:textSize="18sp"
+        android:textStyle="bold"
+        android:textColor="@color/text_primary"
+        android:fontFamily="sans-serif-medium" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="导入将合并备份中的分类、空间平面图与资产明细记录："
+        android:textSize="12sp"
+        android:textColor="@color/text_secondary"
+        android:layout_marginTop="2dp"
+        android:layout_marginBottom="12dp" />
+
+    <EditText
+        android:id="@+id/input_backup_json"
+        android:layout_width="match_parent"
+        android:layout_height="130dp"
+        android:background="@drawable/bg_input_box"
+        android:hint="在此粘贴导出的备份 JSON 数据包..."
+        android:textColorHint="@color/text_hint"
+        android:textColor="@color/text_primary"
+        android:padding="12dp"
+        android:gravity="top|start"
+        android:textSize="13sp"
+        android:fontFamily="monospace"
+        android:inputType="textMultiLine" />
+
+    <!-- 从剪贴板粘贴快捷按钮 -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:layout_marginTop="8dp"
+        android:layout_marginBottom="16dp">
+
+        <TextView
+            android:id="@+id/btn_paste_from_clipboard"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="📋 一键从剪贴板粘贴"
+            android:textSize="12sp"
+            android:textColor="@color/primary"
+            android:padding="4dp"
+            android:clickable="true"
+            android:focusable="true"
+            android:background="?attr/selectableItemBackgroundBorderless" />
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal">
+
+        <Button
+            android:id="@+id/btn_cancel_import"
+            android:layout_width="0dp"
+            android:layout_height="46dp"
+            android:layout_weight="1"
+            android:layout_marginEnd="10dp"
+            android:text="取消"
+            android:textSize="14sp"
+            android:textColor="@color/text_secondary"
+            android:background="@drawable/bg_btn_secondary"
+            style="?android:attr/borderlessButtonStyle" />
+
+        <Button
+            android:id="@+id/btn_confirm_import"
+            android:layout_width="0dp"
+            android:layout_height="46dp"
+            android:layout_weight="1.4"
+            android:text="确认导入恢复"
+            android:textSize="14sp"
+            android:textStyle="bold"
+            android:textColor="#FFFFFF"
+            android:background="@drawable/bg_btn_primary"
+            style="?android:attr/borderlessButtonStyle" />
+    </LinearLayout>
+
+</LinearLayout>

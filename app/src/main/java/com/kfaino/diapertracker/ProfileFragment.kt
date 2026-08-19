@@ -4,15 +4,23 @@ import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
 import android.content.Intent
+import android.graphics.Color
+import android.graphics.drawable.ColorDrawable
 import android.net.Uri
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.EditText
 import android.widget.Toast
+import androidx.appcompat.app.AlertDialog
+import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
+import com.kfaino.diapertracker.databinding.DialogBackupManageBinding
+import com.kfaino.diapertracker.databinding.DialogEditRepoBinding
+import com.kfaino.diapertracker.databinding.DialogImportBackupBinding
+import com.kfaino.diapertracker.databinding.DialogMoreSettingsBinding
+import com.kfaino.diapertracker.databinding.DialogThemePickerBinding
 import com.kfaino.diapertracker.databinding.FragmentProfileBinding
 
 class ProfileFragment : Fragment() {
@@ -63,7 +71,7 @@ class ProfileFragment : Fragment() {
             FloorPlanDialog.show(requireActivity(), store, isSelectMode = false)
         }
 
-        // 3. 更多设置（主题设置、GitHub 仓库配置）
+        // 3. 更多设置（主题设置、触感震动、通知提醒、GitHub 仓库配置）
         binding.btnMoreSettings.setOnClickListener {
             showMoreSettingsDialog()
         }
@@ -99,178 +107,282 @@ class ProfileFragment : Fragment() {
         }
     }
 
-    /** 更多设置对话框：深浅色主题 & 触感震动 & 通知提醒设置 & GitHub 仓库设置 */
+    // =========================================================================
+    // ⚙️ 现代化「更多设置」主面板
+    // =========================================================================
+
     private fun showMoreSettingsDialog() {
-        val options = arrayOf(
-            "外观与深浅主题",
-            "📳 触感震动反馈设置",
-            "🔔 资产与订阅提醒设置",
-            "GitHub 仓库设置 (热更新源)"
-        )
-        MaterialAlertDialogBuilder(requireContext())
-            .setTitle("更多设置")
-            .setItems(options) { _, which ->
-                when (which) {
-                    0 -> showThemeDialog()
-                    1 -> showHapticDialog()
-                    2 -> showReminderSettingsDialog()
-                    3 -> showRepoEditDialog()
-                }
-            }
-            .setNegativeButton(R.string.cancel, null)
-            .show()
-    }
+        val dBinding = DialogMoreSettingsBinding.inflate(layoutInflater)
+        val dialog = MaterialAlertDialogBuilder(requireContext())
+            .setView(dBinding.root)
+            .create()
 
-    private fun showHapticDialog() {
-        val isEnabled = store.isHapticFeedbackEnabled()
-        val newState = !isEnabled
-        store.setHapticFeedbackEnabled(newState)
-        if (newState) {
-            requireView().performAppHapticFeedback()
-            Toast.makeText(requireContext(), "已开启触感震动反馈 📳", Toast.LENGTH_SHORT).show()
-        } else {
-            Toast.makeText(requireContext(), "已关闭触感震动反馈", Toast.LENGTH_SHORT).show()
+        dialog.window?.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
+        dialog.window?.attributes?.windowAnimations = R.style.CustomDialogAnimation
+
+        fun updateThemeText() {
+            dBinding.tvCurrentThemeDesc.text = when (store.getThemeMode()) {
+                1 -> "☀️ 浅色明亮模式"
+                2 -> "🌙 深色暗黑模式"
+                else -> "📱 跟随系统偏好"
+            }
         }
-    }
 
-    private fun showReminderSettingsDialog() {
-        val isEnabled = store.isNotificationEnabled()
-        val options = arrayOf(
-            if (isEnabled) "🔔 提醒功能：【已开启】(点击关闭)" else "🔕 提醒功能：【已关闭】(点击开启)",
-            "🚀 立即发送一条测试通知"
-        )
-        MaterialAlertDialogBuilder(requireContext())
-            .setTitle("🔔 资产与订阅提醒设置")
-            .setItems(options) { _, which ->
-                when (which) {
-                    0 -> {
-                        val newState = !isEnabled
-                        store.setNotificationEnabled(newState)
-                        if (newState) {
-                            NotificationHelper.scheduleDailyReminder(requireContext())
-                            Toast.makeText(requireContext(), "已开启每日自动提醒", Toast.LENGTH_SHORT).show()
-                        } else {
-                            Toast.makeText(requireContext(), "已关闭通知提醒", Toast.LENGTH_SHORT).show()
-                        }
-                    }
-                    1 -> {
-                        NotificationHelper.sendTestNotification(requireContext())
-                        Toast.makeText(requireContext(), "已发送测试通知，请查看手机通知栏！", Toast.LENGTH_LONG).show()
-                    }
-                }
+        fun updateRepoText() {
+            val repo = store.getGithubRepo()
+            dBinding.tvCurrentRepoDesc.text = "$repo (热更新源)"
+        }
+
+        updateThemeText()
+        updateRepoText()
+
+        // 1. 外观与主题
+        dBinding.cardSettingTheme.applyPressScaleAnimation(0.96f)
+        dBinding.cardSettingTheme.setOnClickListener {
+            showThemeDialog {
+                updateThemeText()
             }
-            .setNegativeButton("关闭", null)
-            .show()
-    }
+        }
 
-    private fun showThemeDialog() {
-        val themes = arrayOf("跟随系统", "浅色模式", "深色模式")
-        val current = store.getThemeMode()
-        MaterialAlertDialogBuilder(requireContext())
-            .setTitle("外观与深浅主题")
-            .setSingleChoiceItems(themes, current) { dialog, which ->
-                store.setThemeMode(which)
-                dialog.dismiss()
+        // 2. 触感震动反馈开关
+        dBinding.switchHapticFeedback.isChecked = store.isHapticFeedbackEnabled()
+        dBinding.switchHapticFeedback.setOnCheckedChangeListener { _, isChecked ->
+            store.setHapticFeedbackEnabled(isChecked)
+            if (isChecked) {
+                dBinding.root.performAppHapticFeedback()
+                Toast.makeText(requireContext(), "已开启触感震动反馈 📳", Toast.LENGTH_SHORT).show()
+            } else {
+                Toast.makeText(requireContext(), "已关闭触感震动反馈", Toast.LENGTH_SHORT).show()
             }
-            .setNegativeButton(R.string.cancel, null)
-            .show()
+        }
+
+        // 3. 资产与订阅提醒开关与测试
+        val isNotifOn = store.isNotificationEnabled()
+        dBinding.switchDailyReminder.isChecked = isNotifOn
+        dBinding.switchDailyReminder.setOnCheckedChangeListener { _, isChecked ->
+            store.setNotificationEnabled(isChecked)
+            if (isChecked) {
+                NotificationHelper.scheduleDailyReminder(requireContext())
+                Toast.makeText(requireContext(), "已开启每日自动提醒 🔔", Toast.LENGTH_SHORT).show()
+            } else {
+                Toast.makeText(requireContext(), "已关闭通知提醒", Toast.LENGTH_SHORT).show()
+            }
+        }
+
+        dBinding.btnSendTestNotification.applyPressScaleAnimation(0.94f)
+        dBinding.btnSendTestNotification.setOnClickListener {
+            NotificationHelper.sendTestNotification(requireContext())
+            Toast.makeText(requireContext(), "已发送测试通知，请查看通知栏！", Toast.LENGTH_SHORT).show()
+        }
+
+        // 4. GitHub 仓库配置
+        dBinding.cardSettingRepo.applyPressScaleAnimation(0.96f)
+        dBinding.cardSettingRepo.setOnClickListener {
+            showRepoEditDialog {
+                updateRepoText()
+            }
+        }
+
+        // 关闭与完成按钮
+        dBinding.btnCloseSettings.applyPressScaleAnimation(0.90f)
+        dBinding.btnCloseSettings.setOnClickListener { dialog.dismiss() }
+
+        dBinding.btnDialogDone.applyPressScaleAnimation(0.94f)
+        dBinding.btnDialogDone.setOnClickListener { dialog.dismiss() }
+
+        dialog.show()
     }
 
-    private fun showRepoEditDialog() {
+    // =========================================================================
+    // 🎨 现代化「外观与深浅主题」选择面板
+    // =========================================================================
+
+    private fun showThemeDialog(onThemeChanged: (() -> Unit)? = null) {
+        val tBinding = DialogThemePickerBinding.inflate(layoutInflater)
+        val dialog = MaterialAlertDialogBuilder(requireContext())
+            .setView(tBinding.root)
+            .create()
+
+        dialog.window?.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
+        dialog.window?.attributes?.windowAnimations = R.style.CustomDialogAnimation
+
+        val curMode = store.getThemeMode()
+        tBinding.checkThemeAuto.visibility = if (curMode == 0) View.VISIBLE else View.GONE
+        tBinding.checkThemeLight.visibility = if (curMode == 1) View.VISIBLE else View.GONE
+        tBinding.checkThemeDark.visibility = if (curMode == 2) View.VISIBLE else View.GONE
+
+        fun selectMode(mode: Int) {
+            store.setThemeMode(mode)
+            onThemeChanged?.invoke()
+            dialog.dismiss()
+        }
+
+        tBinding.cardThemeAuto.applyPressScaleAnimation(0.96f)
+        tBinding.cardThemeLight.applyPressScaleAnimation(0.96f)
+        tBinding.cardThemeDark.applyPressScaleAnimation(0.96f)
+
+        tBinding.cardThemeAuto.setOnClickListener { selectMode(0) }
+        tBinding.cardThemeLight.setOnClickListener { selectMode(1) }
+        tBinding.cardThemeDark.setOnClickListener { selectMode(2) }
+
+        tBinding.btnCancelTheme.applyPressScaleAnimation(0.94f)
+        tBinding.btnCancelTheme.setOnClickListener { dialog.dismiss() }
+
+        dialog.show()
+    }
+
+    // =========================================================================
+    // 🐙 现代化「GitHub 仓库源配置」面板
+    // =========================================================================
+
+    private fun showRepoEditDialog(onRepoSaved: (() -> Unit)? = null) {
+        val rBinding = DialogEditRepoBinding.inflate(layoutInflater)
+        val dialog = MaterialAlertDialogBuilder(requireContext())
+            .setView(rBinding.root)
+            .create()
+
+        dialog.window?.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
+        dialog.window?.attributes?.windowAnimations = R.style.CustomDialogAnimation
+
         val currentRepo = store.getGithubRepo()
-        val input = EditText(requireContext()).apply {
-            setText(currentRepo)
-            setSelection(text.length)
-            setPadding(48, 36, 48, 36)
+        rBinding.inputRepo.setText(currentRepo)
+        rBinding.inputRepo.setSelection(currentRepo.length)
+
+        rBinding.btnRestoreDefaultRepo.applyPressScaleAnimation(0.94f)
+        rBinding.btnRestoreDefaultRepo.setOnClickListener {
+            rBinding.inputRepo.setText("Workworks/Collector")
+            rBinding.inputRepo.setSelection(rBinding.inputRepo.text.length)
         }
-        MaterialAlertDialogBuilder(requireContext())
-            .setTitle("配置 GitHub 仓库")
-            .setMessage("请输入 GitHub 仓库地址 (格式: owner/repo):")
-            .setView(input)
-            .setPositiveButton(R.string.confirm) { _, _ ->
-                val newRepo = input.text.toString().trim()
-                if (newRepo.isNotEmpty() && newRepo.contains("/")) {
-                    store.setGithubRepo(newRepo)
-                    Toast.makeText(requireContext(), "已更新仓库: $newRepo", Toast.LENGTH_SHORT).show()
-                } else {
-                    Toast.makeText(requireContext(), "仓库格式不正确 (如 Workworks/Collector)", Toast.LENGTH_SHORT).show()
-                }
+
+        rBinding.btnCancelRepo.applyPressScaleAnimation(0.94f)
+        rBinding.btnCancelRepo.setOnClickListener { dialog.dismiss() }
+
+        rBinding.btnSaveRepo.applyPressScaleAnimation(0.94f)
+        rBinding.btnSaveRepo.setOnClickListener {
+            val newRepo = rBinding.inputRepo.text.toString().trim()
+            if (newRepo.isNotEmpty() && newRepo.contains("/")) {
+                store.setGithubRepo(newRepo)
+                Toast.makeText(requireContext(), "已更新仓库源: $newRepo", Toast.LENGTH_SHORT).show()
+                onRepoSaved?.invoke()
+                dialog.dismiss()
+            } else {
+                Toast.makeText(requireContext(), "仓库格式不正确 (如 Workworks/Collector)", Toast.LENGTH_SHORT).show()
             }
-            .setNegativeButton(R.string.cancel, null)
-            .show()
+        }
+
+        dialog.show()
     }
 
-    /** 数据备份恢复对话框 */
+    // =========================================================================
+    // 💾 现代化「数据备份与导出」面板
+    // =========================================================================
+
     private fun showBackupRestoreDialog() {
-        val options = arrayOf(
-            "📊 导出【资产全景总表】(CSV / Excel 兼容)",
-            "📋 导出【收支流水明细】(CSV / Excel 兼容)",
-            "📤 导出数据备份 (复制 JSON)",
-            "📥 导入数据备份 (粘贴 JSON)",
-            "🗑️ 清空所有记录"
-        )
-        MaterialAlertDialogBuilder(requireContext())
-            .setTitle("数据备份与导出")
-            .setItems(options) { _, which ->
-                val entries = store.loadAll()
-                when (which) {
-                    0 -> {
-                        ExportManager.exportAndShareAssetsCsv(requireActivity(), entries)
-                    }
-                    1 -> {
-                        ExportManager.exportAndShareTimelineCsv(requireActivity(), entries)
-                    }
-                    2 -> {
-                        val json = store.exportBackupJson()
-                        val clipboard = requireContext().getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
-                        clipboard.setPrimaryClip(ClipData.newPlainText("Collecter Backup", json))
-                        Toast.makeText(requireContext(), "备份数据已复制到剪贴板！", Toast.LENGTH_LONG).show()
-                    }
-                    3 -> {
-                        showImportDialog()
-                    }
-                    4 -> {
-                        showClearDataDialog()
-                    }
-                }
-            }
-            .setNegativeButton(R.string.cancel, null)
-            .show()
+        val bBinding = DialogBackupManageBinding.inflate(layoutInflater)
+        val dialog = MaterialAlertDialogBuilder(requireContext())
+            .setView(bBinding.root)
+            .create()
+
+        dialog.window?.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
+        dialog.window?.attributes?.windowAnimations = R.style.CustomDialogAnimation
+
+        bBinding.btnExportAssetsCsv.applyPressScaleAnimation(0.96f)
+        bBinding.btnExportAssetsCsv.setOnClickListener {
+            val entries = store.loadAll()
+            ExportManager.exportAndShareAssetsCsv(requireActivity(), entries)
+        }
+
+        bBinding.btnExportTimelineCsv.applyPressScaleAnimation(0.96f)
+        bBinding.btnExportTimelineCsv.setOnClickListener {
+            val entries = store.loadAll()
+            ExportManager.exportAndShareTimelineCsv(requireActivity(), entries)
+        }
+
+        bBinding.btnExportJsonBackup.applyPressScaleAnimation(0.96f)
+        bBinding.btnExportJsonBackup.setOnClickListener {
+            val json = store.exportBackupJson()
+            val clipboard = requireContext().getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+            clipboard.setPrimaryClip(ClipData.newPlainText("Collecter Backup", json))
+            Toast.makeText(requireContext(), "备份 JSON 数据已复制到剪贴板！", Toast.LENGTH_LONG).show()
+        }
+
+        bBinding.btnImportJsonBackup.applyPressScaleAnimation(0.96f)
+        bBinding.btnImportJsonBackup.setOnClickListener {
+            dialog.dismiss()
+            showImportDialog()
+        }
+
+        bBinding.btnClearAllData.applyPressScaleAnimation(0.96f)
+        bBinding.btnClearAllData.setOnClickListener {
+            dialog.dismiss()
+            showClearDataDialog()
+        }
+
+        bBinding.btnCloseBackupDialog.applyPressScaleAnimation(0.90f)
+        bBinding.btnCloseBackupDialog.setOnClickListener { dialog.dismiss() }
+
+        bBinding.btnDoneBackupDialog.applyPressScaleAnimation(0.94f)
+        bBinding.btnDoneBackupDialog.setOnClickListener { dialog.dismiss() }
+
+        dialog.show()
     }
+
+    // =========================================================================
+    // 📥 现代化「导入数据备份」面板
+    // =========================================================================
 
     private fun showImportDialog() {
-        val input = EditText(requireContext()).apply {
-            hint = "在此粘贴导出的备份 JSON 内容"
-            setPadding(48, 36, 48, 36)
-            maxLines = 6
-        }
-        MaterialAlertDialogBuilder(requireContext())
-            .setTitle("导入数据备份")
-            .setMessage("导入将合并备份中的分类、空间与记录，请谨慎操作：")
-            .setView(input)
-            .setPositiveButton("导入恢复") { _, _ ->
-                val text = input.text.toString().trim()
-                if (text.isNotEmpty()) {
-                    val ok = store.importBackupJson(text)
-                    if (ok) {
-                        Toast.makeText(requireContext(), "数据恢复成功！", Toast.LENGTH_SHORT).show()
-                        (activity as? MainActivity)?.refreshCurrentFragment()
-                    } else {
-                        Toast.makeText(requireContext(), "备份解析失败，请检查格式", Toast.LENGTH_SHORT).show()
-                    }
-                }
+        val iBinding = DialogImportBackupBinding.inflate(layoutInflater)
+        val dialog = MaterialAlertDialogBuilder(requireContext())
+            .setView(iBinding.root)
+            .create()
+
+        dialog.window?.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
+        dialog.window?.attributes?.windowAnimations = R.style.CustomDialogAnimation
+
+        iBinding.btnPasteFromClipboard.applyPressScaleAnimation(0.94f)
+        iBinding.btnPasteFromClipboard.setOnClickListener {
+            val clipboard = requireContext().getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+            val item = clipboard.primaryClip?.getItemAt(0)
+            val pastedText = item?.text?.toString()?.trim()
+            if (!pastedText.isNullOrEmpty()) {
+                iBinding.inputBackupJson.setText(pastedText)
+                Toast.makeText(requireContext(), "已从剪贴板粘贴", Toast.LENGTH_SHORT).show()
+            } else {
+                Toast.makeText(requireContext(), "剪贴板中没有文本内容", Toast.LENGTH_SHORT).show()
             }
-            .setNegativeButton(R.string.cancel, null)
-            .show()
+        }
+
+        iBinding.btnCancelImport.applyPressScaleAnimation(0.94f)
+        iBinding.btnCancelImport.setOnClickListener { dialog.dismiss() }
+
+        iBinding.btnConfirmImport.applyPressScaleAnimation(0.94f)
+        iBinding.btnConfirmImport.setOnClickListener {
+            val text = iBinding.inputBackupJson.text.toString().trim()
+            if (text.isNotEmpty()) {
+                val ok = store.importBackupJson(text)
+                if (ok) {
+                    Toast.makeText(requireContext(), "🎉 数据恢复成功！", Toast.LENGTH_SHORT).show()
+                    (activity as? MainActivity)?.refreshCurrentFragment()
+                    dialog.dismiss()
+                } else {
+                    Toast.makeText(requireContext(), "备份解析失败，请确认 JSON 数据格式正确", Toast.LENGTH_SHORT).show()
+                }
+            } else {
+                Toast.makeText(requireContext(), "请先输入或粘贴备份 JSON 内容", Toast.LENGTH_SHORT).show()
+            }
+        }
+
+        dialog.show()
     }
 
     private fun showClearDataDialog() {
         MaterialAlertDialogBuilder(requireContext())
-            .setTitle("警告：清空全部数据")
-            .setMessage("确定要清空所有物品记录与位置历史吗？此操作不可逆！")
+            .setTitle("⚠️ 警告：清空全部数据")
+            .setMessage("确定要彻底清空本地所有物品记录、分类与空间位置历史吗？此操作不可逆！")
             .setPositiveButton("确定清空") { _, _ ->
                 store.clearAllData()
-                Toast.makeText(requireContext(), "记录已全部清空", Toast.LENGTH_SHORT).show()
+                Toast.makeText(requireContext(), "所有记录已彻底清空", Toast.LENGTH_SHORT).show()
                 (activity as? MainActivity)?.refreshCurrentFragment()
             }
             .setNegativeButton(R.string.cancel, null)
