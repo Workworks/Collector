@@ -63,8 +63,15 @@ data class Entry(
 
     // 5. 实物照片与购买发票/保修卡留存 (沙盒私有路径)
     val photoPath: String = "",                     // 物品实物照片文件名/相对路径
-    val receiptPath: String = ""                    // 购买发票/凭证/保修卡照片文件名/相对路径
+    val receiptPath: String = "",                   // 购买发票/凭证/保修卡照片文件名/相对路径
+
+    // 6. 安全库存预警体系
+    val minStockThreshold: Int = 0                  // 最低安全库存预警阈值 (0=不预警, >0=当在库数量<=该值时触发补货清单)
 ) {
+    /** 是否处于低库存缺货预警状态 */
+    fun isLowStock(): Boolean {
+        return isIn && !isRetired && minStockThreshold > 0 && qty <= minStockThreshold
+    }
     /** 获取到期状态描述 */
     fun getExpiryStatusText(): String {
         if (expiryDate <= 0L) return ""
@@ -178,4 +185,13 @@ data class MonthStat(
     val reduceCount: Int,      // 减少数量 (本月总消耗)
     val entryCount: Int,       // 总笔数
     val topItems: List<String> = emptyList() // 当月主要记账项目
+)
+
+/** 多账本独立空间数据模型 */
+data class Ledger(
+    val id: String = UUID.randomUUID().toString(),
+    val name: String = "默认账本",
+    val icon: String = "🏠",
+    val desc: String = "个人与家庭资产",
+    val createdAt: Long = System.currentTimeMillis()
 )

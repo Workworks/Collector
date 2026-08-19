@@ -108,6 +108,40 @@
         </LinearLayout>
     </com.google.android.material.card.MaterialCardView>
 
+    <!-- 硬件生态拓展按钮组 (蓝牙热敏打印机 / NFC 智能贴纸) -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:layout_marginBottom="8dp">
+
+        <Button
+            android:id="@+id/btn_bluetooth_print"
+            android:layout_width="0dp"
+            android:layout_height="44dp"
+            android:layout_weight="1"
+            android:layout_marginEnd="6dp"
+            android:text="🖨️ 蓝牙标签机打印"
+            android:textSize="12sp"
+            android:textStyle="bold"
+            android:textColor="@color/primary"
+            android:background="@drawable/bg_chip_inactive"
+            style="?android:attr/borderlessButtonStyle" />
+
+        <Button
+            android:id="@+id/btn_nfc_write"
+            android:layout_width="0dp"
+            android:layout_height="44dp"
+            android:layout_weight="1"
+            android:layout_marginStart="6dp"
+            android:text="🏷️ 写入 NFC 贴纸"
+            android:textSize="12sp"
+            android:textStyle="bold"
+            android:textColor="@color/accent_dark"
+            android:background="@drawable/bg_chip_inactive"
+            style="?android:attr/borderlessButtonStyle" />
+    </LinearLayout>
+
     <!-- 操作按钮组 (保存至相册 / 一键分享打印) -->
     <LinearLayout
         android:layout_width="match_parent"

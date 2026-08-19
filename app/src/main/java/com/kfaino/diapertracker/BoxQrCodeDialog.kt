@@ -60,6 +60,16 @@ object BoxQrCodeDialog {
         binding.btnCloseQr.applyPressScaleAnimation(0.90f)
         binding.btnCloseQr.setOnClickListener { dialog.dismiss() }
 
+        binding.btnBluetoothPrint.applyPressScaleAnimation(0.94f)
+        binding.btnBluetoothPrint.setOnClickListener {
+            BluetoothPrinterHelper.printBoxLabel(activity, houseName, roomName, itemsInRoom, qrBitmap)
+        }
+
+        binding.btnNfcWrite.applyPressScaleAnimation(0.94f)
+        binding.btnNfcWrite.setOnClickListener {
+            NfcHelper.prepareWriteBoxTag(activity, houseName, roomName)
+        }
+
         binding.btnSaveQrToGallery.applyPressScaleAnimation(0.94f)
         binding.btnSaveQrToGallery.setOnClickListener {
             val labelBitmap = captureViewBitmap(binding.cardQrLabelPreview)

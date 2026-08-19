@@ -377,6 +377,71 @@ class ReportFragment : Fragment() {
         binding.assetTotalSpent.text = "¥${String.format(Locale.getDefault(), "%.2f", totalSpent)}"
         binding.assetInStockWorth.text = "¥${String.format(Locale.getDefault(), "%.2f", currentInStockWorth)}"
 
+        // 3.1 闲置变现与回血 ROI 分析看板
+        val resale = store.getResaleAnalytics()
+        binding.tvResaleTotalRecovered.text = "¥${String.format(Locale.getDefault(), "%.2f", resale.totalRecovered)}"
+        binding.tvResaleRecoveryRate.text = String.format(Locale.getDefault(), "%.1f%%", resale.recoveryRate)
+        binding.tvResaleNetCostDesc.text = "退役物品总原值 ¥${String.format(Locale.getDefault(), "%.2f", resale.totalInvested)}，已回收变现 ¥${String.format(Locale.getDefault(), "%.2f", resale.totalRecovered)}，实际净支出 ¥${String.format(Locale.getDefault(), "%.2f", resale.netCost)}"
+
+        val heroContainer = binding.layoutResaleHeroContainer
+        heroContainer.removeAllViews()
+        if (resale.soldItems.isEmpty()) {
+            val emptyHeroTv = TextView(requireContext()).apply {
+                text = "💡 暂无转卖回血记录。物品退役时标记「挂闲鱼代售」或「转转二手」并记录卖出金额，即可在此查看资金回血榜！"
+                textSize = 12f
+                setTextColor(ContextCompat.getColor(context, R.color.text_secondary))
+                setPadding(0, 8, 0, 8)
+                setLineSpacing(0f, 1.2f)
+            }
+            heroContainer.addView(emptyHeroTv)
+        } else {
+            val heroTitle = TextView(requireContext()).apply {
+                text = "🏆 断舍离变现英雄榜 (Top 5)"
+                textSize = 13f
+                paint.isFakeBoldText = true
+                setTextColor(ContextCompat.getColor(context, R.color.text_primary))
+                setPadding(0, 4, 0, 8)
+            }
+            heroContainer.addView(heroTitle)
+
+            for ((hIdx, sItem) in resale.soldItems.take(5).withIndex()) {
+                val heroRow = LinearLayout(requireContext()).apply {
+                    orientation = LinearLayout.HORIZONTAL
+                    gravity = Gravity.CENTER_VERTICAL
+                    setPadding(0, 6, 0, 6)
+                }
+
+                val hRankTv = TextView(requireContext()).apply {
+                    text = "${hIdx + 1}."
+                    textSize = 13f
+                    paint.isFakeBoldText = true
+                    setTextColor(ContextCompat.getColor(context, R.color.accent_dark))
+                    setPadding(0, 0, 8, 0)
+                }
+
+                val hNameTv = TextView(requireContext()).apply {
+                    text = "${sItem.brand} (${sItem.retiredAction.ifBlank { "已出二手" }})"
+                    textSize = 13f
+                    setTextColor(ContextCompat.getColor(context, R.color.text_primary))
+                    layoutParams = LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f)
+                }
+
+                val originalCost = sItem.price * sItem.qty
+                val roiPct = if (originalCost > 0) (sItem.retiredSoldPrice / originalCost) * 100.0 else 0.0
+                val hPriceTv = TextView(requireContext()).apply {
+                    text = "回血 ¥${String.format(Locale.getDefault(), "%.2f", sItem.retiredSoldPrice)} (${String.format(Locale.getDefault(), "%.0f%%", roiPct)})"
+                    textSize = 12f
+                    paint.isFakeBoldText = true
+                    setTextColor(ContextCompat.getColor(context, R.color.primary))
+                }
+
+                heroRow.addView(hRankTv)
+                heroRow.addView(hNameTv)
+                heroRow.addView(hPriceTv)
+                heroContainer.addView(heroRow)
+            }
+        }
+
         // Top 5 价值品牌榜
         val brandMap = LinkedHashMap<String, Pair<Int, Double>>()
         for (e in entries) {

@@ -13,6 +13,10 @@ import android.widget.ImageView
 import android.widget.TextView
 import android.widget.Toast
 import android.net.Uri
+import android.content.Intent
+import android.os.Build
+import android.nfc.NfcAdapter
+import android.nfc.Tag
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
@@ -106,17 +110,48 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    override fun onNewIntent(intent: android.content.Intent?) {
+    override fun onNewIntent(intent: Intent?) {
         super.onNewIntent(intent)
         setIntent(intent)
         if (intent?.getBooleanExtra("action_open_add_dialog", false) == true) {
             binding.root.post { showAddDialog() }
+            return
+        }
+        if (intent == null) return
+
+        // 1. 尝试处理 NFC 标签写入
+        val tag = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            intent.getParcelableExtra(NfcAdapter.EXTRA_TAG, Tag::class.java)
+        } else {
+            @Suppress("DEPRECATION")
+            intent.getParcelableExtra(NfcAdapter.EXTRA_TAG)
+        }
+        if (tag != null && NfcHelper.handleTagDiscoveredForWrite(this, tag)) {
+            return
+        }
+
+        // 2. 尝试处理 NFC 标签「碰一碰」读取寻物
+        val parsed = NfcHelper.parseNfcIntent(intent)
+        if (parsed != null) {
+            val (house, room) = parsed
+            val all = store.loadAll()
+            val target = all.firstOrNull {
+                (it.roomName == room || it.location.contains(room)) && (house.isBlank() || it.houseName == house)
+            } ?: Entry(houseName = house.ifBlank { "我的家" }, roomName = room)
+            FloorPlanDialog.show(this, store, targetEntry = target)
+            Toast.makeText(this, "🏷️ NFC 智能感应成功：$room (${target.houseName})", Toast.LENGTH_SHORT).show()
         }
     }
 
     override fun onResume() {
         super.onResume()
         checkBiometricLock()
+        NfcHelper.enableForegroundDispatch(this)
+    }
+
+    override fun onPause() {
+        super.onPause()
+        NfcHelper.disableForegroundDispatch(this)
     }
 
     private fun checkBiometricLock() {
@@ -436,6 +471,7 @@ class MainActivity : AppCompatActivity() {
         } else {
             dialogBinding.unitInput.setText(selectedUnit)
         }
+        dialogBinding.minStockThresholdInput.setText((editEntry?.minStockThreshold ?: 0).toString())
 
         fun curQty(): Int = dialogBinding.qtyInput.text.toString().toIntOrNull() ?: 1
         fun setQty(v: Int) { dialogBinding.qtyInput.setText(v.coerceIn(1, 99999).toString()) }
@@ -974,7 +1010,8 @@ class MainActivity : AppCompatActivity() {
                         manufactureDate = selectedMfgDate,
                         expiryDate = selectedExpDate,
                         photoPath = currentPhotoPath,
-                        receiptPath = currentReceiptPath
+                        receiptPath = currentReceiptPath,
+                        minStockThreshold = dialogBinding.minStockThresholdInput.text.toString().toIntOrNull() ?: 0
                     )
 
                     if (isEditMode && editPosition != null) {

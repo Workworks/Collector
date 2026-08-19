@@ -54,6 +54,8 @@ class ProfileFragment : Fragment() {
     private fun setupClicks() {
         binding.btnCategoryManage.applyPressScaleAnimation(0.94f)
         binding.btnFloorplanManage.applyPressScaleAnimation(0.94f)
+        binding.btnLedgerManage.applyPressScaleAnimation(0.94f)
+        binding.btnLanSyncManage.applyPressScaleAnimation(0.94f)
         binding.btnMoreSettings.applyPressScaleAnimation(0.94f)
         binding.btnBackupRestore.applyPressScaleAnimation(0.94f)
         binding.btnFeedback.applyPressScaleAnimation(0.94f)
@@ -78,6 +80,20 @@ class ProfileFragment : Fragment() {
         // 2. 空间平面图与寻物地图
         binding.btnFloorplanManage.setOnClickListener {
             FloorPlanDialog.show(requireActivity(), store, isSelectMode = false)
+        }
+
+        // 2.1 多账本空间管理
+        binding.btnLedgerManage.setOnClickListener {
+            LedgerManager.showLedgerPicker(requireActivity()) {
+                Toast.makeText(requireContext(), "账本已切换，数据已即时同步！", Toast.LENGTH_SHORT).show()
+            }
+        }
+
+        // 2.2 局域网免密极速互传
+        binding.btnLanSyncManage.setOnClickListener {
+            LanSyncHelper.showLanSyncDialog(requireActivity(), store) {
+                Toast.makeText(requireContext(), "局域网同步完成！", Toast.LENGTH_SHORT).show()
+            }
         }
 
         // 3. 更多设置（主题设置、触感震动、通知提醒、GitHub 仓库配置）

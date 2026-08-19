@@ -208,6 +208,92 @@
                         android:layout_marginStart="56dp"
                         android:background="@color/card_border" />
 
+                    <!-- 多账本空间管理 -->
+                    <LinearLayout
+                        android:id="@+id/btn_ledger_manage"
+                        android:layout_width="match_parent"
+                        android:layout_height="58dp"
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical"
+                        android:paddingHorizontal="18dp"
+                        android:clickable="true"
+                        android:focusable="true"
+                        android:background="?attr/selectableItemBackground">
+
+                        <ImageView
+                            android:layout_width="22dp"
+                            android:layout_height="22dp"
+                            android:src="@drawable/ic_folder"
+                            app:tint="@color/accent_dark"
+                            android:contentDescription="多账本管理" />
+
+                        <TextView
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:layout_marginStart="16dp"
+                            android:text="📚 多账本体系管理"
+                            android:textSize="16sp"
+                            android:textColor="@color/text_primary"
+                            android:fontFamily="sans-serif-medium" />
+
+                        <ImageView
+                            android:layout_width="16dp"
+                            android:layout_height="16dp"
+                            android:src="@drawable/ic_arrow_right"
+                            app:tint="@color/text_hint"
+                            android:contentDescription="进入" />
+                    </LinearLayout>
+
+                    <View
+                        android:layout_width="match_parent"
+                        android:layout_height="1dp"
+                        android:layout_marginStart="56dp"
+                        android:background="@color/card_border" />
+
+                    <!-- 局域网免密极速互传 -->
+                    <LinearLayout
+                        android:id="@+id/btn_lan_sync_manage"
+                        android:layout_width="match_parent"
+                        android:layout_height="58dp"
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical"
+                        android:paddingHorizontal="18dp"
+                        android:clickable="true"
+                        android:focusable="true"
+                        android:background="?attr/selectableItemBackground">
+
+                        <ImageView
+                            android:layout_width="22dp"
+                            android:layout_height="22dp"
+                            android:src="@drawable/ic_share"
+                            app:tint="@color/primary"
+                            android:contentDescription="局域网互传" />
+
+                        <TextView
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:layout_marginStart="16dp"
+                            android:text="⚡ 局域网免密极速互传"
+                            android:textSize="16sp"
+                            android:textColor="@color/text_primary"
+                            android:fontFamily="sans-serif-medium" />
+
+                        <ImageView
+                            android:layout_width="16dp"
+                            android:layout_height="16dp"
+                            android:src="@drawable/ic_arrow_right"
+                            app:tint="@color/text_hint"
+                            android:contentDescription="进入" />
+                    </LinearLayout>
+
+                    <View
+                        android:layout_width="match_parent"
+                        android:layout_height="1dp"
+                        android:layout_marginStart="56dp"
+                        android:background="@color/card_border" />
+
                     <!-- 更多设置 (主题、仓库等) -->
                     <LinearLayout
                         android:id="@+id/btn_more_settings"

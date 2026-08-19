@@ -8,7 +8,11 @@ import org.json.JSONObject
 /** 基于 SharedPreferences 的高可用持久化层，管理物品折旧、在役/退役待办归置、周期订阅资产与空间位置 */
 class DataStore(private val ctx: Context) {
     private val prefs = ctx.getSharedPreferences("collector_data", Context.MODE_PRIVATE)
-    private val keyEntries = "entries_v4"
+    private val keyEntries: String
+        get() {
+            val curId = try { LedgerManager.getCurrentLedger(ctx).id } catch (e: Exception) { "default" }
+            return if (curId == "default") "entries_v4" else "entries_ledger_$curId"
+        }
     private val keyHouses = "houses_v1"
     private val keyCategories = "custom_categories_v2"
     private val keyTheme = "app_theme_mode"
@@ -112,7 +116,8 @@ class DataStore(private val ctx: Context) {
                         manufactureDate = o.optLong("m_date", 0L),
                         expiryDate = o.optLong("e_date", 0L),
                         photoPath = o.optString("img_p", ""),
-                        receiptPath = o.optString("rec_p", "")
+                        receiptPath = o.optString("rec_p", ""),
+                        minStockThreshold = o.optInt("min_th", 0)
                     )
                 )
             }
@@ -178,6 +183,7 @@ class DataStore(private val ctx: Context) {
                     .put("e_date", e.expiryDate)
                     .put("img_p", e.photoPath)
                     .put("rec_p", e.receiptPath)
+                    .put("min_th", e.minStockThreshold)
             )
         }
         prefs.edit().putString(keyEntries, arr.toString()).apply()
@@ -827,5 +833,63 @@ class DataStore(private val ctx: Context) {
 
     fun setSimpleMode(enabled: Boolean) {
         prefs.edit().putBoolean("app_simple_mode_enabled", enabled).apply()
+    }
+
+    // ==================== 闲置变现与回血 ROI 统计 (Cashback Analytics) ====================
+
+    data class ResaleAnalytics(
+        val totalInvested: Double,
+        val totalRecovered: Double,
+        val netCost: Double,
+        val recoveryRate: Double,
+        val soldItems: List<Entry>
+    )
+
+    fun getResaleAnalytics(): ResaleAnalytics {
+        val all = loadAll()
+        val retiredItems = all.filter { it.isRetired }
+        val soldItems = retiredItems.filter { it.retiredSoldPrice > 0.0 }
+        val totalInvested = retiredItems.sumOf { it.price * it.qty }
+        val totalRecovered = retiredItems.sumOf { it.retiredSoldPrice }
+        val netCost = (totalInvested - totalRecovered).coerceAtLeast(0.0)
+        val recoveryRate = if (totalInvested > 0.0) (totalRecovered / totalInvested) * 100.0 else 0.0
+
+        return ResaleAnalytics(
+            totalInvested = totalInvested,
+            totalRecovered = totalRecovered,
+            netCost = netCost,
+            recoveryRate = recoveryRate,
+            soldItems = soldItems.sortedByDescending { if (it.retiredAt > 0) it.retiredAt else it.ts }
+        )
+    }
+
+    // ==================== 耗材安全库存预警与智能采购清单 ====================
+
+    fun getLowStockItems(): List<Entry> {
+        return loadAll().filter { it.isLowStock() }
+    }
+
+    fun generateReplenishmentListText(): String {
+        val lowStock = getLowStockItems()
+        if (lowStock.isEmpty()) return "🎉 当前所有耗材库存充足，无需补货！"
+
+        val sb = StringBuilder()
+        sb.append("🛒【Collecter 智能待采购清单】\n")
+        sb.append("----------------------------\n")
+        val sdf = java.text.SimpleDateFormat("yyyy-MM-dd HH:mm", java.util.Locale.getDefault())
+        sb.append("生成时间: ${sdf.format(java.util.Date())}\n\n")
+
+        for ((idx, item) in lowStock.withIndex()) {
+            val diff = (item.minStockThreshold - item.qty).coerceAtLeast(1)
+            val lackStr = " (需补 $diff ${item.unit})"
+            sb.append("${idx + 1}. 【${item.brand}】\n")
+            sb.append("   • 所属分类: ${item.category}\n")
+            sb.append("   • 当前库存: ${item.qty} ${item.unit} / 安全预警线: ${item.minStockThreshold} ${item.unit}$lackStr\n")
+            if (item.location.isNotBlank()) sb.append("   • 放置位置: ${item.location}\n")
+            sb.append("\n")
+        }
+        sb.append("----------------------------\n")
+        sb.append("共计 ${lowStock.size} 项物品急需补货采购")
+        return sb.toString()
     }
 }

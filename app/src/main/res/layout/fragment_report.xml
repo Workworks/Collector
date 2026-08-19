@@ -548,6 +548,106 @@
                     </LinearLayout>
                 </com.google.android.material.card.MaterialCardView>
 
+                <!-- 💰 闲置变现与断舍离回血 ROI 分析看板 -->
+                <com.google.android.material.card.MaterialCardView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    app:cardCornerRadius="18dp"
+                    app:cardElevation="0dp"
+                    app:cardBackgroundColor="@color/card"
+                    app:strokeColor="@color/card_border"
+                    app:strokeWidth="1dp"
+                    android:layout_marginBottom="14dp">
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical"
+                        android:padding="20dp">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="💰 闲置变现与回血 ROI 分析"
+                            android:textColor="@color/text_primary"
+                            android:textSize="16sp"
+                            android:textStyle="bold"
+                            android:layout_marginBottom="14dp" />
+
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:orientation="horizontal"
+                            android:layout_marginBottom="12dp">
+
+                            <LinearLayout
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_weight="1"
+                                android:orientation="vertical">
+
+                                <TextView
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:text="闲鱼/二手回血总额"
+                                    android:textColor="@color/text_secondary"
+                                    android:textSize="12sp" />
+
+                                <TextView
+                                    android:id="@+id/tv_resale_total_recovered"
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:text="¥0.00"
+                                    android:textColor="@color/accent_dark"
+                                    android:textSize="20sp"
+                                    android:textStyle="bold"
+                                    android:layout_marginTop="2dp" />
+                            </LinearLayout>
+
+                            <LinearLayout
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_weight="1"
+                                android:orientation="vertical">
+
+                                <TextView
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:text="资金回收率"
+                                    android:textColor="@color/text_secondary"
+                                    android:textSize="12sp" />
+
+                                <TextView
+                                    android:id="@+id/tv_resale_recovery_rate"
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:text="0.0%"
+                                    android:textColor="@color/primary"
+                                    android:textSize="20sp"
+                                    android:textStyle="bold"
+                                    android:layout_marginTop="2dp" />
+                            </LinearLayout>
+                        </LinearLayout>
+
+                        <TextView
+                            android:id="@+id/tv_resale_net_cost_desc"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:text="退役物品总原值 ¥0.00，已回收变现 ¥0.00，实际净消耗 ¥0.00"
+                            android:textColor="@color/text_secondary"
+                            android:textSize="12sp"
+                            android:lineSpacingExtra="2dp" />
+
+                        <!-- 🏆 断舍离变现英雄榜 -->
+                        <LinearLayout
+                            android:id="@+id/layout_resale_hero_container"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:orientation="vertical"
+                            android:layout_marginTop="12dp" />
+                    </LinearLayout>
+                </com.google.android.material.card.MaterialCardView>
+
                 <!-- 🏆 品牌/物品估值排行榜 Top 5 -->
                 <com.google.android.material.card.MaterialCardView
                     android:layout_width="match_parent"

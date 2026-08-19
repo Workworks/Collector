@@ -105,6 +105,31 @@ class HomeFragment : Fragment() {
         (binding.tabItems.parent as? View)?.visibility = if (isSimple) View.GONE else View.VISIBLE
         binding.btnFilterMapView.visibility = if (isSimple) View.GONE else View.VISIBLE
 
+        // 1. 多账本快速切换器
+        binding.layoutLedgerSwitcher.applyPressScaleAnimation(0.94f)
+        binding.layoutLedgerSwitcher.setOnClickListener {
+            LedgerManager.showLedgerPicker(requireActivity()) {
+                refresh()
+            }
+        }
+
+        // 2. 局域网极速互传
+        binding.btnLanSyncTop.applyPressScaleAnimation(0.90f)
+        binding.btnLanSyncTop.setOnClickListener {
+            LanSyncHelper.showLanSyncDialog(requireActivity(), store) {
+                refresh()
+            }
+        }
+
+        // 3. 智能采购清单一键生成与复制
+        binding.btnGenerateReplenishmentList.applyPressScaleAnimation(0.92f)
+        binding.btnGenerateReplenishmentList.setOnClickListener {
+            val text = store.generateReplenishmentListText()
+            val cm = requireContext().getSystemService(android.content.Context.CLIPBOARD_SERVICE) as android.content.ClipboardManager
+            cm.setPrimaryClip(android.content.ClipData.newPlainText("Collecter 待采购清单", text))
+            Toast.makeText(requireContext(), "🎉 智能采购清单已复制到剪贴板！可直接粘贴至微信或购物平台", Toast.LENGTH_LONG).show()
+        }
+
         // 顶部操作按钮
         binding.btnScanQrTop.applyPressScaleAnimation(0.90f)
         binding.btnScanQrTop.setOnClickListener {
@@ -409,7 +434,21 @@ class HomeFragment : Fragment() {
         if (_binding == null) return
         val allEntries = store.loadAll()
 
-        // 0. 数据备份横幅持久化显示控制
+        // 0. 更新当前账本标题
+        val curLedger = LedgerManager.getCurrentLedger(requireContext())
+        binding.tvHomeTitle.text = "${curLedger.icon} ${curLedger.name}"
+
+        // 0.1 耗材安全库存预警与采购卡片控制
+        val lowStock = store.getLowStockItems()
+        if (lowStock.isNotEmpty()) {
+            binding.cardLowStockAlert.visibility = View.VISIBLE
+            binding.tvLowStockTitle.text = "⚠️ 耗材安全库存告急 (${lowStock.size} 项需补货)"
+            binding.tvLowStockDesc.text = "【${lowStock.take(3).joinToString("、") { it.brand }}】等耗材已低于预设安全库存线，点击即可复制格式化采购单。"
+        } else {
+            binding.cardLowStockAlert.visibility = View.GONE
+        }
+
+        // 0.2 数据备份横幅持久化显示控制
         binding.cardBackupBanner.visibility = if (store.shouldShowBackupBanner()) View.VISIBLE else View.GONE
 
         val isSimple = store.isSimpleMode()
