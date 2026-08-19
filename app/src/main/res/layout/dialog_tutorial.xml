@@ -52,6 +52,65 @@
             android:contentDescription="关闭" />
     </LinearLayout>
 
+    <!-- 🎮 开启手把手实操教学 醒目入口条 -->
+    <LinearLayout
+        android:id="@+id/btn_start_interactive_tour"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:background="@drawable/bg_input_box"
+        android:paddingHorizontal="14dp"
+        android:paddingVertical="10dp"
+        android:layout_marginBottom="12dp"
+        android:clickable="true"
+        android:focusable="true">
+
+        <TextView
+            android:layout_width="36dp"
+            android:layout_height="36dp"
+            android:gravity="center"
+            android:text="🎮"
+            android:textSize="18sp"
+            android:background="@drawable/bg_icon_circle" />
+
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:layout_marginStart="12dp"
+            android:orientation="vertical">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="🎮 开启手把手互动实操教学"
+                android:textSize="14sp"
+                android:textStyle="bold"
+                android:textColor="@color/primary"
+                android:fontFamily="sans-serif-medium" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="聚光灯聚焦指引 · 沉浸式实操摸清所有功能"
+                android:textSize="11sp"
+                android:textColor="@color/text_secondary"
+                android:layout_marginTop="1dp" />
+        </LinearLayout>
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="26dp"
+            android:gravity="center"
+            android:text="立即开始 ➔"
+            android:textSize="11sp"
+            android:textStyle="bold"
+            android:textColor="#FFFFFF"
+            android:background="@drawable/bg_btn_primary"
+            android:paddingHorizontal="10dp" />
+    </LinearLayout>
+
     <!-- 分类过滤 Chip 栏 -->
     <HorizontalScrollView
         android:layout_width="match_parent"

@@ -27,7 +27,7 @@ import java.util.Locale
 
 class MainActivity : AppCompatActivity() {
 
-    private lateinit var binding: ActivityMainBinding
+    lateinit var binding: ActivityMainBinding
     private val store by lazy { DataStore(this) }
     private val entries = mutableListOf<Entry>()
 
@@ -217,6 +217,19 @@ class MainActivity : AppCompatActivity() {
         binding.fabAdd.applyPressScaleAnimation(0.88f)
         binding.fabAdd.setOnClickListener {
             showAddDialog()
+        }
+    }
+
+    fun navigateToTab(index: Int) {
+        if (currentTab != index) {
+            val fragment = when (index) {
+                0 -> HomeFragment()
+                1 -> TimelineFragment()
+                2 -> ReportFragment()
+                else -> ProfileFragment()
+            }
+            switchFragment(fragment)
+            selectTab(index)
         }
     }
 

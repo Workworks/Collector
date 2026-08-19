@@ -368,6 +368,14 @@ object TutorialDialog {
         binding.chipTutSync.applyPressScaleAnimation(0.92f)
         binding.chipTutSync.setOnClickListener { currentCategory = "sync"; updateChips() }
 
+        binding.btnStartInteractiveTour.applyPressScaleAnimation(0.94f)
+        binding.btnStartInteractiveTour.setOnClickListener {
+            dialog.dismiss()
+            if (activity is MainActivity) {
+                InteractiveGuideTour.startTour(activity)
+            }
+        }
+
         binding.btnCloseTutorial.applyPressScaleAnimation(0.90f)
         binding.btnCloseTutorial.setOnClickListener { dialog.dismiss() }
 

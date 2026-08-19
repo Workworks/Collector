@@ -1,0 +1,149 @@
+<?xml version="1.0" encoding="utf-8"?>
+<com.google.android.material.card.MaterialCardView
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/card_guide_tooltip"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_marginHorizontal="20dp"
+    app:cardCornerRadius="20dp"
+    app:cardElevation="12dp"
+    app:cardBackgroundColor="@color/card"
+    app:strokeColor="@color/primary"
+    app:strokeWidth="1.5dp">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="18dp">
+
+        <!-- 顶部步骤指示与退出按钮 -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:layout_marginBottom="8dp">
+
+            <!-- 步骤 Badge -->
+            <TextView
+                android:id="@+id/tv_guide_step_badge"
+                android:layout_width="wrap_content"
+                android:layout_height="24dp"
+                android:gravity="center"
+                android:text="🎯 步骤 1 / 7"
+                android:textSize="11sp"
+                android:textStyle="bold"
+                android:textColor="#FFFFFF"
+                android:background="@drawable/bg_btn_primary"
+                android:paddingHorizontal="10dp" />
+
+            <View
+                android:layout_width="0dp"
+                android:layout_height="1dp"
+                android:layout_weight="1" />
+
+            <!-- 退出教程按钮 -->
+            <TextView
+                android:id="@+id/btn_exit_tour"
+                android:layout_width="wrap_content"
+                android:layout_height="28dp"
+                android:gravity="center"
+                android:text="✕ 退出教程"
+                android:textSize="12sp"
+                android:textColor="@color/text_secondary"
+                android:background="@drawable/bg_chip_inactive"
+                android:paddingHorizontal="10dp"
+                android:clickable="true"
+                android:focusable="true" />
+        </LinearLayout>
+
+        <!-- 标题 -->
+        <TextView
+            android:id="@+id/tv_guide_title"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="🏠 资产大盘与日均使用成本"
+            android:textSize="17sp"
+            android:textStyle="bold"
+            android:textColor="@color/text_primary"
+            android:fontFamily="sans-serif-medium" />
+
+        <!-- 详细说明 -->
+        <TextView
+            android:id="@+id/tv_guide_desc"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="这里是你的全景资产看板。顶部可以随时切换「物品」与「周期订阅」两大资产池。系统会自动为你折算每一件物品的使用天数与每日成本（元/天）。"
+            android:textSize="13sp"
+            android:textColor="@color/text_secondary"
+            android:lineSpacingExtra="3dp"
+            android:layout_marginTop="6dp" />
+
+        <!-- 操作提示小条 (带动态呼吸发光) -->
+        <LinearLayout
+            android:id="@+id/layout_action_hint"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:background="@drawable/bg_input_box"
+            android:padding="10dp"
+            android:layout_marginTop="10dp">
+
+            <TextView
+                android:id="@+id/tv_guide_action_icon"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="👉"
+                android:textSize="16sp"
+                android:layout_marginEnd="6dp" />
+
+            <TextView
+                android:id="@+id/tv_guide_action_text"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="请点击下方高亮的目标控件继续下一步"
+                android:textSize="12sp"
+                android:textStyle="bold"
+                android:textColor="@color/primary" />
+        </LinearLayout>
+
+        <!-- 底部控制按钮 (上一步 / 下一步) -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_marginTop="14dp">
+
+            <Button
+                android:id="@+id/btn_guide_prev"
+                android:layout_width="0dp"
+                android:layout_height="40dp"
+                android:layout_weight="1"
+                android:layout_marginEnd="6dp"
+                android:text="上一步"
+                android:textSize="12sp"
+                android:textColor="@color/text_primary"
+                android:background="@drawable/bg_chip_inactive"
+                android:visibility="gone"
+                style="?android:attr/borderlessButtonStyle" />
+
+            <Button
+                android:id="@+id/btn_guide_next"
+                android:layout_width="0dp"
+                android:layout_height="40dp"
+                android:layout_weight="2"
+                android:layout_marginStart="6dp"
+                android:text="我知道了 · 下一步 ➔"
+                android:textSize="13sp"
+                android:textStyle="bold"
+                android:textColor="#FFFFFF"
+                android:background="@drawable/bg_btn_primary"
+                style="?android:attr/borderlessButtonStyle" />
+        </LinearLayout>
+
+    </LinearLayout>
+</com.google.android.material.card.MaterialCardView>
