@@ -377,6 +377,76 @@ class DataStore(ctx: Context) {
         return removed
     }
 
+    fun updateHouse(updatedHouse: HouseSpace): Boolean {
+        val houses = getHouses().toMutableList()
+        val idx = houses.indexOfFirst { it.id == updatedHouse.id }
+        if (idx != -1) {
+            houses[idx] = updatedHouse
+            saveHouses(houses)
+            return true
+        }
+        return false
+    }
+
+    fun addRoomToHouse(houseId: String, room: HouseRoom): Boolean {
+        val houses = getHouses().toMutableList()
+        val idx = houses.indexOfFirst { it.id == houseId }
+        if (idx != -1) {
+            val house = houses[idx]
+            val currentRooms = house.rooms.toMutableList()
+            currentRooms.add(room)
+            houses[idx] = house.copy(rooms = currentRooms)
+            saveHouses(houses)
+            return true
+        }
+        return false
+    }
+
+    fun updateRoomInHouse(houseId: String, room: HouseRoom): Boolean {
+        val houses = getHouses().toMutableList()
+        val idx = houses.indexOfFirst { it.id == houseId }
+        if (idx != -1) {
+            val house = houses[idx]
+            val currentRooms = house.rooms.toMutableList()
+            val rIdx = currentRooms.indexOfFirst { it.id == room.id }
+            if (rIdx != -1) {
+                currentRooms[rIdx] = room
+                houses[idx] = house.copy(rooms = currentRooms)
+                saveHouses(houses)
+                return true
+            }
+        }
+        return false
+    }
+
+    fun deleteRoomFromHouse(houseId: String, roomId: String): Boolean {
+        val houses = getHouses().toMutableList()
+        val idx = houses.indexOfFirst { it.id == houseId }
+        if (idx != -1) {
+            val house = houses[idx]
+            val currentRooms = house.rooms.toMutableList()
+            val removed = currentRooms.removeAll { it.id == roomId }
+            if (removed) {
+                houses[idx] = house.copy(rooms = currentRooms)
+                saveHouses(houses)
+                return true
+            }
+        }
+        return false
+    }
+
+    fun resetRoomsInHouse(houseId: String): List<HouseRoom> {
+        val houses = getHouses().toMutableList()
+        val idx = houses.indexOfFirst { it.id == houseId }
+        if (idx != -1) {
+            val defaults = HouseSpace.defaultRooms()
+            houses[idx] = houses[idx].copy(rooms = defaults)
+            saveHouses(houses)
+            return defaults
+        }
+        return HouseSpace.defaultRooms()
+    }
+
     // ==================== 通用分类分组管理 ====================
 
     fun getCategories(): List<String> {
@@ -476,6 +546,31 @@ class DataStore(ctx: Context) {
 
     fun setGithubRepo(repo: String) {
         prefs.edit().putString("github_repo", repo.trim()).apply()
+    }
+
+    // ==================== 通知提醒设置 ====================
+
+    fun isNotificationEnabled(): Boolean {
+        return prefs.getBoolean("reminders_enabled", true)
+    }
+
+    fun setNotificationEnabled(enabled: Boolean) {
+        prefs.edit().putBoolean("reminders_enabled", enabled).apply()
+    }
+
+    fun getNotificationHour(): Int {
+        return prefs.getInt("reminder_hour", 9)
+    }
+
+    fun getNotificationMinute(): Int {
+        return prefs.getInt("reminder_minute", 0)
+    }
+
+    fun setNotificationTime(hour: Int, minute: Int) {
+        prefs.edit()
+            .putInt("reminder_hour", hour)
+            .putInt("reminder_minute", minute)
+            .apply()
     }
 
     // ==================== 备份与恢复 ====================

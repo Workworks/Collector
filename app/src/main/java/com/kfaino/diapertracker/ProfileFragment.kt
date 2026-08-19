@@ -99,18 +99,53 @@ class ProfileFragment : Fragment() {
         }
     }
 
-    /** 更多设置对话框：深浅色主题 & GitHub 仓库设置 */
+    /** 更多设置对话框：深浅色主题 & 通知提醒设置 & GitHub 仓库设置 */
     private fun showMoreSettingsDialog() {
-        val options = arrayOf("外观与深浅主题", "GitHub 仓库设置 (热更新源)")
+        val options = arrayOf(
+            "外观与深浅主题",
+            "🔔 资产与订阅提醒设置",
+            "GitHub 仓库设置 (热更新源)"
+        )
         MaterialAlertDialogBuilder(requireContext())
             .setTitle("更多设置")
             .setItems(options) { _, which ->
                 when (which) {
                     0 -> showThemeDialog()
-                    1 -> showRepoEditDialog()
+                    1 -> showReminderSettingsDialog()
+                    2 -> showRepoEditDialog()
                 }
             }
             .setNegativeButton(R.string.cancel, null)
+            .show()
+    }
+
+    private fun showReminderSettingsDialog() {
+        val isEnabled = store.isNotificationEnabled()
+        val options = arrayOf(
+            if (isEnabled) "🔔 提醒功能：【已开启】(点击关闭)" else "🔕 提醒功能：【已关闭】(点击开启)",
+            "🚀 立即发送一条测试通知"
+        )
+        MaterialAlertDialogBuilder(requireContext())
+            .setTitle("🔔 资产与订阅提醒设置")
+            .setItems(options) { _, which ->
+                when (which) {
+                    0 -> {
+                        val newState = !isEnabled
+                        store.setNotificationEnabled(newState)
+                        if (newState) {
+                            NotificationHelper.scheduleDailyReminder(requireContext())
+                            Toast.makeText(requireContext(), "已开启每日自动提醒", Toast.LENGTH_SHORT).show()
+                        } else {
+                            Toast.makeText(requireContext(), "已关闭通知提醒", Toast.LENGTH_SHORT).show()
+                        }
+                    }
+                    1 -> {
+                        NotificationHelper.sendTestNotification(requireContext())
+                        Toast.makeText(requireContext(), "已发送测试通知，请查看手机通知栏！", Toast.LENGTH_LONG).show()
+                    }
+                }
+            }
+            .setNegativeButton("关闭", null)
             .show()
     }
 
@@ -154,24 +189,33 @@ class ProfileFragment : Fragment() {
     /** 数据备份恢复对话框 */
     private fun showBackupRestoreDialog() {
         val options = arrayOf(
+            "📊 导出【资产全景总表】(CSV / Excel 兼容)",
+            "📋 导出【收支流水明细】(CSV / Excel 兼容)",
             "📤 导出数据备份 (复制 JSON)",
             "📥 导入数据备份 (粘贴 JSON)",
             "🗑️ 清空所有记录"
         )
         MaterialAlertDialogBuilder(requireContext())
-            .setTitle("数据备份恢复")
+            .setTitle("数据备份与导出")
             .setItems(options) { _, which ->
+                val entries = store.loadAll()
                 when (which) {
                     0 -> {
+                        ExportManager.exportAndShareAssetsCsv(requireActivity(), entries)
+                    }
+                    1 -> {
+                        ExportManager.exportAndShareTimelineCsv(requireActivity(), entries)
+                    }
+                    2 -> {
                         val json = store.exportBackupJson()
                         val clipboard = requireContext().getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
                         clipboard.setPrimaryClip(ClipData.newPlainText("Collecter Backup", json))
                         Toast.makeText(requireContext(), "备份数据已复制到剪贴板！", Toast.LENGTH_LONG).show()
                     }
-                    1 -> {
+                    3 -> {
                         showImportDialog()
                     }
-                    2 -> {
+                    4 -> {
                         showClearDataDialog()
                     }
                 }

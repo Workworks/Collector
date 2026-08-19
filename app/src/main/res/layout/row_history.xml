@@ -5,9 +5,9 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:layout_marginHorizontal="16dp"
-    android:layout_marginBottom="10dp"
+    android:layout_marginBottom="12dp"
     app:cardCornerRadius="16dp"
-    app:cardElevation="1dp"
+    app:cardElevation="0dp"
     app:cardBackgroundColor="@color/card"
     app:strokeColor="@color/card_border"
     app:strokeWidth="1dp">
@@ -16,10 +16,59 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
-        android:paddingHorizontal="14dp"
-        android:paddingVertical="14dp">
+        android:padding="16dp">
 
-        <!-- 顶部主信息栏 (徽章 + 物品与时间 + 金额与操作) -->
+        <!-- 1. 顶栏：分类标签 + 物品名称 + 记录时间 (清晰从容，绝不换行重叠) -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:layout_marginBottom="12dp">
+
+            <TextView
+                android:id="@+id/category_tag"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="数码"
+                android:textSize="11sp"
+                android:textStyle="bold"
+                android:textColor="@color/primary"
+                android:background="@drawable/bg_cat_tag"
+                android:paddingHorizontal="8dp"
+                android:paddingVertical="3dp"
+                android:singleLine="true"
+                android:maxLines="1"
+                android:layout_marginEnd="8dp" />
+
+            <TextView
+                android:id="@+id/brand"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="台式电脑"
+                android:textSize="16sp"
+                android:textStyle="bold"
+                android:textColor="@color/text_primary"
+                android:fontFamily="sans-serif-medium"
+                android:singleLine="true"
+                android:maxLines="1"
+                android:ellipsize="end" />
+
+            <!-- 时间戳：固定单行，靠右对齐 -->
+            <TextView
+                android:id="@+id/time"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="2026-08-19 00:43"
+                android:textSize="12sp"
+                android:textColor="@color/text_tertiary"
+                android:singleLine="true"
+                android:maxLines="1"
+                android:layout_marginStart="8dp" />
+        </LinearLayout>
+
+        <!-- 2. 主体栏：+ / - 状态圆形徽章 + 数量/天数/日均 + 金额与操作 -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -29,8 +78,8 @@
             <!-- + / - 状态圆形徽章 -->
             <TextView
                 android:id="@+id/badge"
-                android:layout_width="38dp"
-                android:layout_height="38dp"
+                android:layout_width="36dp"
+                android:layout_height="36dp"
                 android:gravity="center"
                 android:text="+"
                 android:textColor="#FFFFFF"
@@ -38,107 +87,49 @@
                 android:textStyle="bold"
                 android:background="@drawable/bg_avatar" />
 
-            <!-- 中间信息区 -->
+            <!-- 数量、拥有天数、日均花费描述 -->
             <LinearLayout
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:orientation="vertical"
                 android:layout_marginStart="12dp"
-                android:layout_marginEnd="10dp">
+                android:layout_marginEnd="10dp"
+                android:orientation="vertical">
 
-                <!-- 品牌与分类标签行 -->
-                <LinearLayout
+                <TextView
+                    android:id="@+id/qtyInfo"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:orientation="horizontal"
-                    android:gravity="center_vertical">
-
-                    <TextView
-                        android:id="@+id/category_tag"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="分类"
-                        android:textSize="11sp"
-                        android:textStyle="bold"
-                        android:textColor="@color/primary"
-                        android:background="@drawable/bg_cat_tag"
-                        android:paddingHorizontal="6dp"
-                        android:paddingVertical="2dp"
-                        android:layout_marginEnd="6dp" />
-
-                    <TextView
-                        android:id="@+id/brand"
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:text="物品名称"
-                        android:textSize="15sp"
-                        android:textStyle="bold"
-                        android:textColor="@color/text_primary"
-                        android:fontFamily="sans-serif-medium"
-                        android:maxLines="1"
-                        android:ellipsize="end" />
-                </LinearLayout>
-
-                <!-- 数量、单价与记录时间副标题 -->
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="horizontal"
-                    android:gravity="center_vertical"
-                    android:layout_marginTop="4dp">
-
-                    <TextView
-                        android:id="@+id/qtyInfo"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="50片 · ¥1.30/片"
-                        android:textSize="12sp"
-                        android:textColor="@color/text_secondary" />
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text=" · "
-                        android:textSize="11sp"
-                        android:textColor="@color/text_tertiary" />
-
-                    <TextView
-                        android:id="@+id/time"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="08-18 22:34"
-                        android:textSize="12sp"
-                        android:textColor="@color/text_tertiary" />
-                </LinearLayout>
+                    android:text="1台 · 拥有 167 天 · 日均 ¥32.93"
+                    android:textSize="13sp"
+                    android:textColor="@color/text_secondary"
+                    android:lineSpacingExtra="2dp" />
             </LinearLayout>
 
-            <!-- 右侧：金额与快捷操作按钮组 -->
+            <!-- 右侧：金额与操作按钮 -->
             <LinearLayout
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:orientation="vertical"
                 android:gravity="end">
 
-                <!-- 金额或出库件数展示 -->
                 <TextView
                     android:id="@+id/amount"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="+ ¥65.00"
+                    android:text="+ ¥5500.00"
                     android:textSize="16sp"
                     android:textStyle="bold"
                     android:textColor="@color/primary"
-                    android:fontFamily="sans-serif-medium" />
+                    android:fontFamily="sans-serif-medium"
+                    android:singleLine="true" />
 
-                <!-- 操作按钮行 (编辑与删除) -->
                 <LinearLayout
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:orientation="horizontal"
                     android:gravity="center_vertical"
-                    android:layout_marginTop="4dp">
+                    android:layout_marginTop="6dp">
 
                     <ImageView
                         android:id="@+id/editBtn"
@@ -154,7 +145,7 @@
                         android:id="@+id/deleteBtn"
                         android:layout_width="28dp"
                         android:layout_height="28dp"
-                        android:layout_marginStart="4dp"
+                        android:layout_marginStart="6dp"
                         android:src="@drawable/ic_delete"
                         app:tint="@color/text_hint"
                         android:background="?attr/selectableItemBackgroundBorderless"
@@ -165,7 +156,7 @@
 
         </LinearLayout>
 
-        <!-- 空间与放置位置条 (若已填写) -->
+        <!-- 3. 空间与放置位置条 (若已填写) -->
         <LinearLayout
             android:id="@+id/location_badge_container"
             android:layout_width="match_parent"
@@ -173,9 +164,9 @@
             android:orientation="horizontal"
             android:gravity="center_vertical"
             android:background="@drawable/bg_changelog_box"
-            android:paddingHorizontal="10dp"
-            android:paddingVertical="5dp"
-            android:layout_marginTop="8dp"
+            android:paddingHorizontal="12dp"
+            android:paddingVertical="7dp"
+            android:layout_marginTop="10dp"
             android:visibility="gone">
 
             <TextView
@@ -183,7 +174,7 @@
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:text="📍 放置于: 🏠 自己的家 · 主卧衣柜二层"
+                android:text="📍 自己的家 · 次卧"
                 android:textSize="12sp"
                 android:textColor="@color/primary" />
 
@@ -194,22 +185,22 @@
                 android:text="轨迹 ▾"
                 android:textSize="11sp"
                 android:textColor="@color/text_secondary"
-                android:paddingHorizontal="6dp"
-                android:paddingVertical="2dp"
+                android:paddingHorizontal="8dp"
+                android:paddingVertical="3dp"
                 android:background="@drawable/bg_chip_inactive" />
         </LinearLayout>
 
-        <!-- 备注信息卡片 (若有) -->
+        <!-- 4. 备注信息卡片 (若有) -->
         <TextView
             android:id="@+id/notes_text"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="💬 备注: 618京东自营购入"
+            android:text="💬 备注: 京东组装件"
             android:textSize="12sp"
             android:textColor="@color/text_secondary"
             android:background="@drawable/bg_qty"
-            android:paddingHorizontal="10dp"
-            android:paddingVertical="5dp"
+            android:paddingHorizontal="12dp"
+            android:paddingVertical="6dp"
             android:layout_marginTop="6dp"
             android:visibility="gone" />
 

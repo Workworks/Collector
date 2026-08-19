@@ -48,6 +48,19 @@ class MainActivity : AppCompatActivity() {
             selectTab(0)
         }
 
+        // 初始化通知渠道并请求权限 (Android 13+)
+        NotificationHelper.createNotificationChannel(this)
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.TIRAMISU) {
+            if (!NotificationHelper.hasNotificationPermission(this)) {
+                requestPermissions(arrayOf(android.Manifest.permission.POST_NOTIFICATIONS), 1001)
+            }
+        }
+        // 调度每日定时闹钟并在应用启动时后台核验一次提醒
+        NotificationHelper.scheduleDailyReminder(this)
+        java.util.concurrent.Executors.newSingleThreadExecutor().execute {
+            NotificationHelper.checkAndSendReminders(this)
+        }
+
         // 后台静默预下载最新版本 APK（无感缓存）
         UpdateManager.preloadSilently(this)
     }

@@ -14,6 +14,7 @@ import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.kfaino.diapertracker.databinding.FragmentReportBinding
 import com.kfaino.diapertracker.databinding.ItemAssetCategoryBreakdownBinding
 import java.text.SimpleDateFormat
@@ -143,27 +144,48 @@ class ReportFragment : Fragment() {
     private fun setupShareButton() {
         binding.btnShareReport.applyPressScaleAnimation(0.90f)
         binding.btnShareReport.setOnClickListener {
-            val entries = store.loadAll()
-            val totalInCount = entries.filter { it.isIn }.sumOf { it.qty }
-            val totalOutCount = entries.filter { !it.isIn }.sumOf { it.qty }
-            val inStock = (totalInCount - totalOutCount).coerceAtLeast(0)
-            val totalSpent = entries.filter { it.isIn }.sumOf { it.qty * it.price }
+            val options = arrayOf(
+                "📝 分享报表摘要文本",
+                "📊 导出【资产全景总表】(CSV / Excel 兼容)",
+                "📋 导出【收支流水明细】(CSV / Excel 兼容)"
+            )
+            MaterialAlertDialogBuilder(requireContext())
+                .setTitle("分享与导出报表")
+                .setItems(options) { _, which ->
+                    val entries = store.loadAll()
+                    when (which) {
+                        0 -> {
+                            val totalInCount = entries.filter { it.isIn }.sumOf { it.qty }
+                            val totalOutCount = entries.filter { !it.isIn }.sumOf { it.qty }
+                            val inStock = (totalInCount - totalOutCount).coerceAtLeast(0)
+                            val totalSpent = entries.filter { it.isIn }.sumOf { it.qty * it.price }
 
-            val shareText = """
-                📊 【Collecter 资产与收纳数据报表】
-                · 净资产估值：¥${String.format(Locale.getDefault(), "%.2f", totalSpent)}
-                · 在库总数量：$inStock (累计入库: $totalInCount, 累计消耗: $totalOutCount)
-                · 分类总数：${store.getCategories().size} 类
-                
-                记录时间：${SimpleDateFormat("yyyy-MM-dd HH:mm", Locale.getDefault()).format(Date())}
-            """.trimIndent()
+                            val shareText = """
+                                📊 【Collecter 资产与收纳数据报表】
+                                · 净资产估值：¥${String.format(Locale.getDefault(), "%.2f", totalSpent)}
+                                · 在库总数量：$inStock (累计入库: $totalInCount, 累计消耗: $totalOutCount)
+                                · 分类总数：${store.getCategories().size} 类
+                                
+                                记录时间：${SimpleDateFormat("yyyy-MM-dd HH:mm", Locale.getDefault()).format(Date())}
+                            """.trimIndent()
 
-            val sendIntent = Intent().apply {
-                action = Intent.ACTION_SEND
-                putExtra(Intent.EXTRA_TEXT, shareText)
-                type = "text/plain"
-            }
-            startActivity(Intent.createChooser(sendIntent, "分享资产报表"))
+                            val sendIntent = Intent().apply {
+                                action = Intent.ACTION_SEND
+                                putExtra(Intent.EXTRA_TEXT, shareText)
+                                type = "text/plain"
+                            }
+                            startActivity(Intent.createChooser(sendIntent, "分享资产报表"))
+                        }
+                        1 -> {
+                            ExportManager.exportAndShareAssetsCsv(requireActivity(), entries)
+                        }
+                        2 -> {
+                            ExportManager.exportAndShareTimelineCsv(requireActivity(), entries)
+                        }
+                    }
+                }
+                .setNegativeButton(R.string.cancel, null)
+                .show()
         }
     }
 

@@ -54,8 +54,35 @@ data class Entry(
     val isSubscription: Boolean = false,            // 是否为订阅型资产
     val subCycle: String = "按月",                  // 订阅周期: "按月", "按年", "按季", "按周"
     val subNextBillingDate: Long = 0L,              // 下次扣费日期
-    val subAutoRenew: Boolean = true                // 是否自动续费
+    val subAutoRenew: Boolean = true,               // 是否自动续费
+
+    // 4. 纠正需求：细分物品类型 (折旧资产, 保质期物品, 长期使用耐用品, 日常消耗品)
+    val assetType: String = "consumable",           // "depreciating" (折旧资产), "expiring" (保质期物品), "durable" (长期使用), "consumable" (日常消耗品)
+    val manufactureDate: Long = 0L,                 // 生产日期
+    val expiryDate: Long = 0L                       // 到期日期
 ) {
+    /** 获取到期状态描述 */
+    fun getExpiryStatusText(): String {
+        if (expiryDate <= 0L) return ""
+        val now = System.currentTimeMillis()
+        val diffMs = expiryDate - now
+        val days = (diffMs / (24L * 60 * 60 * 1000)).toInt()
+        return if (days < 0) {
+            "🔴 已过期 ${Math.abs(days)} 天"
+        } else {
+            "⏳ 剩 $days 天过期"
+        }
+    }
+
+    /** 获取类型中文描述 */
+    fun getAssetTypeDisplayName(): String {
+        return when (assetType) {
+            "depreciating" -> "折旧资产"
+            "expiring" -> "保质期"
+            "durable" -> "长期持有"
+            else -> "消耗品"
+        }
+    }
     /** 计算拥有天数 */
     fun getDaysOwned(): Int {
         val endTime = if (isRetired && retiredAt > 0) retiredAt else System.currentTimeMillis()

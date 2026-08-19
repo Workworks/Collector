@@ -21,12 +21,11 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:text="归否"
-            android:textSize="26sp"
+            android:text="我的资产"
+            android:textSize="20sp"
             android:textStyle="bold"
             android:textColor="@color/text_primary"
-            android:fontFamily="serif"
-            android:letterSpacing="0.05" />
+            android:fontFamily="sans-serif-medium" />
 
         <!-- 空间平面图快捷键 -->
         <ImageView

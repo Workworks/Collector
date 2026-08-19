@@ -27,6 +27,18 @@
             android:textColor="@color/text_primary"
             android:fontFamily="sans-serif-medium" />
 
+        <TextView
+            android:id="@+id/btn_manage_rooms_top"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="🛠️ 房间管理"
+            android:textSize="12sp"
+            android:textColor="@color/primary"
+            android:paddingHorizontal="10dp"
+            android:paddingVertical="5dp"
+            android:background="@drawable/bg_btn_custom_add"
+            android:layout_marginEnd="8dp" />
+
         <ImageView
             android:id="@+id/btn_close_floorplan"
             android:layout_width="36dp"

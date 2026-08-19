@@ -119,6 +119,16 @@ object FloorPlanDialog {
             binding.selectedRoomInfo.text = "🏠 $summary"
         }
 
+        binding.btnManageRoomsTop.applyPressScaleAnimation(0.92f)
+        binding.btnManageRoomsTop.setOnClickListener {
+            RoomManagerDialog.showManageDialog(activity, store, selectedHouse) { updatedHouse ->
+                selectedHouse = updatedHouse
+                houses = store.getHouses()
+                binding.interactiveFloorPlan.houseSpace = updatedHouse
+                binding.interactiveFloorPlan.invalidate()
+            }
+        }
+
         binding.btnCloseFloorplan.applyPressScaleAnimation(0.92f)
         binding.btnConfirmFloorplan.applyPressScaleAnimation(0.92f)
 

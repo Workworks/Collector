@@ -127,7 +127,7 @@ class FloorPlanView @JvmOverloads constructor(
             // 房间图标与名称
             val centerX = roomRect.centerX()
             val centerY = roomRect.centerY()
-            textPaint.textSize = Math.min(rw, rh) * 0.22f
+            textPaint.textSize = (Math.min(rw, rh) * 0.22f).coerceIn(22f, 38f)
             canvas.drawText("${room.icon} ${room.name}", centerX, centerY + (textPaint.textSize / 3), textPaint)
 
             // 统计该房间内的物品数量
