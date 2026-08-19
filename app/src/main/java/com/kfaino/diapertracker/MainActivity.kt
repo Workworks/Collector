@@ -1,6 +1,5 @@
 package com.kfaino.diapertracker
 
-import android.app.DatePickerDialog
 import android.content.res.ColorStateList
 import android.graphics.Color
 import android.graphics.drawable.ColorDrawable
@@ -445,18 +444,23 @@ class MainActivity : AppCompatActivity() {
             val days = ((System.currentTimeMillis() - selectedPurchaseDate) / (24L * 60 * 60 * 1000)).toInt().coerceAtLeast(1)
             dialogBinding.btnPickPurchaseDate.text = "📅 购入: $dateStr ($days 天)"
         }
+
+        fun updateDurableDateButton() {
+            val df = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
+            val days = ((System.currentTimeMillis() - selectedPurchaseDate) / (24L * 60 * 60 * 1000)).toInt().coerceAtLeast(1)
+            dialogBinding.btnPickDurableDate.text = "📅 启用时间: ${df.format(Date(selectedPurchaseDate))} (已使用 $days 天)"
+        }
+
         updatePurchaseDateButton()
+        updateDurableDateButton()
 
         dialogBinding.btnPickPurchaseDate.applyPressScaleAnimation(0.92f)
         dialogBinding.btnPickPurchaseDate.setOnClickListener {
-            val cal = Calendar.getInstance().apply { timeInMillis = selectedPurchaseDate }
-            DatePickerDialog(this, { _, year, month, dayOfMonth ->
-                val newCal = Calendar.getInstance().apply {
-                    set(year, month, dayOfMonth, 12, 0, 0)
-                }
-                selectedPurchaseDate = newCal.timeInMillis
+            ModernDatePickerDialog.show(this, selectedPurchaseDate, title = "📅 选择购入/启用日期") { pickedMs ->
+                selectedPurchaseDate = pickedMs
                 updatePurchaseDateButton()
-            }, cal.get(Calendar.YEAR), cal.get(Calendar.MONTH), cal.get(Calendar.DAY_OF_MONTH)).show()
+                updateDurableDateButton()
+            }
         }
 
         if (editEntry != null && editEntry.currentValuation > 0) {
@@ -482,34 +486,25 @@ class MainActivity : AppCompatActivity() {
             }
         }
 
-        fun updateDurableDateButton() {
-            val df = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
-            val days = ((System.currentTimeMillis() - selectedPurchaseDate) / (24L * 60 * 60 * 1000)).toInt().coerceAtLeast(1)
-            dialogBinding.btnPickDurableDate.text = "📅 启用时间: ${df.format(Date(selectedPurchaseDate))} (已使用 $days 天)"
-        }
-
         updateMfgDateButton()
         updateExpDateButton()
-        updateDurableDateButton()
 
         dialogBinding.btnPickMfgDate.applyPressScaleAnimation(0.92f)
         dialogBinding.btnPickMfgDate.setOnClickListener {
-            val cal = Calendar.getInstance().apply { timeInMillis = if (selectedMfgDate > 0) selectedMfgDate else System.currentTimeMillis() }
-            DatePickerDialog(this, { _, year, month, dayOfMonth ->
-                val newCal = Calendar.getInstance().apply { set(year, month, dayOfMonth, 12, 0, 0) }
-                selectedMfgDate = newCal.timeInMillis
+            val initTime = if (selectedMfgDate > 0) selectedMfgDate else System.currentTimeMillis()
+            ModernDatePickerDialog.show(this, initTime, title = "🏭 选择生产日期") { pickedMs ->
+                selectedMfgDate = pickedMs
                 updateMfgDateButton()
-            }, cal.get(Calendar.YEAR), cal.get(Calendar.MONTH), cal.get(Calendar.DAY_OF_MONTH)).show()
+            }
         }
 
         dialogBinding.btnPickExpDate.applyPressScaleAnimation(0.92f)
         dialogBinding.btnPickExpDate.setOnClickListener {
-            val cal = Calendar.getInstance().apply { timeInMillis = if (selectedExpDate > 0) selectedExpDate else (System.currentTimeMillis() + 365L * 24 * 60 * 60 * 1000) }
-            DatePickerDialog(this, { _, year, month, dayOfMonth ->
-                val newCal = Calendar.getInstance().apply { set(year, month, dayOfMonth, 12, 0, 0) }
-                selectedExpDate = newCal.timeInMillis
+            val initTime = if (selectedExpDate > 0) selectedExpDate else (System.currentTimeMillis() + 365L * 24 * 60 * 60 * 1000)
+            ModernDatePickerDialog.show(this, initTime, title = "⌛ 选择保质期到期日") { pickedMs ->
+                selectedExpDate = pickedMs
                 updateExpDateButton()
-            }, cal.get(Calendar.YEAR), cal.get(Calendar.MONTH), cal.get(Calendar.DAY_OF_MONTH)).show()
+            }
         }
 
         fun addDaysToExp(days: Int) {
@@ -526,13 +521,11 @@ class MainActivity : AppCompatActivity() {
 
         dialogBinding.btnPickDurableDate.applyPressScaleAnimation(0.92f)
         dialogBinding.btnPickDurableDate.setOnClickListener {
-            val cal = Calendar.getInstance().apply { timeInMillis = selectedPurchaseDate }
-            DatePickerDialog(this, { _, year, month, dayOfMonth ->
-                val newCal = Calendar.getInstance().apply { set(year, month, dayOfMonth, 12, 0, 0) }
-                selectedPurchaseDate = newCal.timeInMillis
+            ModernDatePickerDialog.show(this, selectedPurchaseDate, title = "📅 选择启用日期") { pickedMs ->
+                selectedPurchaseDate = pickedMs
                 updatePurchaseDateButton()
                 updateDurableDateButton()
-            }, cal.get(Calendar.YEAR), cal.get(Calendar.MONTH), cal.get(Calendar.DAY_OF_MONTH)).show()
+            }
         }
 
         if (editEntry != null && editEntry.currentValuation > 0) {
@@ -634,14 +627,10 @@ class MainActivity : AppCompatActivity() {
 
         dialogBinding.btnPickNextBillingDate.applyPressScaleAnimation(0.92f)
         dialogBinding.btnPickNextBillingDate.setOnClickListener {
-            val cal = Calendar.getInstance().apply { timeInMillis = selectedNextBillingDate }
-            DatePickerDialog(this, { _, year, month, dayOfMonth ->
-                val newCal = Calendar.getInstance().apply {
-                    set(year, month, dayOfMonth, 10, 0, 0)
-                }
-                selectedNextBillingDate = newCal.timeInMillis
+            ModernDatePickerDialog.show(this, selectedNextBillingDate, title = "🔄 选择下次扣费日期") { pickedMs ->
+                selectedNextBillingDate = pickedMs
                 updateNextBillingDateButton()
-            }, cal.get(Calendar.YEAR), cal.get(Calendar.MONTH), cal.get(Calendar.DAY_OF_MONTH)).show()
+            }
         }
 
         dialogBinding.cbIsSubscriptionAsset.isChecked = isSubscription
