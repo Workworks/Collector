@@ -1,158 +1,188 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout
+<RelativeLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="vertical"
     android:background="@color/background">
 
     <!-- Fragment 容器 -->
     <FrameLayout
         android:id="@+id/fragment_container"
         android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_weight="1" />
+        android:layout_height="match_parent"
+        android:layout_above="@id/bottom_nav_wrapper" />
 
-    <!-- 中心 FAB（增加按钮）浮在底部导航上方 -->
-    <com.google.android.material.floatingactionbutton.FloatingActionButton
-        android:id="@+id/fab_add"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_gravity="bottom|center"
-        android:layout_marginBottom="28dp"
-        android:src="@drawable/ic_add"
-        android:contentDescription="@string/add_entry"
-        app:backgroundTint="@color/primary"
-        app:fabSize="normal"
-        app:fabCustomSize="52dp"
-        app:maxImageSize="22dp"
-        app:elevation="10dp"
-        app:shapeAppearanceOverlay="@style/FabShape" />
-
-    <!-- 底部导航栏（5项：首页/生活流/+/报表/我的） -->
-    <LinearLayout
+    <!-- 底部导航总成包装层 (带细微阴影与分割线) -->
+    <FrameLayout
+        android:id="@+id/bottom_nav_wrapper"
         android:layout_width="match_parent"
-        android:layout_height="52dp"
-        android:orientation="horizontal"
-        android:background="@color/card"
-        android:elevation="12dp"
-        android:gravity="center_vertical"
-        android:paddingBottom="2dp">
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true">
 
-        <!-- 首页 -->
+        <!-- 导航底栏卡片 (高度 60dp，5栏均匀分布) -->
         <LinearLayout
-            android:id="@+id/nav_home"
-            android:layout_width="0dp"
-            android:layout_height="match_parent"
-            android:layout_weight="1"
-            android:orientation="vertical"
-            android:gravity="center"
-            android:clickable="true"
-            android:focusable="true"
-            android:background="?attr/selectableItemBackgroundBorderless">
-            <ImageView
-                android:id="@+id/nav_home_icon"
-                android:layout_width="22dp"
-                android:layout_height="22dp"
-                android:src="@drawable/ic_nav_home"
-                android:contentDescription="@string/nav_home" />
-            <TextView
-                android:id="@+id/nav_home_label"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="@string/nav_home"
-                android:textSize="10sp"
-                android:textColor="@color/text_secondary"
-                android:layout_marginTop="1dp" />
+            android:id="@+id/bottom_nav_bar"
+            android:layout_width="match_parent"
+            android:layout_height="60dp"
+            android:orientation="horizontal"
+            android:background="@color/card"
+            android:elevation="14dp"
+            android:gravity="center_vertical">
+
+            <!-- 1. 首页 / 仓库库存 -->
+            <LinearLayout
+                android:id="@+id/nav_home"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:orientation="vertical"
+                android:gravity="center"
+                android:clickable="true"
+                android:focusable="true"
+                android:background="?attr/selectableItemBackgroundBorderless">
+
+                <ImageView
+                    android:id="@+id/nav_home_icon"
+                    android:layout_width="23dp"
+                    android:layout_height="23dp"
+                    android:src="@drawable/ic_nav_home"
+                    app:tint="@color/primary"
+                    android:contentDescription="@string/nav_home" />
+
+                <TextView
+                    android:id="@+id/nav_home_label"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/nav_home"
+                    android:textSize="11sp"
+                    android:textStyle="bold"
+                    android:textColor="@color/primary"
+                    android:layout_marginTop="2dp" />
+            </LinearLayout>
+
+            <!-- 2. 生活流 / 出入流水 -->
+            <LinearLayout
+                android:id="@+id/nav_timeline"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:orientation="vertical"
+                android:gravity="center"
+                android:clickable="true"
+                android:focusable="true"
+                android:background="?attr/selectableItemBackgroundBorderless">
+
+                <ImageView
+                    android:id="@+id/nav_timeline_icon"
+                    android:layout_width="23dp"
+                    android:layout_height="23dp"
+                    android:src="@drawable/ic_nav_timeline"
+                    app:tint="@color/text_secondary"
+                    android:contentDescription="@string/nav_timeline" />
+
+                <TextView
+                    android:id="@+id/nav_timeline_label"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/nav_timeline"
+                    android:textSize="11sp"
+                    android:textColor="@color/text_secondary"
+                    android:layout_marginTop="2dp" />
+            </LinearLayout>
+
+            <!-- 3. 中央集成「+」极速记账按键 (完美嵌入导航栏居中) -->
+            <FrameLayout
+                android:id="@+id/nav_add_center_slot"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:gravity="center">
+
+                <com.google.android.material.floatingactionbutton.FloatingActionButton
+                    android:id="@+id/fab_add"
+                    android:layout_width="46dp"
+                    android:layout_height="46dp"
+                    android:layout_gravity="center"
+                    android:src="@drawable/ic_add"
+                    android:contentDescription="@string/add_entry"
+                    app:backgroundTint="@color/primary"
+                    app:tint="@android:color/white"
+                    app:fabCustomSize="46dp"
+                    app:maxImageSize="22dp"
+                    app:elevation="4dp"
+                    app:pressedTranslationZ="8dp"
+                    app:shapeAppearanceOverlay="@style/FabShape" />
+            </FrameLayout>
+
+            <!-- 4. 报表 -->
+            <LinearLayout
+                android:id="@+id/nav_report"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:orientation="vertical"
+                android:gravity="center"
+                android:clickable="true"
+                android:focusable="true"
+                android:background="?attr/selectableItemBackgroundBorderless">
+
+                <ImageView
+                    android:id="@+id/nav_report_icon"
+                    android:layout_width="23dp"
+                    android:layout_height="23dp"
+                    android:src="@drawable/ic_nav_report"
+                    app:tint="@color/text_secondary"
+                    android:contentDescription="@string/nav_report" />
+
+                <TextView
+                    android:id="@+id/nav_report_label"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/nav_report"
+                    android:textSize="11sp"
+                    android:textColor="@color/text_secondary"
+                    android:layout_marginTop="2dp" />
+            </LinearLayout>
+
+            <!-- 5. 我的 / 系统设置 -->
+            <LinearLayout
+                android:id="@+id/nav_profile"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:orientation="vertical"
+                android:gravity="center"
+                android:clickable="true"
+                android:focusable="true"
+                android:background="?attr/selectableItemBackgroundBorderless">
+
+                <ImageView
+                    android:id="@+id/nav_profile_icon"
+                    android:layout_width="23dp"
+                    android:layout_height="23dp"
+                    android:src="@drawable/ic_nav_profile"
+                    app:tint="@color/text_secondary"
+                    android:contentDescription="@string/nav_profile" />
+
+                <TextView
+                    android:id="@+id/nav_profile_label"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/nav_profile"
+                    android:textSize="11sp"
+                    android:textColor="@color/text_secondary"
+                    android:layout_marginTop="2dp" />
+            </LinearLayout>
+
         </LinearLayout>
 
-        <!-- 生活流 -->
-        <LinearLayout
-            android:id="@+id/nav_timeline"
-            android:layout_width="0dp"
-            android:layout_height="match_parent"
-            android:layout_weight="1"
-            android:orientation="vertical"
-            android:gravity="center"
-            android:clickable="true"
-            android:focusable="true"
-            android:background="?attr/selectableItemBackgroundBorderless">
-            <ImageView
-                android:id="@+id/nav_timeline_icon"
-                android:layout_width="22dp"
-                android:layout_height="22dp"
-                android:src="@drawable/ic_nav_timeline"
-                android:contentDescription="@string/nav_timeline" />
-            <TextView
-                android:id="@+id/nav_timeline_label"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="@string/nav_timeline"
-                android:textSize="10sp"
-                android:textColor="@color/text_secondary"
-                android:layout_marginTop="1dp" />
-        </LinearLayout>
-
-        <!-- 占位（FAB 位置） -->
+        <!-- 顶部细微 1dp 分割线 -->
         <View
-            android:layout_width="0dp"
-            android:layout_height="match_parent"
-            android:layout_weight="1" />
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:background="@color/card_border" />
+    </FrameLayout>
 
-        <!-- 报表 -->
-        <LinearLayout
-            android:id="@+id/nav_report"
-            android:layout_width="0dp"
-            android:layout_height="match_parent"
-            android:layout_weight="1"
-            android:orientation="vertical"
-            android:gravity="center"
-            android:clickable="true"
-            android:focusable="true"
-            android:background="?attr/selectableItemBackgroundBorderless">
-            <ImageView
-                android:id="@+id/nav_report_icon"
-                android:layout_width="22dp"
-                android:layout_height="22dp"
-                android:src="@drawable/ic_nav_report"
-                android:contentDescription="@string/nav_report" />
-            <TextView
-                android:id="@+id/nav_report_label"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="@string/nav_report"
-                android:textSize="10sp"
-                android:textColor="@color/text_secondary"
-                android:layout_marginTop="1dp" />
-        </LinearLayout>
-
-        <!-- 我的 -->
-        <LinearLayout
-            android:id="@+id/nav_profile"
-            android:layout_width="0dp"
-            android:layout_height="match_parent"
-            android:layout_weight="1"
-            android:orientation="vertical"
-            android:gravity="center"
-            android:clickable="true"
-            android:focusable="true"
-            android:background="?attr/selectableItemBackgroundBorderless">
-            <ImageView
-                android:id="@+id/nav_profile_icon"
-                android:layout_width="22dp"
-                android:layout_height="22dp"
-                android:src="@drawable/ic_nav_profile"
-                android:contentDescription="@string/nav_profile" />
-            <TextView
-                android:id="@+id/nav_profile_label"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="@string/nav_profile"
-                android:textSize="10sp"
-                android:textColor="@color/text_secondary"
-                android:layout_marginTop="1dp" />
-        </LinearLayout>
-    </LinearLayout>
-
-</LinearLayout>
+</RelativeLayout>

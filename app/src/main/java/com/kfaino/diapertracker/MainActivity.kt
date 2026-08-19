@@ -228,9 +228,24 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun setupFloatingAddButton() {
-        binding.fabAdd.applyPressScaleAnimation(0.88f)
         binding.fabAdd.setOnClickListener {
-            showAddDialog()
+            binding.fabAdd.performAppHapticFeedback()
+            binding.fabAdd.animate()
+                .scaleX(0.84f)
+                .scaleY(0.84f)
+                .rotation(45f)
+                .setDuration(120)
+                .withEndAction {
+                    binding.fabAdd.animate()
+                        .scaleX(1.0f)
+                        .scaleY(1.0f)
+                        .rotation(0f)
+                        .setDuration(220)
+                        .setInterpolator(android.view.animation.OvershootInterpolator(2.2f))
+                        .start()
+                    showAddDialog()
+                }
+                .start()
         }
     }
 
@@ -258,18 +273,47 @@ class MainActivity : AppCompatActivity() {
         val active = ContextCompat.getColor(this, R.color.primary)
         val inactive = ContextCompat.getColor(this, R.color.text_secondary)
 
-        data class TabInfo(val icon: ImageView, val label: TextView)
+        data class TabInfo(val icon: ImageView, val label: TextView, val container: View)
         val tabs = listOf(
-            TabInfo(binding.navHomeIcon, binding.navHomeLabel),
-            TabInfo(binding.navTimelineIcon, binding.navTimelineLabel),
-            TabInfo(binding.navReportIcon, binding.navReportLabel),
-            TabInfo(binding.navProfileIcon, binding.navProfileLabel)
+            TabInfo(binding.navHomeIcon, binding.navHomeLabel, binding.navHome),
+            TabInfo(binding.navTimelineIcon, binding.navTimelineLabel, binding.navTimeline),
+            TabInfo(binding.navReportIcon, binding.navReportLabel, binding.navReport),
+            TabInfo(binding.navProfileIcon, binding.navProfileLabel, binding.navProfile)
         )
 
         tabs.forEachIndexed { i, tab ->
-            val color = if (i == index) active else inactive
+            val isSelected = (i == index)
+            val color = if (isSelected) active else inactive
             tab.icon.imageTintList = ColorStateList.valueOf(color)
             tab.label.setTextColor(color)
+            tab.label.paint.isFakeBoldText = isSelected
+
+            if (isSelected) {
+                tab.icon.animate()
+                    .scaleX(1.18f)
+                    .scaleY(1.18f)
+                    .translationY(-3f)
+                    .setDuration(220)
+                    .setInterpolator(android.view.animation.OvershootInterpolator(2.4f))
+                    .start()
+                tab.label.animate()
+                    .scaleX(1.05f)
+                    .scaleY(1.05f)
+                    .setDuration(220)
+                    .start()
+            } else {
+                tab.icon.animate()
+                    .scaleX(1.0f)
+                    .scaleY(1.0f)
+                    .translationY(0f)
+                    .setDuration(180)
+                    .start()
+                tab.label.animate()
+                    .scaleX(1.0f)
+                    .scaleY(1.0f)
+                    .setDuration(180)
+                    .start()
+            }
         }
     }
 
