@@ -197,6 +197,8 @@
 
 ---
 
+---
+
 ## 17. 📦 简易库存模式 (Simplified Inventory Mode)
 
 - **模式切换**：前往【我的 ➔ 更多设置 ➔ 📦 简易库存模式】开启/关闭。
@@ -206,3 +208,23 @@
   - 底部导航精简为 3 栏：`📦 仓库库存`、`📋 出入流水`、`⚙️ 系统设置`；
   - 记账弹窗极简化：仅保留物品名称、分类选择、出入库类型（入库+/出库-）、库存数量、单价与备注。
 - **数据 100% 共享**：简易模式与普通全功能模式共用同一套底层本地数据库，随时无缝自由切换，数据绝不割裂、绝不丢失。
+
+---
+
+## 18. 🐧🍎 跨平台桌面端 (Linux & macOS)
+
+- **支持平台**：
+  - **Linux**（Ubuntu / Debian / Arch / Fedora 等，提供 `collecter-desktop-linux-v2.8.0.tar.gz` 与 `collecter.desktop` 快捷方式）；
+  - **macOS**（Apple Silicon M系列 / Intel，提供 `collecter-desktop-macos-v2.8.0.zip` 与 `launch_macos.command` 一键直启脚本）；
+  - **通用独立跨平台包**：`Collecter-Desktop-v2.8.0-Universal.jar`（需 Java 17+）。
+- **运行环境**：
+  - 安装 JRE / JDK 17 或更高版本：
+    - macOS: `brew install openjdk@17`
+    - Ubuntu/Debian: `sudo apt install openjdk-17-jre`
+- **桌面专属快捷键**：
+  - `⌘+N` / `Ctrl+N`：极速呼出记账与出入库窗口；
+  - `⌘+S` / `Ctrl+S`：一键触发 WebDAV 云同步；
+  - 宽屏大盘：左侧模块导航、居中库存流水表格与可视化数据报表。
+- **与手机端数据无缝互通**：
+  - 桌面端数据存储于 `~/.collector/collector_data.json`；
+  - 在桌面端【系统设置 ➔ WebDAV 配置】中填入与手机端相同的网盘账号与密码，随时一键上传/下载，多端数据完美同态一致！

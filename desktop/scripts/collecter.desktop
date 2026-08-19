@@ -1,0 +1,9 @@
+[Desktop Entry]
+Name=Collecter
+Comment=个人资产与仓库收纳管理系统 (跨平台桌面版)
+Exec=java -jar %k/Collecter-Desktop-2.8.0.jar
+Icon=utilities-system-monitor
+Terminal=false
+Type=Application
+Categories=Utility;Office;Finance;
+StartupWMClass=com-kfaino-collector-desktop-MainKt

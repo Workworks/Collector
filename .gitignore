@@ -9,4 +9,9 @@
 .cxx
 *.apk
 app/build/
+desktop/build/
+dist/
+*.jar
+*.tar.gz
+*.zip
 .system_generated/

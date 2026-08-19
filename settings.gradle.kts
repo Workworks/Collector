@@ -18,4 +18,4 @@ dependencyResolutionManagement {
     }
 }
 rootProject.name = "DiaperTracker"
-include(":app")
+include(":app", ":desktop")
