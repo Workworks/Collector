@@ -745,4 +745,31 @@ class DataStore(ctx: Context) {
     fun setHapticFeedbackEnabled(enabled: Boolean) {
         prefs.edit().putBoolean("haptic_feedback_enabled", enabled).apply()
     }
+
+    // ==================== 备份提醒持久化控制 ====================
+
+    fun getNextBackupPromptTime(): Long {
+        return prefs.getLong("next_backup_prompt_time", 0L)
+    }
+
+    fun snoozeBackupPrompt(days: Int = 3) {
+        val nextTime = System.currentTimeMillis() + days.toLong() * 24L * 60 * 60 * 1000
+        prefs.edit().putLong("next_backup_prompt_time", nextTime).apply()
+    }
+
+    fun recordBackupDone() {
+        val now = System.currentTimeMillis()
+        prefs.edit()
+            .putLong("last_backup_time", now)
+            .putLong("next_backup_prompt_time", now + 7L * 24 * 60 * 60 * 1000)
+            .apply()
+    }
+
+    fun shouldShowBackupBanner(): Boolean {
+        val list = loadAll()
+        if (list.isEmpty()) return false
+        val now = System.currentTimeMillis()
+        val nextPrompt = getNextBackupPromptTime()
+        return now >= nextPrompt
+    }
 }

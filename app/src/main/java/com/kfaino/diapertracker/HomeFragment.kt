@@ -153,19 +153,25 @@ class HomeFragment : Fragment() {
     }
 
     private fun setupBackupBanner() {
+        binding.btnCloseBackupBanner.applyPressScaleAnimation(0.92f)
         binding.btnCloseBackupBanner.setOnClickListener {
+            store.snoozeBackupPrompt(3)
             binding.cardBackupBanner.visibility = View.GONE
         }
 
+        binding.btnRemindLater.applyPressScaleAnimation(0.92f)
         binding.btnRemindLater.setOnClickListener {
+            store.snoozeBackupPrompt(3)
             binding.cardBackupBanner.visibility = View.GONE
-            Toast.makeText(requireContext(), "已推迟备份提醒", Toast.LENGTH_SHORT).show()
+            Toast.makeText(requireContext(), "已推迟备份提醒，3 天内将不再提示", Toast.LENGTH_SHORT).show()
         }
 
+        binding.btnBackupNow.applyPressScaleAnimation(0.94f)
         binding.btnBackupNow.setOnClickListener {
             val json = store.exportBackupJson()
             val clipboard = requireContext().getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
             clipboard.setPrimaryClip(ClipData.newPlainText("Collecter Backup", json))
+            store.recordBackupDone()
             Toast.makeText(requireContext(), "已将完整数据备份复制到剪贴板！", Toast.LENGTH_LONG).show()
             binding.cardBackupBanner.visibility = View.GONE
         }
@@ -379,6 +385,9 @@ class HomeFragment : Fragment() {
     fun refresh() {
         if (_binding == null) return
         val allEntries = store.loadAll()
+
+        // 0. 数据备份横幅持久化显示控制
+        binding.cardBackupBanner.visibility = if (store.shouldShowBackupBanner()) View.VISIBLE else View.GONE
 
         // 1. VIP 重要物品核对卡片
         val vipEntries = allEntries.filter { (it.isImportant || it.reminderEnabled) && !it.isRetired }
