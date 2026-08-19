@@ -243,6 +243,16 @@ class ReportFragment : Fragment() {
 
         categoryBreakdownAdapter.submit(breakdownList)
 
+        // 概览分类动态环形图
+        val slices = breakdownList.map {
+            DonutChartView.Slice(
+                name = it.name,
+                value = it.amount,
+                color = it.color
+            )
+        }
+        binding.overviewDonutChart.setData(slices, animate = true)
+
         // 概览多色横条
         val barContainer = binding.overviewCategoryProgressBar
         barContainer.removeAllViews()
@@ -253,6 +263,96 @@ class ReportFragment : Fragment() {
                     setBackgroundColor(item.color)
                 }
                 barContainer.addView(segment)
+            }
+        }
+
+        // 3. 闲置资产与断舍离健康雷达
+        val activeNonSubs = entries.filter { !it.isRetired && !it.isSubscription }
+        val nowMs = System.currentTimeMillis()
+        val idleItems = activeNonSubs.filter { item ->
+            val isUncheckedLong = (item.getDaysOwned() > 180 && (nowMs - item.lastCheckedAt > 180L * 24 * 60 * 60 * 1000))
+            val isExpiringSoon = (item.assetType == "expiring" && item.expiryDate > 0 && item.expiryDate - nowMs < 15L * 24 * 60 * 60 * 1000)
+            isUncheckedLong || isExpiringSoon
+        }
+
+        val healthScore = (100 - idleItems.size * 5).coerceIn(40, 100)
+        binding.tvHealthScoreBadge.text = "资产健康度 ${healthScore}分"
+        if (healthScore >= 90) {
+            binding.tvHealthScoreBadge.setTextColor(ContextCompat.getColor(requireContext(), R.color.stock_healthy_text))
+            binding.tvHealthScoreBadge.setBackgroundResource(R.drawable.bg_stock_healthy)
+        } else {
+            binding.tvHealthScoreBadge.setTextColor(ContextCompat.getColor(requireContext(), R.color.danger))
+            binding.tvHealthScoreBadge.setBackgroundResource(R.drawable.bg_chip_inactive)
+        }
+
+        if (idleItems.isEmpty()) {
+            binding.tvHealthDesc.text = "🎉 资产流转极其健康！暂无超过 180 天未打卡或临期闲置物品。"
+            binding.idleItemsContainer.removeAllViews()
+            binding.idleItemsContainer.visibility = View.GONE
+        } else {
+            binding.tvHealthDesc.text = "发现 ${idleItems.size} 件超 180 天未打卡确认或临期闲置物品，建议及时归置出二手回血："
+            binding.idleItemsContainer.visibility = View.VISIBLE
+            binding.idleItemsContainer.removeAllViews()
+
+            for (item in idleItems.take(5)) {
+                val rowCard = com.google.android.material.card.MaterialCardView(requireContext()).apply {
+                    radius = 24f
+                    cardElevation = 0f
+                    strokeWidth = 2
+                    setStrokeColor(ContextCompat.getColor(context, R.color.card_border))
+                    setCardBackgroundColor(ContextCompat.getColor(context, R.color.input_bg))
+                    val lp = LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT)
+                    lp.bottomMargin = 16
+                    layoutParams = lp
+                }
+
+                val row = LinearLayout(requireContext()).apply {
+                    orientation = LinearLayout.HORIZONTAL
+                    gravity = Gravity.CENTER_VERTICAL
+                    setPadding(28, 20, 28, 20)
+                }
+
+                val tvName = TextView(requireContext()).apply {
+                    text = "📦 ${item.brand}"
+                    textSize = 13f
+                    setTextColor(ContextCompat.getColor(context, R.color.text_primary))
+                    paint.isFakeBoldText = true
+                    layoutParams = LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f)
+                }
+
+                val btnConfirmChecked = TextView(requireContext()).apply {
+                    text = "✅ 确认在位"
+                    textSize = 11f
+                    setTextColor(ContextCompat.getColor(context, R.color.primary))
+                    setBackgroundResource(R.drawable.bg_btn_custom_add)
+                    setPadding(20, 10, 20, 10)
+                    applyPressScaleAnimation(0.92f)
+                    setOnClickListener {
+                        store.confirmItemChecked(item.id)
+                        refresh()
+                    }
+                }
+
+                val btnRetire = TextView(requireContext()).apply {
+                    text = "📦 挂闲鱼/归置"
+                    textSize = 11f
+                    setTextColor(Color.WHITE)
+                    setBackgroundResource(R.drawable.bg_btn_primary)
+                    setPadding(20, 10, 20, 10)
+                    val lp = LinearLayout.LayoutParams(LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.WRAP_CONTENT)
+                    lp.marginStart = 16
+                    layoutParams = lp
+                    applyPressScaleAnimation(0.92f)
+                    setOnClickListener {
+                        (activity as? MainActivity)?.showEditDialog(item)
+                    }
+                }
+
+                row.addView(tvName)
+                row.addView(btnConfirmChecked)
+                row.addView(btnRetire)
+                rowCard.addView(row)
+                binding.idleItemsContainer.addView(rowCard)
             }
         }
 

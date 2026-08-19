@@ -16,8 +16,8 @@ data class LocationMovement(
 /** 一条出入库/记账记录（集成折旧拥有天数、在役/退役待办归置、订阅型资产体系） */
 data class Entry(
     val id: String = UUID.randomUUID().toString(),
-    val category: String,       // 分类: 数码, 日用品, 零食, 耗材等
-    val brand: String,          // 品牌/物品名称
+    val category: String = "通用",       // 分类: 数码, 日用品, 零食, 耗材等
+    val brand: String = "物品",          // 品牌/物品名称
     val qty: Int = 1,           // 数量
     val price: Double = 0.0,    // 购买原价 / 单价（元/单位）
     val currentValuation: Double = 0.0, // 当前二手/折旧估值 (元，若为0则默认按原价)

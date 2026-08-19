@@ -233,20 +233,26 @@
                             android:background="@color/card_border"
                             android:layout_marginVertical="14dp" />
 
-                        <!-- 资产版图分类进度条与明细 -->
+                        <!-- 资产版图分类动态环形图与明细 -->
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="资产版图分布"
+                            android:text="🎨 资产版图分布（点击扇区高亮）"
                             android:textColor="@color/text_primary"
                             android:textSize="14sp"
                             android:textStyle="bold"
                             android:layout_marginBottom="10dp" />
 
+                        <com.kfaino.diapertracker.DonutChartView
+                            android:id="@+id/overview_donut_chart"
+                            android:layout_width="match_parent"
+                            android:layout_height="200dp"
+                            android:layout_marginBottom="14dp" />
+
                         <LinearLayout
                             android:id="@+id/overview_category_progress_bar"
                             android:layout_width="match_parent"
-                            android:layout_height="10dp"
+                            android:layout_height="8dp"
                             android:orientation="horizontal"
                             android:background="@drawable/bg_progress_track"
                             android:layout_marginBottom="14dp" />
@@ -256,6 +262,72 @@
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
                             android:nestedScrollingEnabled="false" />
+                    </LinearLayout>
+                </com.google.android.material.card.MaterialCardView>
+
+                <!-- 🧹 闲置资产与断舍离健康雷达卡片 -->
+                <com.google.android.material.card.MaterialCardView
+                    android:id="@+id/card_asset_health"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    app:cardCornerRadius="18dp"
+                    app:cardElevation="0dp"
+                    app:cardBackgroundColor="@color/card"
+                    app:strokeColor="@color/card_border"
+                    app:strokeWidth="1dp"
+                    android:layout_marginBottom="14dp">
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical"
+                        android:paddingHorizontal="20dp"
+                        android:paddingVertical="18dp">
+
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:orientation="horizontal"
+                            android:gravity="center_vertical">
+
+                            <TextView
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_weight="1"
+                                android:text="🧹 闲置资产与断舍离雷达"
+                                android:textColor="@color/text_primary"
+                                android:textSize="15sp"
+                                android:textStyle="bold" />
+
+                            <TextView
+                                android:id="@+id/tv_health_score_badge"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="资产健康度 95分"
+                                android:textSize="12sp"
+                                android:textStyle="bold"
+                                android:textColor="@color/stock_healthy_text"
+                                android:background="@drawable/bg_stock_healthy"
+                                android:paddingHorizontal="8dp"
+                                android:paddingVertical="3dp" />
+                        </LinearLayout>
+
+                        <TextView
+                            android:id="@+id/tv_health_desc"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:text="发现 0 件超 180 天未确认在位或临期的闲置物品，建议及时归置出二手回血。"
+                            android:textSize="12sp"
+                            android:textColor="@color/text_secondary"
+                            android:layout_marginTop="6dp"
+                            android:layout_marginBottom="10dp" />
+
+                        <!-- 闲置物品动态抽屉容器 -->
+                        <LinearLayout
+                            android:id="@+id/idle_items_container"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:orientation="vertical" />
                     </LinearLayout>
                 </com.google.android.material.card.MaterialCardView>
 

@@ -78,15 +78,36 @@ object FloorPlanDialog {
 
             binding.roomAssetsScroll.visibility = View.VISIBLE
 
-            // 头部标题
+            // 头部标题与二维码标签生成按钮
+            val headerRow = LinearLayout(activity).apply {
+                orientation = LinearLayout.HORIZONTAL
+                gravity = Gravity.CENTER_VERTICAL
+                setPadding(0, 4, 0, 8)
+            }
+
             val headerTv = TextView(activity).apply {
-                text = "📦 【$roomName】存放的在库物品 (共 ${items.size} 种):"
+                text = "📦 【$roomName】在库物品 (${items.size} 种):"
                 textSize = 12f
                 setTextColor(ContextCompat.getColor(context, R.color.primary))
                 paint.isFakeBoldText = true
-                setPadding(0, 4, 0, 8)
+                layoutParams = LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f)
             }
-            binding.roomAssetsContainer.addView(headerTv)
+
+            val btnGenQr = TextView(activity).apply {
+                text = "🏷️ 生成二维码标签"
+                textSize = 11f
+                setTextColor(ContextCompat.getColor(context, R.color.primary))
+                setBackgroundResource(R.drawable.bg_btn_custom_add)
+                setPadding(activity.dpToPx(8), activity.dpToPx(4), activity.dpToPx(8), activity.dpToPx(4))
+                applyPressScaleAnimation(0.92f)
+                setOnClickListener {
+                    BoxQrCodeDialog.show(activity, store, selectedHouse.name, roomName)
+                }
+            }
+
+            headerRow.addView(headerTv)
+            headerRow.addView(btnGenQr)
+            binding.roomAssetsContainer.addView(headerRow)
 
             for (item in items) {
                 val card = MaterialCardView(activity).apply {

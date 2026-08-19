@@ -6,7 +6,7 @@ import org.json.JSONArray
 import org.json.JSONObject
 
 /** 基于 SharedPreferences 的高可用持久化层，管理物品折旧、在役/退役待办归置、周期订阅资产与空间位置 */
-class DataStore(ctx: Context) {
+class DataStore(private val ctx: Context) {
     private val prefs = ctx.getSharedPreferences("collector_data", Context.MODE_PRIVATE)
     private val keyEntries = "entries_v4"
     private val keyHouses = "houses_v1"
@@ -181,6 +181,10 @@ class DataStore(ctx: Context) {
             )
         }
         prefs.edit().putString(keyEntries, arr.toString()).apply()
+        try {
+            ExpiringAndSubWidgetProvider.updateAllWidgets(ctx)
+            QuickAddWidgetProvider.updateAllWidgets(ctx)
+        } catch (_: Exception) {}
     }
 
     fun updateEntry(index: Int, newEntry: Entry): Boolean {
@@ -777,5 +781,41 @@ class DataStore(ctx: Context) {
         val now = System.currentTimeMillis()
         val nextPrompt = getNextBackupPromptTime()
         return now >= nextPrompt
+    }
+
+    // ==================== 生物识别指纹应用锁 ====================
+
+    fun isBiometricLockEnabled(): Boolean {
+        return prefs.getBoolean("biometric_lock_enabled", false)
+    }
+
+    fun setBiometricLockEnabled(enabled: Boolean) {
+        prefs.edit().putBoolean("biometric_lock_enabled", enabled).apply()
+    }
+
+    // ==================== WebDAV 私有云配置 ====================
+
+    fun getWebDavUrl(): String {
+        return prefs.getString("webdav_server_url", "https://dav.jianguoyun.com/dav/") ?: "https://dav.jianguoyun.com/dav/"
+    }
+
+    fun setWebDavUrl(url: String) {
+        prefs.edit().putString("webdav_server_url", url.trim()).apply()
+    }
+
+    fun getWebDavUsername(): String {
+        return prefs.getString("webdav_username", "") ?: ""
+    }
+
+    fun setWebDavUsername(user: String) {
+        prefs.edit().putString("webdav_username", user.trim()).apply()
+    }
+
+    fun getWebDavPassword(): String {
+        return prefs.getString("webdav_password", "") ?: ""
+    }
+
+    fun setWebDavPassword(pass: String) {
+        prefs.edit().putString("webdav_password", pass).apply()
     }
 }

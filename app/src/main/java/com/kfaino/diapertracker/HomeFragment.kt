@@ -102,6 +102,11 @@ class HomeFragment : Fragment() {
 
     private fun setupTopBarAndTabs() {
         // 顶部操作按钮
+        binding.btnScanQrTop.applyPressScaleAnimation(0.90f)
+        binding.btnScanQrTop.setOnClickListener {
+            (activity as? MainActivity)?.startQrScanner()
+        }
+
         binding.btnOpenFloorplanTop.applyPressScaleAnimation(0.90f)
         binding.btnOpenFloorplanTop.setOnClickListener {
             FloorPlanDialog.show(requireActivity(), store, isSelectMode = false)

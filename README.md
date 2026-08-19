@@ -7,7 +7,7 @@
 <p align="center">
   <img src="https://img.shields.io/badge/Platform-Android_8.0+-3DDC84?logo=android&logoColor=white" alt="Platform" />
   <img src="https://img.shields.io/badge/Language-Kotlin_1.9-7F52FF?logo=kotlin&logoColor=white" alt="Language" />
-  <img src="https://img.shields.io/badge/Version-v2.6.0-10B981" alt="Version" />
+  <img src="https://img.shields.io/badge/Version-v2.7.0-10B981" alt="Version" />
   <img src="https://img.shields.io/badge/License-MIT-blue" alt="License" />
 </p>
 
@@ -18,7 +18,11 @@
 - 📊 **资产看板 & 日均折旧成本**：支持「物品」与「周期订阅」双资产池，实时计算每一件数码/日用资产的**日均使用消费成本（元/天）**与二手回血收益。
 - 📸 **实物照片与发票/保修卡留存**：100% 本地沙盒私有存储，自动纠偏压缩，沉浸式高清大图查看与系统分享。
 - 🗺️ **空间平面图与寻物高亮穿梭**：可视化家庭空间多房间 Canvas 平面图，支持**由物找空间（呼吸脉冲高亮打点）**与**由空间看物品（房间在库资产抽屉）**双向穿梭。
-- ⏳ **物品管理 4 维分类**：折旧资产 / 保质期物品（临期倒计时） / 长期耐用品 / 日常消耗品。
+- 🏷️ **收纳箱专属二维码与智能扫码**：一键生成收纳箱二维码标签（支持保存相册与打印），扫一扫秒查箱内清单，扫描商品条码极速匹配入库。
+- 🎨 **动态环形图与断舍离健康雷达**：原生交互式分类占比环形图，智能评估 100 分资产健康度，一键归置超 180 天未打卡或临期闲置资产。
+- 📱 **桌面小组件系统**：桌面一秒查看「临期物品预警与订阅扣费倒计时」，在役资产总值与「+」一键快速记账。
+- 🔐 **生物识别指纹/面容隐私锁**：系统原生指纹/面容锁屏验证，严密守护个人资产与贵重物品存放隐私。
+- ☁️ **WebDAV 私有云安全同步**：支持坚果云、Nextcloud、群晖 Synology 等标准网盘，一键备份与多端还原。
 - 🔄 **周期订阅资产监控**：统一纳管 iCloud、ChatGPT Plus、宽带、年卡订阅，月均与年化支出一览无余，支持扣费前通知预警。
 - 📦 **物品退役与待办归置**：支持闲鱼代售、转转二手、赠送亲友、封箱收藏与报废归置，记录二手回血收益。
 - 📊 **多格式数据备份与导出**：一键生成带 UTF-8 BOM 的 **Excel 兼容 CSV 资产总表与流水表**，支持完整 JSON 备份与剪贴板极速恢复。

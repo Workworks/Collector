@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/widget_quick_root"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="horizontal"
+    android:gravity="center_vertical"
+    android:background="@drawable/bg_dialog_card"
+    android:backgroundTint="#0F172A"
+    android:paddingHorizontal="14dp"
+    android:paddingVertical="10dp">
+
+    <!-- 左侧：资产与日均消费 -->
+    <LinearLayout
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:orientation="vertical">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="在役资产 · 日均消费"
+            android:textSize="11sp"
+            android:textColor="#94A3B8" />
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="bottom"
+            android:layout_marginTop="2dp">
+
+            <TextView
+                android:id="@+id/widget_total_worth"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="¥0"
+                android:textSize="16sp"
+                android:textStyle="bold"
+                android:textColor="#FFFFFF" />
+
+            <TextView
+                android:id="@+id/widget_daily_cost"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="8dp"
+                android:text="¥0.00/天"
+                android:textSize="12sp"
+                android:textColor="#38BDF8" />
+        </LinearLayout>
+    </LinearLayout>
+
+    <!-- 右侧：一键记一笔圆形按钮 -->
+    <TextView
+        android:id="@+id/widget_btn_quick_add"
+        android:layout_width="38dp"
+        android:layout_height="38dp"
+        android:gravity="center"
+        android:text="+"
+        android:textSize="22sp"
+        android:textStyle="bold"
+        android:textColor="#FFFFFF"
+        android:background="@drawable/bg_btn_primary" />
+
+</LinearLayout>

@@ -11,8 +11,8 @@ android {
         applicationId = "com.kfaino.diapertracker"
         minSdk = 26
         targetSdk = 34
-        versionCode = 18
-        versionName = "2.6.0"
+        versionCode = 19
+        versionName = "2.7.0"
     }
 
     buildTypes {
@@ -42,4 +42,7 @@ dependencies {
     implementation("androidx.constraintlayout:constraintlayout:2.1.4")
     implementation("androidx.recyclerview:recyclerview:1.3.2")
     implementation("androidx.exifinterface:exifinterface:1.3.7")
+    implementation("com.google.zxing:core:3.5.3")
+    implementation("com.journeyapps:zxing-android-embedded:4.3.0")
+    implementation("androidx.biometric:biometric:1.1.0")
 }

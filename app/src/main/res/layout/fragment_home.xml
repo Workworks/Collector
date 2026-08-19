@@ -27,11 +27,25 @@
             android:textColor="@color/text_primary"
             android:fontFamily="sans-serif-medium" />
 
+        <!-- 智能扫码按钮 (扫收纳箱/条形码) -->
+        <ImageView
+            android:id="@+id/btn_scan_qr_top"
+            android:layout_width="38dp"
+            android:layout_height="38dp"
+            android:padding="8dp"
+            android:src="@drawable/ic_share"
+            app:tint="@color/text_primary"
+            android:contentDescription="智能扫码"
+            android:clickable="true"
+            android:focusable="true"
+            android:background="?attr/selectableItemBackgroundBorderless" />
+
         <!-- 空间平面图快捷键 -->
         <ImageView
             android:id="@+id/btn_open_floorplan_top"
             android:layout_width="38dp"
             android:layout_height="38dp"
+            android:layout_marginStart="2dp"
             android:padding="8dp"
             android:src="@drawable/ic_edit"
             app:tint="@color/text_primary"

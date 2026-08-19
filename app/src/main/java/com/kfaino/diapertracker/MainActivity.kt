@@ -59,6 +59,16 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    private val scanQrLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+        if (result.resultCode == RESULT_OK) {
+            val scanResult = com.journeyapps.barcodescanner.ScanIntentResult.parseActivityResult(result.resultCode, result.data)
+            val scanned = scanResult?.contents ?: result.data?.getStringExtra("SCAN_RESULT")
+            if (!scanned.isNullOrBlank()) {
+                handleScannedResult(scanned)
+            }
+        }
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         // 应用用户主题设置
         DataStore.applyThemeMode(store.getThemeMode())
@@ -90,6 +100,83 @@ class MainActivity : AppCompatActivity() {
 
         // 后台静默预下载最新版本 APK（无感缓存）
         UpdateManager.preloadSilently(this)
+
+        // 响应小组件一键快速记账
+        if (intent?.getBooleanExtra("action_open_add_dialog", false) == true) {
+            binding.root.post { showAddDialog() }
+        }
+    }
+
+    override fun onNewIntent(intent: android.content.Intent?) {
+        super.onNewIntent(intent)
+        setIntent(intent)
+        if (intent?.getBooleanExtra("action_open_add_dialog", false) == true) {
+            binding.root.post { showAddDialog() }
+        }
+    }
+
+    override fun onResume() {
+        super.onResume()
+        checkBiometricLock()
+    }
+
+    private fun checkBiometricLock() {
+        if (store.isBiometricLockEnabled() && !BiometricLockHelper.isUnlockedThisSession) {
+            if (BiometricLockHelper.canAuthenticate(this)) {
+                BiometricLockHelper.authenticate(
+                    activity = this,
+                    onSuccess = {
+                        // 认证通过
+                    },
+                    onError = {
+                        finish()
+                    }
+                )
+            }
+        }
+    }
+
+    fun startQrScanner() {
+        val intent = com.journeyapps.barcodescanner.ScanOptions()
+            .setPrompt("对准收纳箱二维码秒查清单，或扫描商品条形码")
+            .setBeepEnabled(true)
+            .setOrientationLocked(true)
+            .setCaptureActivity(ScannerActivity::class.java)
+            .createScanIntent(this)
+        scanQrLauncher.launch(intent)
+    }
+
+    private fun handleScannedResult(scanned: String) {
+        if (scanned.startsWith("collecter://room")) {
+            // 收纳箱/房间专属协议
+            try {
+                val uri = Uri.parse(scanned)
+                val house = uri.getQueryParameter("house") ?: ""
+                val room = uri.getQueryParameter("room") ?: ""
+
+                val all = store.loadAll()
+                val target = all.firstOrNull {
+                    (it.roomName == room || it.location.contains(room)) && (house.isBlank() || it.houseName == house)
+                } ?: Entry(houseName = house.ifBlank { "🏠 自己的家" }, roomName = room)
+                FloorPlanDialog.show(this, store, targetEntry = target)
+                Toast.makeText(this, "📍 已识别收纳箱：$room (${target.houseName})", Toast.LENGTH_SHORT).show()
+            } catch (_: Exception) {
+                Toast.makeText(this, "收纳箱二维码解析失败", Toast.LENGTH_SHORT).show()
+            }
+        } else {
+            // 商品条码或普通文本
+            val all = store.loadAll()
+            val matched = all.firstOrNull {
+                it.brand.contains(scanned, ignoreCase = true) || it.notes.contains(scanned, ignoreCase = true)
+            }
+            if (matched != null) {
+                Toast.makeText(this, "🔍 已匹配库内资产：${matched.brand}", Toast.LENGTH_SHORT).show()
+                showEditDialog(matched)
+            } else {
+                Toast.makeText(this, "条形码：$scanned，快速录入新资产", Toast.LENGTH_SHORT).show()
+                showAddDialog(prefilledNotes = "条形码: $scanned")
+            }
+        }
     }
 
     private fun setupBottomNavigation() {
@@ -174,12 +261,19 @@ class MainActivity : AppCompatActivity() {
         prefillBrand: String? = null,
         prefillCategory: String? = null,
         presetCategory: String? = null,
+        prefilledNotes: String? = null,
         editEntry: Entry? = null,
         editPosition: Int? = null
     ) {
         val isEditMode = (editEntry != null && editPosition != null)
         val dialogBinding = DialogAddEntryBinding.inflate(layoutInflater)
         val categories = store.getCategories().toMutableList()
+
+        if (!prefilledNotes.isNullOrEmpty() && editEntry == null) {
+            dialogBinding.notesInput.setText(prefilledNotes)
+        } else if (editEntry != null) {
+            dialogBinding.notesInput.setText(editEntry.notes)
+        }
 
         val defaultCat = presetCategory ?: prefillCategory
         var selectedCategory = editEntry?.category ?: defaultCat ?: if (categories.isNotEmpty()) categories[0] else "数码"
