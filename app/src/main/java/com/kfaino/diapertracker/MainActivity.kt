@@ -184,6 +184,20 @@ class MainActivity : AppCompatActivity() {
         binding.navReport.applyPressScaleAnimation(0.92f)
         binding.navProfile.applyPressScaleAnimation(0.92f)
 
+        val isSimple = store.isSimpleMode()
+        if (isSimple) {
+            binding.navReport.visibility = View.GONE
+            binding.navHomeLabel.text = "仓库库存"
+            binding.navTimelineLabel.text = "出入流水"
+            binding.navProfileLabel.text = "系统设置"
+        } else {
+            binding.navReport.visibility = View.VISIBLE
+            binding.navHomeLabel.text = "资产"
+            binding.navTimelineLabel.text = "生活流"
+            binding.navReportLabel.text = "报表"
+            binding.navProfileLabel.text = "我的"
+        }
+
         binding.navHome.setOnClickListener {
             if (currentTab != 0) {
                 switchFragment(HomeFragment())
@@ -335,19 +349,32 @@ class MainActivity : AppCompatActivity() {
 
         // 标题与图标
         if (isEditMode) {
-            dialogBinding.dialogTitle.text = "编辑资产记录"
+            dialogBinding.dialogTitle.text = if (store.isSimpleMode()) "编辑库存记录" else "编辑资产记录"
             dialogBinding.btnDialogConfirm.text = "保存修改"
             if (editEntry != null && (editEntry.location.isNotBlank() || editEntry.locationHistory.isNotEmpty())) {
-                dialogBinding.btnViewLocationHistory.visibility = View.VISIBLE
+                dialogBinding.btnViewLocationHistory.visibility = if (store.isSimpleMode()) View.GONE else View.VISIBLE
                 dialogBinding.btnViewLocationHistory.applyPressScaleAnimation(0.92f)
                 dialogBinding.btnViewLocationHistory.setOnClickListener {
                     LocationHistoryDialog.show(this, editEntry)
                 }
             }
         } else {
-            dialogBinding.dialogTitle.text = "记一笔"
+            dialogBinding.dialogTitle.text = if (store.isSimpleMode()) "📦 出入库记一笔" else "记一笔"
             dialogBinding.btnDialogConfirm.text = "确认添加"
             dialogBinding.btnViewLocationHistory.visibility = View.GONE
+        }
+
+        // 简易库存模式隐藏高阶非必要卡片与开关
+        if (store.isSimpleMode()) {
+            dialogBinding.typeSelectContainer.visibility = View.GONE
+            dialogBinding.layoutDepreciationSection.visibility = View.GONE
+            dialogBinding.layoutExpirySection.visibility = View.GONE
+            dialogBinding.layoutDurableSection.visibility = View.GONE
+            dialogBinding.btnOpenFloorplanPicker.visibility = View.GONE
+            dialogBinding.cardPhotoSlot.visibility = View.GONE
+            dialogBinding.cardReceiptSlot.visibility = View.GONE
+            dialogBinding.cbIsSubscriptionAsset.visibility = View.GONE
+            dialogBinding.layoutSubAssetDetails.visibility = View.GONE
         }
 
         // 1. 设置入库/出库模式

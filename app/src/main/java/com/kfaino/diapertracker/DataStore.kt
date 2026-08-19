@@ -818,4 +818,14 @@ class DataStore(private val ctx: Context) {
     fun setWebDavPassword(pass: String) {
         prefs.edit().putString("webdav_password", pass).apply()
     }
+
+    // ==================== 简易库存模式 (Simplified Mode) ====================
+
+    fun isSimpleMode(): Boolean {
+        return prefs.getBoolean("app_simple_mode_enabled", false)
+    }
+
+    fun setSimpleMode(enabled: Boolean) {
+        prefs.edit().putBoolean("app_simple_mode_enabled", enabled).apply()
+    }
 }

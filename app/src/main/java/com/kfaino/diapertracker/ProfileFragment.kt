@@ -44,6 +44,9 @@ class ProfileFragment : Fragment() {
 
         val verName = UpdateManager.getAppVersionName(requireContext())
         binding.currentVersionBadge.text = "v$verName"
+        val isSimple = store.isSimpleMode()
+        binding.cardUserTutorial.visibility = if (isSimple) View.GONE else View.VISIBLE
+        binding.btnFloorplanManage.visibility = if (isSimple) View.GONE else View.VISIBLE
 
         setupClicks()
     }
@@ -125,6 +128,20 @@ class ProfileFragment : Fragment() {
 
         dialog.window?.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
         dialog.window?.attributes?.windowAnimations = R.style.CustomDialogAnimation
+
+        // 0. 简易库存模式开关
+        dBinding.switchSimpleMode.isChecked = store.isSimpleMode()
+        dBinding.switchSimpleMode.setOnCheckedChangeListener { _, isChecked ->
+            store.setSimpleMode(isChecked)
+            dBinding.root.performAppHapticFeedback()
+            if (isChecked) {
+                Toast.makeText(requireContext(), "📦 已切换至「简易库存模式」", Toast.LENGTH_SHORT).show()
+            } else {
+                Toast.makeText(requireContext(), "🌟 已切换回「标准全功能模式」", Toast.LENGTH_SHORT).show()
+            }
+            dialog.dismiss()
+            requireActivity().recreate()
+        }
 
         fun updateThemeText() {
             dBinding.tvCurrentThemeDesc.text = when (store.getThemeMode()) {

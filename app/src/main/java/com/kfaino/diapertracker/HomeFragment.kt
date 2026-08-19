@@ -100,6 +100,11 @@ class HomeFragment : Fragment() {
     }
 
     private fun setupTopBarAndTabs() {
+        val isSimple = store.isSimpleMode()
+        binding.btnOpenFloorplanTop.visibility = if (isSimple) View.GONE else View.VISIBLE
+        (binding.tabItems.parent as? View)?.visibility = if (isSimple) View.GONE else View.VISIBLE
+        binding.btnFilterMapView.visibility = if (isSimple) View.GONE else View.VISIBLE
+
         // 顶部操作按钮
         binding.btnScanQrTop.applyPressScaleAnimation(0.90f)
         binding.btnScanQrTop.setOnClickListener {
@@ -407,9 +412,11 @@ class HomeFragment : Fragment() {
         // 0. 数据备份横幅持久化显示控制
         binding.cardBackupBanner.visibility = if (store.shouldShowBackupBanner()) View.VISIBLE else View.GONE
 
-        // 1. VIP 重要物品核对卡片
+        val isSimple = store.isSimpleMode()
+
+        // 1. VIP 重要物品核对卡片 (简易模式隐藏)
         val vipEntries = allEntries.filter { (it.isImportant || it.reminderEnabled) && !it.isRetired }
-        if (vipEntries.isNotEmpty()) {
+        if (!isSimple && vipEntries.isNotEmpty()) {
             binding.cardImportantVip.visibility = View.VISIBLE
             binding.vipItemsCountBadge.text = "${vipEntries.size} 件重要关注"
             binding.vipItemsListContainer.removeAllViews()
@@ -460,20 +467,26 @@ class HomeFragment : Fragment() {
         }
 
         // 2. 根据选中的 Tab 填充数据
-        if (selectedTab == 0) {
+        if (selectedTab == 0 || isSimple) {
             // 【物品 Tab】
             val nonSubs = allEntries.filter { !it.isSubscription }
             val activeCount = nonSubs.count { !it.isRetired }
             val retiredCount = nonSubs.count { it.isRetired }
-
-            binding.tvActiveRetiredRatio.text = "$activeCount 在役 / $retiredCount 退役"
-
             val totalAssetWorth = nonSubs.filter { it.isIn && !it.isRetired }.sumOf { it.price * it.qty }
-            binding.tvTotalAssetAmount.text = "¥${String.format(Locale.getDefault(), "%,.2f", totalAssetWorth)}"
 
-            val activeItems = nonSubs.filter { !it.isRetired }
-            val totalDaily = activeItems.sumOf { it.getDailyCost() }
-            binding.tvTotalDailyCost.text = "¥${String.format(Locale.getDefault(), "%.2f", totalDaily)}"
+            if (isSimple) {
+                val totalStockQty = nonSubs.filter { it.isIn && !it.isRetired }.sumOf { it.qty }
+                binding.tvActiveRetiredRatio.text = "$activeCount 种在库物品"
+                binding.tvTotalAssetAmount.text = "$totalStockQty 件"
+                binding.tvTotalDailyCost.text = "¥${String.format(Locale.getDefault(), "%,.2f", totalAssetWorth)}"
+            } else {
+                binding.tvActiveRetiredRatio.text = "$activeCount 在役 / $retiredCount 退役"
+                binding.tvTotalAssetAmount.text = "¥${String.format(Locale.getDefault(), "%,.2f", totalAssetWorth)}"
+
+                val activeItems = nonSubs.filter { !it.isRetired }
+                val totalDaily = activeItems.sumOf { it.getDailyCost() }
+                binding.tvTotalDailyCost.text = "¥${String.format(Locale.getDefault(), "%.2f", totalDaily)}"
+            }
 
             // 过滤列表
             var filtered = nonSubs
