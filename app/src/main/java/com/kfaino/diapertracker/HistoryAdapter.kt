@@ -52,10 +52,24 @@ class HistoryAdapter(
             val totalAmount = entry.qty * entry.price
             b.amount.text = "+ ¥${String.format(Locale.getDefault(), "%.2f", totalAmount)}"
             b.amount.setTextColor(ContextCompat.getColor(ctx, R.color.primary))
-            b.qtyInfo.text = if (entry.price > 0)
-                "${entry.qty}$unit · 拥有 ${entry.getDaysOwned()} 天 · 日均 ¥${String.format(Locale.getDefault(), "%.2f", entry.getDailyCost())}"
-            else
-                "${entry.qty}$unit 入库 · 拥有 ${entry.getDaysOwned()} 天"
+            b.qtyInfo.text = when (entry.assetType) {
+                "expiring" -> {
+                    if (entry.expiryDate > 0) {
+                        val expStr = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(Date(entry.expiryDate))
+                        "${entry.qty}$unit · 到期: $expStr (${entry.getExpiryStatusText()})"
+                    } else {
+                        "${entry.qty}$unit · 保质期耗材"
+                    }
+                }
+                "durable" -> "${entry.qty}$unit · 长期持有 ${entry.getDaysOwned()} 天"
+                "consumable" -> "${entry.qty}$unit 入库"
+                else -> {
+                    if (entry.price > 0)
+                        "${entry.qty}$unit · 拥有 ${entry.getDaysOwned()} 天 · 日均 ¥${String.format(Locale.getDefault(), "%.2f", entry.getDailyCost())}"
+                    else
+                        "${entry.qty}$unit 入库 · 拥有 ${entry.getDaysOwned()} 天"
+                }
+            }
         } else {
             b.badge.text = "-"
             b.badge.backgroundTintList = ColorStateList.valueOf(ContextCompat.getColor(ctx, R.color.danger))

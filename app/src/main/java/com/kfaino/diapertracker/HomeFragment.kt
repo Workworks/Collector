@@ -121,11 +121,12 @@ class HomeFragment : Fragment() {
         if (tab == 0) {
             // 切换为【物品】
             binding.tabItems.setBackgroundResource(R.drawable.bg_chip_active)
-            binding.tabItems.backgroundTintList = ContextCompat.getColorStateList(requireContext(), android.R.color.white)
-            binding.tabItems.setTextColor(Color.parseColor("#0A0E17"))
+            binding.tabItems.backgroundTintList = null
+            binding.tabItems.setTextColor(Color.WHITE)
             binding.tabItems.paint.isFakeBoldText = true
 
             binding.tabSubs.setBackgroundColor(Color.TRANSPARENT)
+            binding.tabSubs.backgroundTintList = null
             binding.tabSubs.setTextColor(ContextCompat.getColor(requireContext(), R.color.text_secondary))
             binding.tabSubs.paint.isFakeBoldText = false
 
@@ -135,11 +136,12 @@ class HomeFragment : Fragment() {
         } else {
             // 切换为【订阅】
             binding.tabSubs.setBackgroundResource(R.drawable.bg_chip_active)
-            binding.tabSubs.backgroundTintList = ContextCompat.getColorStateList(requireContext(), android.R.color.white)
-            binding.tabSubs.setTextColor(Color.parseColor("#0A0E17"))
+            binding.tabSubs.backgroundTintList = null
+            binding.tabSubs.setTextColor(Color.WHITE)
             binding.tabSubs.paint.isFakeBoldText = true
 
             binding.tabItems.setBackgroundColor(Color.TRANSPARENT)
+            binding.tabItems.backgroundTintList = null
             binding.tabItems.setTextColor(ContextCompat.getColor(requireContext(), R.color.text_secondary))
             binding.tabItems.paint.isFakeBoldText = false
 

@@ -2,13 +2,14 @@ package com.kfaino.diapertracker
 
 import android.content.Context
 import android.graphics.Color
-import android.graphics.drawable.GradientDrawable
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import androidx.appcompat.widget.PopupMenu
+import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.RecyclerView
 import com.kfaino.diapertracker.databinding.ItemAssetCardBinding
+import java.text.SimpleDateFormat
+import java.util.Date
 import java.util.Locale
 
 class AssetAdapter(
@@ -31,6 +32,7 @@ class AssetAdapter(
     override fun onBindViewHolder(holder: VH, position: Int) {
         val entry = items[position]
         val b = holder.binding
+        val ctx = holder.itemView.context
 
         holder.itemView.applyPressScaleAnimation(0.96f)
         holder.itemView.setOnClickListener { onEntryClick(entry) }
@@ -49,23 +51,53 @@ class AssetAdapter(
             b.itemRetiredBadge.visibility = View.VISIBLE
             val actionText = if (entry.retiredAction.isNotBlank()) entry.retiredAction else "已退役"
             b.itemRetiredBadge.text = "🔴 $actionText"
-            b.itemDaysOwned.setTextColor(Color.parseColor("#94A3B8"))
+            b.itemDaysOwned.setTextColor(ContextCompat.getColor(ctx, R.color.text_tertiary))
         } else {
             b.itemRetiredBadge.visibility = View.GONE
-            b.itemDaysOwned.setTextColor(Color.parseColor("#F1F5F9"))
+            b.itemDaysOwned.setTextColor(ContextCompat.getColor(ctx, R.color.text_primary))
         }
 
-        // 4. 拥有天数
-        b.itemDaysOwned.text = "${entry.getDaysOwned()}"
-
-        // 5. 价格与日均消费
+        // 4. 按物品管理类型（折旧 / 保质期 / 长期耐用 / 消耗品）差异化展示指标
         val totalVal = entry.price * entry.qty
         b.itemOriginalPrice.text = "¥${String.format(Locale.getDefault(), "%,.2f", totalVal)}"
 
-        val dailyCost = entry.getDailyCost()
-        b.itemDailyCost.text = "¥${String.format(Locale.getDefault(), "%.2f", dailyCost)}/天"
+        when (entry.assetType) {
+            "expiring" -> {
+                // 保质期物品：显示到期倒计时与到期日期，不显示折旧费
+                if (entry.expiryDate > 0) {
+                    val statusText = entry.getExpiryStatusText()
+                    b.itemDaysOwned.text = statusText
+                    b.itemDaysLabel.text = ""
+                    val expDateStr = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(Date(entry.expiryDate))
+                    b.itemDailyCost.text = "到期: $expDateStr"
+                } else {
+                    b.itemDaysOwned.text = "保质期"
+                    b.itemDaysLabel.text = ""
+                    b.itemDailyCost.text = "未设到期日"
+                }
+            }
+            "durable" -> {
+                // 长期耐用品：显示拥有天数，不计折旧
+                b.itemDaysOwned.text = "${entry.getDaysOwned()}"
+                b.itemDaysLabel.text = " 天"
+                b.itemDailyCost.text = "🛋️ 长期耐用品"
+            }
+            "consumable" -> {
+                // 日常消耗品：显示库存数量
+                b.itemDaysOwned.text = "${entry.qty}"
+                b.itemDaysLabel.text = " ${entry.unit}"
+                b.itemDailyCost.text = "📦 日常耗材"
+            }
+            else -> {
+                // 折旧资产 (depreciating)：显示拥有天数与日均折旧成本
+                b.itemDaysOwned.text = "${entry.getDaysOwned()}"
+                b.itemDaysLabel.text = " 天"
+                val dailyCost = entry.getDailyCost()
+                b.itemDailyCost.text = "¥${String.format(Locale.getDefault(), "%.2f", dailyCost)}/天"
+            }
+        }
 
-        // 6. 空间位置标签
+        // 5. 空间位置标签
         if (entry.location.isNotBlank()) {
             b.itemLocationTag.visibility = View.VISIBLE
             b.itemLocationTag.text = "📍 ${entry.location}"
@@ -73,7 +105,7 @@ class AssetAdapter(
             b.itemLocationTag.visibility = View.GONE
         }
 
-        // 7. 在库数量
+        // 6. 在库数量
         b.itemStockBadge.text = "${entry.qty} ${entry.unit}"
     }
 

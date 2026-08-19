@@ -232,8 +232,83 @@
                     android:textSize="13sp" />
             </LinearLayout>
 
-            <!-- 1. 购入日期与折旧估值 (用于计算拥有天数和日均花费) -->
+            <!-- 物品类型分类选择 (折旧资产 / 保质期物品 / 长期耐用 / 消耗品) -->
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="12dp"
+                android:text="🏷️ 物品管理类型"
+                android:textColor="@color/text_primary"
+                android:textStyle="bold"
+                android:textSize="13sp" />
+
             <LinearLayout
+                android:id="@+id/type_select_container"
+                android:layout_width="match_parent"
+                android:layout_height="36dp"
+                android:layout_marginTop="6dp"
+                android:orientation="horizontal">
+
+                <TextView
+                    android:id="@+id/type_btn_depreciating"
+                    android:layout_width="0dp"
+                    android:layout_height="match_parent"
+                    android:layout_weight="1"
+                    android:gravity="center"
+                    android:text="📉 折旧资产"
+                    android:textSize="11sp"
+                    android:textStyle="bold"
+                    android:textColor="#FFFFFF"
+                    android:background="@drawable/bg_chip_active"
+                    android:layout_marginEnd="4dp"
+                    android:clickable="true"
+                    android:focusable="true" />
+
+                <TextView
+                    android:id="@+id/type_btn_expiring"
+                    android:layout_width="0dp"
+                    android:layout_height="match_parent"
+                    android:layout_weight="1"
+                    android:gravity="center"
+                    android:text="⏳ 保质期"
+                    android:textSize="11sp"
+                    android:textColor="@color/text_secondary"
+                    android:background="@drawable/bg_chip_inactive"
+                    android:layout_marginEnd="4dp"
+                    android:clickable="true"
+                    android:focusable="true" />
+
+                <TextView
+                    android:id="@+id/type_btn_durable"
+                    android:layout_width="0dp"
+                    android:layout_height="match_parent"
+                    android:layout_weight="1"
+                    android:gravity="center"
+                    android:text="🛋️ 长期耐用"
+                    android:textSize="11sp"
+                    android:textColor="@color/text_secondary"
+                    android:background="@drawable/bg_chip_inactive"
+                    android:layout_marginEnd="4dp"
+                    android:clickable="true"
+                    android:focusable="true" />
+
+                <TextView
+                    android:id="@+id/type_btn_consumable"
+                    android:layout_width="0dp"
+                    android:layout_height="match_parent"
+                    android:layout_weight="1"
+                    android:gravity="center"
+                    android:text="📦 消耗品"
+                    android:textSize="11sp"
+                    android:textColor="@color/text_secondary"
+                    android:background="@drawable/bg_chip_inactive"
+                    android:clickable="true"
+                    android:focusable="true" />
+            </LinearLayout>
+
+            <!-- 1. 折旧资产专用区块 (购入时间与折旧估值) -->
+            <LinearLayout
+                android:id="@+id/layout_depreciation_section"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="vertical"
@@ -244,7 +319,7 @@
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="📅 购入时间与折旧估值（计算拥有天数与日均花费）"
+                    android:text="📉 购入时间与二手折旧估值（计算日均使用成本）"
                     android:textColor="@color/primary"
                     android:textStyle="bold"
                     android:textSize="12sp" />
@@ -264,7 +339,7 @@
                         android:background="@drawable/bg_chip_inactive"
                         android:gravity="center_vertical"
                         android:paddingHorizontal="10dp"
-                        android:text="📅 购入: 2026-08-19 (1天)"
+                        android:text="📅 购入: 2026-08-19"
                         android:textColor="@color/text_primary"
                         android:textSize="12sp"
                         android:clickable="true"
@@ -277,13 +352,177 @@
                         android:layout_height="40dp"
                         android:layout_weight="1"
                         android:background="@drawable/bg_input_box"
-                        android:hint="当前估值: 如3500"
+                        android:hint="当前二手估值(元)"
                         android:inputType="numberDecimal"
                         android:paddingHorizontal="10dp"
                         android:textSize="12sp"
                         android:textColor="@color/text_primary"
                         android:textColorHint="@color/text_hint" />
                 </LinearLayout>
+            </LinearLayout>
+
+            <!-- 2. 保质期物品专用区块 (生产日期与到期日期) -->
+            <LinearLayout
+                android:id="@+id/layout_expiry_section"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:layout_marginTop="12dp"
+                android:background="@drawable/bg_changelog_box"
+                android:padding="12dp"
+                android:visibility="gone">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="⏳ 保质期设定（临期将自动提醒预警）"
+                    android:textColor="@color/accent_dark"
+                    android:textStyle="bold"
+                    android:textSize="12sp" />
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical"
+                    android:layout_marginTop="8dp">
+
+                    <TextView
+                        android:id="@+id/btn_pick_mfg_date"
+                        android:layout_width="0dp"
+                        android:layout_height="40dp"
+                        android:layout_weight="1"
+                        android:background="@drawable/bg_chip_inactive"
+                        android:gravity="center_vertical"
+                        android:paddingHorizontal="10dp"
+                        android:text="🏭 生产: 未选"
+                        android:textColor="@color/text_primary"
+                        android:textSize="12sp"
+                        android:clickable="true"
+                        android:focusable="true"
+                        android:layout_marginEnd="8dp" />
+
+                    <TextView
+                        android:id="@+id/btn_pick_exp_date"
+                        android:layout_width="0dp"
+                        android:layout_height="40dp"
+                        android:layout_weight="1"
+                        android:background="@drawable/bg_chip_inactive"
+                        android:gravity="center_vertical"
+                        android:paddingHorizontal="10dp"
+                        android:text="⌛ 到期: 点击设定"
+                        android:textColor="@color/primary"
+                        android:textStyle="bold"
+                        android:textSize="12sp"
+                        android:clickable="true"
+                        android:focusable="true" />
+                </LinearLayout>
+
+                <!-- 快速设置保质期时长 -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:layout_marginTop="6dp">
+
+                    <TextView
+                        android:id="@+id/chip_exp_30d"
+                        android:layout_width="0dp"
+                        android:layout_height="28dp"
+                        android:layout_weight="1"
+                        android:gravity="center"
+                        android:background="@drawable/bg_chip_inactive"
+                        android:text="30天"
+                        android:textSize="11sp"
+                        android:textColor="@color/text_secondary"
+                        android:layout_marginEnd="4dp"
+                        android:clickable="true" />
+
+                    <TextView
+                        android:id="@+id/chip_exp_180d"
+                        android:layout_width="0dp"
+                        android:layout_height="28dp"
+                        android:layout_weight="1"
+                        android:gravity="center"
+                        android:background="@drawable/bg_chip_inactive"
+                        android:text="半年"
+                        android:textSize="11sp"
+                        android:textColor="@color/text_secondary"
+                        android:layout_marginEnd="4dp"
+                        android:clickable="true" />
+
+                    <TextView
+                        android:id="@+id/chip_exp_1y"
+                        android:layout_width="0dp"
+                        android:layout_height="28dp"
+                        android:layout_weight="1"
+                        android:gravity="center"
+                        android:background="@drawable/bg_chip_inactive"
+                        android:text="1年"
+                        android:textSize="11sp"
+                        android:textColor="@color/text_secondary"
+                        android:layout_marginEnd="4dp"
+                        android:clickable="true" />
+
+                    <TextView
+                        android:id="@+id/chip_exp_2y"
+                        android:layout_width="0dp"
+                        android:layout_height="28dp"
+                        android:layout_weight="1"
+                        android:gravity="center"
+                        android:background="@drawable/bg_chip_inactive"
+                        android:text="2年"
+                        android:textSize="11sp"
+                        android:textColor="@color/text_secondary"
+                        android:layout_marginEnd="4dp"
+                        android:clickable="true" />
+
+                    <TextView
+                        android:id="@+id/chip_exp_3y"
+                        android:layout_width="0dp"
+                        android:layout_height="28dp"
+                        android:layout_weight="1"
+                        android:gravity="center"
+                        android:background="@drawable/bg_chip_inactive"
+                        android:text="3年"
+                        android:textSize="11sp"
+                        android:textColor="@color/text_secondary"
+                        android:clickable="true" />
+                </LinearLayout>
+            </LinearLayout>
+
+            <!-- 3. 长期耐用品专用区块 (购入/启用日期) -->
+            <LinearLayout
+                android:id="@+id/layout_durable_section"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:layout_marginTop="12dp"
+                android:background="@drawable/bg_changelog_box"
+                android:padding="12dp"
+                android:visibility="gone">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="🛋️ 长期耐用品（记录启用日期，不计折旧费）"
+                    android:textColor="@color/primary"
+                    android:textStyle="bold"
+                    android:textSize="12sp" />
+
+                <TextView
+                    android:id="@+id/btn_pick_durable_date"
+                    android:layout_width="match_parent"
+                    android:layout_height="40dp"
+                    android:layout_marginTop="8dp"
+                    android:background="@drawable/bg_chip_inactive"
+                    android:gravity="center_vertical"
+                    android:paddingHorizontal="10dp"
+                    android:text="📅 购入/启用时间: 2026-08-19"
+                    android:textColor="@color/text_primary"
+                    android:textSize="12sp"
+                    android:clickable="true"
+                    android:focusable="true" />
             </LinearLayout>
 
             <!-- 2. 空间与放置位置 (带平面图选点与常用房间) -->

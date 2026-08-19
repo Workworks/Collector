@@ -99,10 +99,11 @@ class ProfileFragment : Fragment() {
         }
     }
 
-    /** 更多设置对话框：深浅色主题 & 通知提醒设置 & GitHub 仓库设置 */
+    /** 更多设置对话框：深浅色主题 & 触感震动 & 通知提醒设置 & GitHub 仓库设置 */
     private fun showMoreSettingsDialog() {
         val options = arrayOf(
             "外观与深浅主题",
+            "📳 触感震动反馈设置",
             "🔔 资产与订阅提醒设置",
             "GitHub 仓库设置 (热更新源)"
         )
@@ -111,12 +112,25 @@ class ProfileFragment : Fragment() {
             .setItems(options) { _, which ->
                 when (which) {
                     0 -> showThemeDialog()
-                    1 -> showReminderSettingsDialog()
-                    2 -> showRepoEditDialog()
+                    1 -> showHapticDialog()
+                    2 -> showReminderSettingsDialog()
+                    3 -> showRepoEditDialog()
                 }
             }
             .setNegativeButton(R.string.cancel, null)
             .show()
+    }
+
+    private fun showHapticDialog() {
+        val isEnabled = store.isHapticFeedbackEnabled()
+        val newState = !isEnabled
+        store.setHapticFeedbackEnabled(newState)
+        if (newState) {
+            requireView().performAppHapticFeedback()
+            Toast.makeText(requireContext(), "已开启触感震动反馈 📳", Toast.LENGTH_SHORT).show()
+        } else {
+            Toast.makeText(requireContext(), "已关闭触感震动反馈", Toast.LENGTH_SHORT).show()
+        }
     }
 
     private fun showReminderSettingsDialog() {

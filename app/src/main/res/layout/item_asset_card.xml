@@ -8,8 +8,8 @@
     android:layout_marginBottom="10dp"
     app:cardCornerRadius="14dp"
     app:cardElevation="0dp"
-    app:cardBackgroundColor="#1A2234"
-    app:strokeColor="#2A344A"
+    app:cardBackgroundColor="@color/card"
+    app:strokeColor="@color/card_border"
     app:strokeWidth="1dp">
 
     <LinearLayout
@@ -31,7 +31,7 @@
                 android:layout_height="32dp"
                 android:gravity="center"
                 android:background="@drawable/bg_icon_circle"
-                android:backgroundTint="#2D3B55"
+                android:backgroundTint="@color/input_bg"
                 android:text="💻"
                 android:textSize="15sp"
                 android:textColor="@color/text_primary" />
@@ -73,7 +73,7 @@
                         android:visibility="gone" />
                 </LinearLayout>
 
-                <!-- 退役归置标签 -->
+                <!-- 退役归置或类型/保质期状态标签 -->
                 <TextView
                     android:id="@+id/item_retired_badge"
                     android:layout_width="wrap_content"
@@ -82,14 +82,13 @@
                     android:paddingHorizontal="6dp"
                     android:paddingVertical="2dp"
                     android:background="@drawable/bg_chip_inactive"
-                    android:backgroundTint="#33EF4444"
                     android:text="🔴 已退役 · 📦 挂闲鱼代售"
                     android:textSize="11sp"
-                    android:textColor="#F87171"
+                    android:textColor="@color/danger"
                     android:visibility="gone" />
             </LinearLayout>
 
-            <!-- 拥有天数 -->
+            <!-- 拥有天数 / 保质期状态 -->
             <LinearLayout
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
@@ -107,6 +106,7 @@
                     android:fontFamily="sans-serif-medium" />
 
                 <TextView
+                    android:id="@+id/item_days_label"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text=" 天"
@@ -184,7 +184,7 @@
                 android:background="@drawable/bg_stock_healthy"
                 android:text="1 件"
                 android:textSize="11sp"
-                android:textColor="@color/primary" />
+                android:textColor="@color/stock_healthy_text" />
         </LinearLayout>
 
     </LinearLayout>

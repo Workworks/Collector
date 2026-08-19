@@ -7,8 +7,8 @@
     android:layout_marginBottom="10dp"
     app:cardCornerRadius="14dp"
     app:cardElevation="0dp"
-    app:cardBackgroundColor="#1A2234"
-    app:strokeColor="#2A344A"
+    app:cardBackgroundColor="@color/card"
+    app:strokeColor="@color/card_border"
     app:strokeWidth="1dp">
 
     <LinearLayout
@@ -30,7 +30,7 @@
                 android:layout_height="34dp"
                 android:gravity="center"
                 android:background="@drawable/bg_icon_circle"
-                android:backgroundTint="#3B82F6"
+                android:backgroundTint="@color/input_bg"
                 android:text="🔄"
                 android:textSize="16sp" />
 
@@ -110,7 +110,7 @@
             android:layout_width="match_parent"
             android:layout_height="1dp"
             android:layout_marginVertical="10dp"
-            android:background="#232C3E" />
+            android:background="@color/card_border_subtle" />
 
         <!-- 累计订阅天数与下次扣费 -->
         <LinearLayout

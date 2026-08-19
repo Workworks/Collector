@@ -107,7 +107,10 @@ class DataStore(ctx: Context) {
                         isSubscription = o.optBoolean("is_sub", false),
                         subCycle = o.optString("sub_cyc", "按月"),
                         subNextBillingDate = o.optLong("sub_nxt", 0L),
-                        subAutoRenew = o.optBoolean("sub_rnw", true)
+                        subAutoRenew = o.optBoolean("sub_rnw", true),
+                        assetType = o.optString("a_type", if (o.optBoolean("is_sub", false)) "subscription" else "consumable"),
+                        manufactureDate = o.optLong("m_date", 0L),
+                        expiryDate = o.optLong("e_date", 0L)
                     )
                 )
             }
@@ -168,6 +171,9 @@ class DataStore(ctx: Context) {
                     .put("sub_cyc", e.subCycle)
                     .put("sub_nxt", e.subNextBillingDate)
                     .put("sub_rnw", e.subAutoRenew)
+                    .put("a_type", e.assetType)
+                    .put("m_date", e.manufactureDate)
+                    .put("e_date", e.expiryDate)
             )
         }
         prefs.edit().putString(keyEntries, arr.toString()).apply()
@@ -631,6 +637,9 @@ class DataStore(ctx: Context) {
                     .put("sub_cyc", e.subCycle)
                     .put("sub_nxt", e.subNextBillingDate)
                     .put("sub_rnw", e.subAutoRenew)
+                    .put("a_type", e.assetType)
+                    .put("m_date", e.manufactureDate)
+                    .put("e_date", e.expiryDate)
             )
         }
         root.put("entries", entryArr)
@@ -642,7 +651,7 @@ class DataStore(ctx: Context) {
             val root = JSONObject(jsonStr)
             val catArr = root.optJSONArray("categories")
             if (catArr != null) {
-                val cats = mutableListOf<String>()
+                val cats = getCategories().toMutableList()
                 for (i in 0 until catArr.length()) {
                     val c = catArr.optString(i).trim()
                     if (c.isNotEmpty() && !cats.contains(c)) {
@@ -712,7 +721,10 @@ class DataStore(ctx: Context) {
                             isSubscription = o.optBoolean("is_sub", false),
                             subCycle = o.optString("sub_cyc", "按月"),
                             subNextBillingDate = o.optLong("sub_nxt", 0L),
-                            subAutoRenew = o.optBoolean("sub_rnw", true)
+                            subAutoRenew = o.optBoolean("sub_rnw", true),
+                            assetType = o.optString("a_type", if (o.optBoolean("is_sub", false)) "subscription" else "consumable"),
+                            manufactureDate = o.optLong("m_date", 0L),
+                            expiryDate = o.optLong("e_date", 0L)
                         )
                     )
                 }
@@ -722,5 +734,15 @@ class DataStore(ctx: Context) {
         } catch (_: Exception) {
             false
         }
+    }
+
+    // ==================== 触感震动反馈配置 ====================
+
+    fun isHapticFeedbackEnabled(): Boolean {
+        return prefs.getBoolean("haptic_feedback_enabled", true)
+    }
+
+    fun setHapticFeedbackEnabled(enabled: Boolean) {
+        prefs.edit().putBoolean("haptic_feedback_enabled", enabled).apply()
     }
 }

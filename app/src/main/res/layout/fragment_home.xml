@@ -6,7 +6,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    android:background="#0A0E17">
+    android:background="@color/background">
 
     <!-- 顶部应用标题栏 -->
     <LinearLayout
@@ -15,7 +15,7 @@
         android:orientation="horizontal"
         android:gravity="center_vertical"
         android:paddingHorizontal="16dp"
-        android:background="#0A0E17">
+        android:background="@color/background">
 
         <TextView
             android:layout_width="0dp"
@@ -89,7 +89,7 @@
                 android:layout_marginTop="8dp"
                 android:layout_marginBottom="14dp"
                 android:background="@drawable/bg_chip_inactive"
-                android:backgroundTint="#161F30"
+                android:backgroundTint="@color/input_bg"
                 android:orientation="horizontal"
                 android:padding="3dp">
 
@@ -103,9 +103,8 @@
                     android:text="物品"
                     android:textSize="14sp"
                     android:textStyle="bold"
-                    android:textColor="#0A0E17"
+                    android:textColor="#FFFFFF"
                     android:background="@drawable/bg_chip_active"
-                    android:backgroundTint="#FFFFFF"
                     android:clickable="true"
                     android:focusable="true" />
 
@@ -132,8 +131,8 @@
                 android:layout_marginBottom="14dp"
                 app:cardCornerRadius="16dp"
                 app:cardElevation="0dp"
-                app:cardBackgroundColor="#134E5E"
-                app:strokeColor="#1E6B80"
+                app:cardBackgroundColor="@color/card"
+                app:strokeColor="@color/primary_surface_stroke"
                 app:strokeWidth="1dp">
 
                 <LinearLayout
@@ -155,14 +154,14 @@
                             android:text="⚠️ 建议尽快备份数据"
                             android:textSize="15sp"
                             android:textStyle="bold"
-                            android:textColor="#FFFFFF" />
+                            android:textColor="@color/text_primary" />
 
                         <ImageView
                             android:id="@+id/btn_close_backup_banner"
                             android:layout_width="24dp"
                             android:layout_height="24dp"
                             android:src="@drawable/ic_close"
-                            app:tint="#D1E8E2"
+                            app:tint="@color/text_secondary"
                             android:contentDescription="关闭"
                             android:clickable="true"
                             android:focusable="true"
@@ -174,7 +173,7 @@
                         android:layout_height="wrap_content"
                         android:text="将打开数据管理并生成本地 JSON 备份包，保障收纳数据安全。"
                         android:textSize="12sp"
-                        android:textColor="#D1E8E2"
+                        android:textColor="@color/text_secondary"
                         android:layout_marginTop="6dp"
                         android:lineSpacingExtra="2dp" />
 
@@ -191,7 +190,7 @@
                             android:layout_height="wrap_content"
                             android:text="3 天后再提醒"
                             android:textSize="13sp"
-                            android:textColor="#D1E8E2"
+                            android:textColor="@color/text_secondary"
                             android:clickable="true"
                             android:focusable="true"
                             android:paddingVertical="6dp"
@@ -211,7 +210,6 @@
                             android:textStyle="bold"
                             android:textColor="#FFFFFF"
                             android:background="@drawable/bg_chip_active"
-                            android:backgroundTint="#1D7874"
                             android:paddingVertical="8dp"
                             android:paddingHorizontal="16dp"
                             android:clickable="true"
@@ -229,8 +227,8 @@
                 android:layout_marginBottom="14dp"
                 app:cardCornerRadius="16dp"
                 app:cardElevation="0dp"
-                app:cardBackgroundColor="#241B35"
-                app:strokeColor="#4C3575"
+                app:cardBackgroundColor="@color/card"
+                app:strokeColor="@color/accent_surface_stroke"
                 app:strokeWidth="1dp"
                 android:visibility="gone">
 
@@ -253,7 +251,7 @@
                             android:text="⭐ 贵重物品防丢 · 定期核对"
                             android:textSize="15sp"
                             android:textStyle="bold"
-                            android:textColor="#F3E8FF" />
+                            android:textColor="@color/accent_dark" />
 
                         <TextView
                             android:id="@+id/vip_items_count_badge"
@@ -261,7 +259,7 @@
                             android:layout_height="wrap_content"
                             android:text="2 件重要关注"
                             android:textSize="12sp"
-                            android:textColor="#C084FC" />
+                            android:textColor="@color/accent" />
                     </LinearLayout>
 
                     <LinearLayout
@@ -282,8 +280,8 @@
                 android:layout_marginBottom="16dp"
                 app:cardCornerRadius="18dp"
                 app:cardElevation="0dp"
-                app:cardBackgroundColor="#131B2B"
-                app:strokeColor="#243048"
+                app:cardBackgroundColor="@color/card"
+                app:strokeColor="@color/card_border"
                 app:strokeWidth="1dp">
 
                 <LinearLayout
@@ -316,7 +314,7 @@
                             android:paddingHorizontal="10dp"
                             android:paddingVertical="4dp"
                             android:background="@drawable/bg_chip_inactive"
-                            android:backgroundTint="#1D273B"
+                            android:backgroundTint="@color/input_bg"
                             android:text="1 在役 / 0 退役"
                             android:textSize="12sp"
                             android:textColor="@color/text_secondary" />
@@ -376,8 +374,8 @@
                 android:layout_marginBottom="16dp"
                 app:cardCornerRadius="18dp"
                 app:cardElevation="0dp"
-                app:cardBackgroundColor="#131B2B"
-                app:strokeColor="#243048"
+                app:cardBackgroundColor="@color/card"
+                app:strokeColor="@color/card_border"
                 app:strokeWidth="1dp"
                 android:visibility="gone">
 
@@ -410,7 +408,7 @@
                             android:paddingHorizontal="10dp"
                             android:paddingVertical="4dp"
                             android:background="@drawable/bg_chip_inactive"
-                            android:backgroundTint="#1D273B"
+                            android:backgroundTint="@color/input_bg"
                             android:text="0 项活跃订阅"
                             android:textSize="12sp"
                             android:textColor="@color/primary" />
@@ -492,7 +490,7 @@
                     android:gravity="center"
                     android:paddingHorizontal="14dp"
                     android:background="@drawable/bg_chip_inactive"
-                    android:backgroundTint="#161F30"
+                    android:backgroundTint="@color/input_bg"
                     android:text="全部 ▾"
                     android:textSize="13sp"
                     android:textColor="@color/text_primary"
@@ -508,7 +506,7 @@
                     android:gravity="center"
                     android:paddingHorizontal="14dp"
                     android:background="@drawable/bg_chip_inactive"
-                    android:backgroundTint="#161F30"
+                    android:backgroundTint="@color/input_bg"
                     android:text="排序 ▾"
                     android:textSize="13sp"
                     android:textColor="@color/text_primary"
@@ -525,7 +523,7 @@
                     android:gravity="center_vertical"
                     android:paddingHorizontal="14dp"
                     android:background="@drawable/bg_chip_inactive"
-                    android:backgroundTint="#161F30"
+                    android:backgroundTint="@color/input_bg"
                     android:text="全部分类 ▾"
                     android:textSize="13sp"
                     android:textColor="@color/text_primary"
@@ -542,7 +540,7 @@
                     android:layout_height="36dp"
                     android:padding="8dp"
                     android:background="@drawable/bg_chip_inactive"
-                    android:backgroundTint="#161F30"
+                    android:backgroundTint="@color/input_bg"
                     android:src="@drawable/ic_sort"
                     app:tint="@color/text_primary"
                     android:contentDescription="更多筛选"

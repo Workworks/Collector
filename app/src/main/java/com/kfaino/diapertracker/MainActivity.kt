@@ -176,6 +176,11 @@ class MainActivity : AppCompatActivity() {
         var selectedSubCycle = editEntry?.subCycle ?: "按月"
         var selectedNextBillingDate = editEntry?.subNextBillingDate ?: (System.currentTimeMillis() + 30L * 24 * 60 * 60 * 1000)
 
+        // 物品管理类型 (折旧资产 / 保质期物品 / 长期耐用 / 消耗品)
+        var selectedAssetType = editEntry?.assetType ?: "depreciating"
+        var selectedMfgDate = editEntry?.manufactureDate ?: 0L
+        var selectedExpDate = editEntry?.expiryDate ?: 0L
+
         // 重要物品防丢
         var isImportant = editEntry?.isImportant ?: false
         var reminderIntervalDays = editEntry?.reminderIntervalDays ?: 1
@@ -254,7 +259,38 @@ class MainActivity : AppCompatActivity() {
             }
         }
 
-        // 3. 分类下拉绑定
+        // 3. 物品类型切换逻辑
+        fun updateTypeUI() {
+            val activeColor = Color.WHITE
+            val inactiveColor = ContextCompat.getColor(this, R.color.text_secondary)
+            val buttons = listOf(
+                Triple("depreciating", dialogBinding.typeBtnDepreciating, dialogBinding.layoutDepreciationSection),
+                Triple("expiring", dialogBinding.typeBtnExpiring, dialogBinding.layoutExpirySection),
+                Triple("durable", dialogBinding.typeBtnDurable, dialogBinding.layoutDurableSection),
+                Triple("consumable", dialogBinding.typeBtnConsumable, null)
+            )
+
+            for ((type, btn, layout) in buttons) {
+                val isSel = (type == selectedAssetType)
+                btn.setBackgroundResource(if (isSel) R.drawable.bg_chip_active else R.drawable.bg_chip_inactive)
+                btn.setTextColor(if (isSel) activeColor else inactiveColor)
+                btn.paint.isFakeBoldText = isSel
+                layout?.visibility = if (isSel) View.VISIBLE else View.GONE
+            }
+        }
+
+        dialogBinding.typeBtnDepreciating.applyPressScaleAnimation(0.92f)
+        dialogBinding.typeBtnExpiring.applyPressScaleAnimation(0.92f)
+        dialogBinding.typeBtnDurable.applyPressScaleAnimation(0.92f)
+        dialogBinding.typeBtnConsumable.applyPressScaleAnimation(0.92f)
+
+        dialogBinding.typeBtnDepreciating.setOnClickListener { selectedAssetType = "depreciating"; updateTypeUI() }
+        dialogBinding.typeBtnExpiring.setOnClickListener { selectedAssetType = "expiring"; updateTypeUI() }
+        dialogBinding.typeBtnDurable.setOnClickListener { selectedAssetType = "durable"; updateTypeUI() }
+        dialogBinding.typeBtnConsumable.setOnClickListener { selectedAssetType = "consumable"; updateTypeUI() }
+        updateTypeUI()
+
+        // 4. 分类下拉绑定
         if (!categories.contains(selectedCategory)) {
             categories.add(0, selectedCategory)
         }
@@ -270,14 +306,14 @@ class MainActivity : AppCompatActivity() {
             override fun onNothingSelected(p: AdapterView<*>?) {}
         }
 
-        // 4. 品牌/物品名称
+        // 5. 品牌/物品名称
         if (!prefillBrand.isNullOrEmpty()) {
             dialogBinding.brandInput.setText(prefillBrand)
         } else if (editEntry != null) {
             dialogBinding.brandInput.setText(editEntry.brand)
         }
 
-        // 5. 购入日期与折旧估值
+        // 6. 购入日期与折旧估值
         fun updatePurchaseDateButton() {
             val df = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
             val dateStr = df.format(Date(selectedPurchaseDate))
@@ -295,6 +331,82 @@ class MainActivity : AppCompatActivity() {
                 }
                 selectedPurchaseDate = newCal.timeInMillis
                 updatePurchaseDateButton()
+            }, cal.get(Calendar.YEAR), cal.get(Calendar.MONTH), cal.get(Calendar.DAY_OF_MONTH)).show()
+        }
+
+        if (editEntry != null && editEntry.currentValuation > 0) {
+            dialogBinding.inputCurrentValuation.setText(String.format(Locale.getDefault(), "%.2f", editEntry.currentValuation))
+        }
+
+        // 7. 保质期与耐用品日期绑定
+        fun updateMfgDateButton() {
+            if (selectedMfgDate > 0) {
+                val df = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
+                dialogBinding.btnPickMfgDate.text = "🏭 生产: ${df.format(Date(selectedMfgDate))}"
+            } else {
+                dialogBinding.btnPickMfgDate.text = "🏭 生产: 未选"
+            }
+        }
+
+        fun updateExpDateButton() {
+            if (selectedExpDate > 0) {
+                val df = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
+                dialogBinding.btnPickExpDate.text = "⌛ 到期: ${df.format(Date(selectedExpDate))}"
+            } else {
+                dialogBinding.btnPickExpDate.text = "⌛ 到期: 点击设定"
+            }
+        }
+
+        fun updateDurableDateButton() {
+            val df = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
+            val days = ((System.currentTimeMillis() - selectedPurchaseDate) / (24L * 60 * 60 * 1000)).toInt().coerceAtLeast(1)
+            dialogBinding.btnPickDurableDate.text = "📅 启用时间: ${df.format(Date(selectedPurchaseDate))} (已使用 $days 天)"
+        }
+
+        updateMfgDateButton()
+        updateExpDateButton()
+        updateDurableDateButton()
+
+        dialogBinding.btnPickMfgDate.applyPressScaleAnimation(0.92f)
+        dialogBinding.btnPickMfgDate.setOnClickListener {
+            val cal = Calendar.getInstance().apply { timeInMillis = if (selectedMfgDate > 0) selectedMfgDate else System.currentTimeMillis() }
+            DatePickerDialog(this, { _, year, month, dayOfMonth ->
+                val newCal = Calendar.getInstance().apply { set(year, month, dayOfMonth, 12, 0, 0) }
+                selectedMfgDate = newCal.timeInMillis
+                updateMfgDateButton()
+            }, cal.get(Calendar.YEAR), cal.get(Calendar.MONTH), cal.get(Calendar.DAY_OF_MONTH)).show()
+        }
+
+        dialogBinding.btnPickExpDate.applyPressScaleAnimation(0.92f)
+        dialogBinding.btnPickExpDate.setOnClickListener {
+            val cal = Calendar.getInstance().apply { timeInMillis = if (selectedExpDate > 0) selectedExpDate else (System.currentTimeMillis() + 365L * 24 * 60 * 60 * 1000) }
+            DatePickerDialog(this, { _, year, month, dayOfMonth ->
+                val newCal = Calendar.getInstance().apply { set(year, month, dayOfMonth, 12, 0, 0) }
+                selectedExpDate = newCal.timeInMillis
+                updateExpDateButton()
+            }, cal.get(Calendar.YEAR), cal.get(Calendar.MONTH), cal.get(Calendar.DAY_OF_MONTH)).show()
+        }
+
+        fun addDaysToExp(days: Int) {
+            val base = if (selectedMfgDate > 0) selectedMfgDate else System.currentTimeMillis()
+            selectedExpDate = base + days.toLong() * 24 * 60 * 60 * 1000
+            updateExpDateButton()
+        }
+
+        dialogBinding.chipExp30d.setOnClickListener { addDaysToExp(30) }
+        dialogBinding.chipExp180d.setOnClickListener { addDaysToExp(180) }
+        dialogBinding.chipExp1y.setOnClickListener { addDaysToExp(365) }
+        dialogBinding.chipExp2y.setOnClickListener { addDaysToExp(730) }
+        dialogBinding.chipExp3y.setOnClickListener { addDaysToExp(1095) }
+
+        dialogBinding.btnPickDurableDate.applyPressScaleAnimation(0.92f)
+        dialogBinding.btnPickDurableDate.setOnClickListener {
+            val cal = Calendar.getInstance().apply { timeInMillis = selectedPurchaseDate }
+            DatePickerDialog(this, { _, year, month, dayOfMonth ->
+                val newCal = Calendar.getInstance().apply { set(year, month, dayOfMonth, 12, 0, 0) }
+                selectedPurchaseDate = newCal.timeInMillis
+                updatePurchaseDateButton()
+                updateDurableDateButton()
             }, cal.get(Calendar.YEAR), cal.get(Calendar.MONTH), cal.get(Calendar.DAY_OF_MONTH)).show()
         }
 
@@ -577,7 +689,10 @@ class MainActivity : AppCompatActivity() {
                         isSubscription = isSubscription,
                         subCycle = selectedSubCycle,
                         subNextBillingDate = selectedNextBillingDate,
-                        subAutoRenew = true
+                        subAutoRenew = true,
+                        assetType = selectedAssetType,
+                        manufactureDate = selectedMfgDate,
+                        expiryDate = selectedExpDate
                     )
 
                     if (isEditMode && editPosition != null) {
