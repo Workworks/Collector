@@ -1,0 +1,384 @@
+package com.kfaino.diapertracker
+
+import android.app.Activity
+import android.graphics.Color
+import android.graphics.drawable.ColorDrawable
+import android.graphics.drawable.GradientDrawable
+import android.view.Gravity
+import android.view.LayoutInflater
+import android.view.View
+import android.widget.LinearLayout
+import android.widget.TextView
+import androidx.core.content.ContextCompat
+import com.google.android.material.card.MaterialCardView
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
+import com.kfaino.diapertracker.databinding.DialogTutorialBinding
+
+/**
+ * 内置互动功能全景与使用教程弹窗 (Tutorial & User Guide Dialog)
+ */
+object TutorialDialog {
+
+    data class TutorialItem(
+        val category: String, // "spatial", "asset", "photo", "sync"
+        val icon: String,
+        val title: String,
+        val summary: String,
+        val steps: List<String>,
+        val tip: String = ""
+    )
+
+    private val TUTORIAL_LIST = listOf(
+        TutorialItem(
+            category = "spatial",
+            icon = "🗺️",
+            title = "空间平面图与寻物双向穿梭",
+            summary = "可视化家庭空间多房间 Canvas 平面图，实现由物找空间与由空间看物品双向穿梭。",
+            steps = listOf(
+                "在「我的 ➔ 空间平面图与寻物地图」中创建空间（如「自己的家」、「父母家」）并编辑房间网格布局；",
+                "记账或编辑物品时，点击「📍 选择空间与房间」，在平面图上轻触即可完成图钉精准打点；",
+                "由物找空间：在首页卡片点击「📍 主卧 · 衣柜」等位置标签，自动弹出平面图并在对应坐标闪烁【金色呼吸光晕】；",
+                "由空间看物品：在全景平面图模式点击任意房间，底部自动滑出该房间内存放的【全部在库物品清单】。"
+            ),
+            tip = "长按房间卡片可以快速自定义房间色彩与图标！"
+        ),
+        TutorialItem(
+            category = "spatial",
+            icon = "🏷️",
+            title = "收纳箱专属二维码与智能扫码",
+            summary = "为实体收纳箱生成二维码标签，扫一扫秒查箱内清单；扫描商品条码快速记账。",
+            steps = listOf(
+                "在平面图点击任意房间，在滑出的物品抽屉中点击【🏷️ 生成二维码标签】；",
+                "标签包含空间名称、在库件数与专属二维码，可点击【保存到相册】并打印贴在收纳箱体；",
+                "首页顶栏点击【📷 扫一扫】，对准收纳箱二维码即可秒级展开箱内物品；",
+                "扫描任意商品条形码（如 EAN-13 商品码），系统将自动匹配库内物品或快速填入条码新建记账。"
+            ),
+            tip = "支持离线无网识别，收纳箱二维码完全在本地离线生成与解析！"
+        ),
+        TutorialItem(
+            category = "asset",
+            icon = "📉",
+            title = "4 维物品分类与日均消费折旧计算",
+            summary = "精准追踪数码折旧、保质期到期、耐用品与消耗品，知晓每一笔钱花得值不值。",
+            steps = listOf(
+                "📉 折旧资产（电脑/手机/相机）：系统按拥有天数动态计算【日均消费成本（元/天）】；",
+                "⏳ 保质期物品（药品/食品/美妆）：选择保质期快速标签（30天/半年/1年/3年），卡片自动展示临期倒计时与红黄绿状态；",
+                "🛋️ 长期耐用品（家具/乐器/首饰）：仅记录拥有天数与原价，不平摊折旧费；",
+                "📦 日常消耗品（纸尿裤/咖啡豆/耗材）：关注库存数量与单件购买成本。"
+            ),
+            tip = "日均消费 = (购入原价 - 二手估值) / 拥有天数，用得越久日均成本越低！"
+        ),
+        TutorialItem(
+            category = "photo",
+            icon = "📸",
+            title = "实物照片与购买发票/保修卡凭证",
+            summary = "100% 离线私有沙盒存储，实物照片作为列表封面，电子发票保修卡防丢备查。",
+            steps = listOf(
+                "在记账或编辑界面，点击【📷 实物照片】插槽从相册挑选实物大图；",
+                "点击【🧾 发票/保修卡】插槽上传购买截图、电子发票或保修凭证；",
+                "列表卡片左侧自动展示圆角实物封面，右下角点亮【🧾 凭证】交互徽章；",
+                "点击任意缩略图或发票徽章，直接拉起沉浸式全屏查看器，支持多指手势缩放与系统分享。"
+            ),
+            tip = "照片自动纠正拍摄 EXIF 旋转角并进行高效压缩，存放在应用私有沙盒绝不上报！"
+        ),
+        TutorialItem(
+            category = "asset",
+            icon = "📦",
+            title = "物品在役/退役与闲鱼代售回血",
+            summary = "全生命周期管理闲置物品，记录二手转卖回血金额与归置轨迹。",
+            steps = listOf(
+                "当物品闲置或损坏时，在卡片点击【更多 ➔ 物品退役与待办归置】；",
+                "选择归置方案：挂闲鱼代售、挂转转二手、赠送亲友、封箱入库、环保回收或报废；",
+                "出掉后记录回血金额，回血收益将自动并入报表统计与生活流明细；",
+                "首页筛选器随时切换【在役在库】与【退役归置】资产。"
+            ),
+            tip = "断舍离出掉的闲置物品回血金额会抵扣原始支出，让财务更清晰！"
+        ),
+        TutorialItem(
+            category = "asset",
+            icon = "🔄",
+            title = "周期订阅资产与扣费前预警",
+            summary = "统一纳管 iCloud、ChatGPT Plus、宽带与流媒体年卡，折算月均与年化支出。",
+            steps = listOf(
+                "首页切换到【🔄 周期订阅】资产池，点击「+」添加订阅；",
+                "设置扣费周期（按月/按季/按年/按周）与下次扣费日期；",
+                "系统自动折算【月均支出】与【年化总支出】看板；",
+                "扣费前 1~3 天，系统通知栏将自动推送扣费预警提醒。"
+            ),
+            tip = "可以在「我的 ➔ 更多设置」中一键测试通知栏提醒！"
+        ),
+        TutorialItem(
+            category = "asset",
+            icon = "📊",
+            title = "动态交互环形图与断舍离健康雷达",
+            summary = "多维资产分析中心，动态环形图直观透视，健康雷达智能治理闲置。",
+            steps = listOf(
+                "切换到底栏【报表】页面，查看顶部的【🎨 资产版图分布】交互式环形图；",
+                "轻触环形图任意分类扇区，扇区自动放大高亮，中心显示该分类金额与占比；",
+                "查看【🧹 闲置资产与断舍离雷达】：系统自动计算 100 分制资产流转健康分；",
+                "雷达自动识别超过 180 天未打卡或临期闲置物品，提供【✅ 确认在位】或【📦 挂闲鱼/归置】一键治理。"
+            ),
+            tip = "定期在闲置雷达中点击确认在位，可以让资产健康分保持在 95+ 优秀水平！"
+        ),
+        TutorialItem(
+            category = "sync",
+            icon = "📱",
+            title = "桌面小组件 (App Widgets)",
+            summary = "无需打开 App，在手机主屏幕一眼查看临期预警与资产看板。",
+            steps = listOf(
+                "在手机桌面长按空白处，选择【微件 / 小组件 / Widgets】；",
+                "找到【Collecter】应用，提供两款精美小组件：",
+                "1. ⏳【临期与订阅预警小组件】：实时显示即将过期的食品药品与近期扣费订阅倒计时；",
+                "2. 💰【资产看板与快捷记账小组件】：显示在役资产总值与日均消费，点击「+」一秒直达记账。"
+            ),
+            tip = "每次在 App 内增删改物品或发生变动时，桌面小组件将自动同步刷新！"
+        ),
+        TutorialItem(
+            category = "sync",
+            icon = "🔐",
+            title = "生物识别指纹与面容隐私锁",
+            summary = "保护个人财产估值与贵重首饰、房产证、重要凭据的位置隐私。",
+            steps = listOf(
+                "前往【我的 ➔ 更多设置 ➔ 🔐 生物识别隐私锁】；",
+                "点击开启开关，系统将调起一次指纹/面容或锁屏密码校验确认；",
+                "开启后，每次冷启动或从后台切换回前台时，需通过生物识别验证方可进入应用。"
+            ),
+            tip = "基于 AndroidX 原生 BiometricPrompt，生物信息完全受系统硬件芯片安全隔离！"
+        ),
+        TutorialItem(
+            category = "sync",
+            icon = "☁️",
+            title = "WebDAV 私有云同步与 Excel CSV 导出",
+            summary = "支持坚果云、Nextcloud 等私有网盘一键云备份，支持 Excel 兼容 CSV 分享。",
+            steps = listOf(
+                "前往【我的 ➔ 更多设置 ➔ ☁️ WebDAV 私有云同步】；",
+                "填入 WebDAV 服务器 URL（如坚果云 `https://dav.jianguoyun.com/dav/`）、用户名和应用独立密码；",
+                "点击【测试连接】校验无误后，点击【上传备份到云端】即可将完整数据安全上传；",
+                "换机或多设备时，在目标设备点击【从云端恢复数据】即可一秒还原；",
+                "在【数据报表】或【数据备份】中可一键生成带 UTF-8 BOM 的 Excel 兼容 CSV 资产总表与流水表，分享至微信或电脑。"
+            ),
+            tip = "坚果云用户请在坚果云网页版「账户信息 ➔ 安全设置 ➔ 第三方应用管理」中生成应用独立密码！"
+        )
+    )
+
+    fun show(activity: Activity) {
+        val binding = DialogTutorialBinding.inflate(LayoutInflater.from(activity))
+        val dialog = MaterialAlertDialogBuilder(activity)
+            .setView(binding.root)
+            .setCancelable(true)
+            .create()
+
+        dialog.window?.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
+        dialog.window?.attributes?.windowAnimations = R.style.CustomDialogAnimation
+
+        var currentCategory = "all"
+
+        fun renderCards() {
+            binding.tutorialCardsContainer.removeAllViews()
+            val filtered = if (currentCategory == "all") {
+                TUTORIAL_LIST
+            } else {
+                TUTORIAL_LIST.filter { it.category == currentCategory }
+            }
+
+            for (item in filtered) {
+                val card = MaterialCardView(activity).apply {
+                    radius = dpToPx(activity, 16).toFloat()
+                    cardElevation = 0f
+                    strokeWidth = dpToPx(activity, 1)
+                    setStrokeColor(ContextCompat.getColor(context, R.color.card_border))
+                    setCardBackgroundColor(ContextCompat.getColor(context, R.color.card))
+                    val lp = LinearLayout.LayoutParams(
+                        LinearLayout.LayoutParams.MATCH_PARENT,
+                        LinearLayout.LayoutParams.WRAP_CONTENT
+                    ).apply { bottomMargin = dpToPx(activity, 12) }
+                    layoutParams = lp
+                }
+
+                val content = LinearLayout(activity).apply {
+                    orientation = LinearLayout.VERTICAL
+                    setPadding(
+                        dpToPx(activity, 16),
+                        dpToPx(activity, 16),
+                        dpToPx(activity, 16),
+                        dpToPx(activity, 16)
+                    )
+                }
+
+                // 标题行
+                val titleRow = LinearLayout(activity).apply {
+                    orientation = LinearLayout.HORIZONTAL
+                    gravity = Gravity.CENTER_VERTICAL
+                }
+
+                val iconTv = TextView(activity).apply {
+                    text = item.icon
+                    textSize = 20f
+                    gravity = Gravity.CENTER
+                    layoutParams = LinearLayout.LayoutParams(dpToPx(activity, 36), dpToPx(activity, 36)).apply {
+                        marginEnd = dpToPx(activity, 10)
+                    }
+                    background = GradientDrawable().apply {
+                        shape = GradientDrawable.OVAL
+                        setColor(ContextCompat.getColor(context, R.color.input_bg))
+                    }
+                }
+
+                val titleTv = TextView(activity).apply {
+                    text = item.title
+                    textSize = 15f
+                    paint.isFakeBoldText = true
+                    setTextColor(ContextCompat.getColor(context, R.color.text_primary))
+                    layoutParams = LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f)
+                }
+
+                titleRow.addView(iconTv)
+                titleRow.addView(titleTv)
+                content.addView(titleRow)
+
+                // 概述
+                val summaryTv = TextView(activity).apply {
+                    text = item.summary
+                    textSize = 12f
+                    setTextColor(ContextCompat.getColor(context, R.color.text_secondary))
+                    val lp = LinearLayout.LayoutParams(
+                        LinearLayout.LayoutParams.MATCH_PARENT,
+                        LinearLayout.LayoutParams.WRAP_CONTENT
+                    ).apply {
+                        topMargin = dpToPx(activity, 8)
+                        bottomMargin = dpToPx(activity, 10)
+                    }
+                    layoutParams = lp
+                }
+                content.addView(summaryTv)
+
+                // 步骤列表
+                val stepsContainer = LinearLayout(activity).apply {
+                    orientation = LinearLayout.VERTICAL
+                    background = GradientDrawable().apply {
+                        shape = GradientDrawable.RECTANGLE
+                        cornerRadius = dpToPx(activity, 10).toFloat()
+                        setColor(ContextCompat.getColor(context, R.color.input_bg))
+                    }
+                    setPadding(
+                        dpToPx(activity, 12),
+                        dpToPx(activity, 10),
+                        dpToPx(activity, 12),
+                        dpToPx(activity, 10)
+                    )
+                }
+
+                for ((idx, step) in item.steps.withIndex()) {
+                    val stepRow = LinearLayout(activity).apply {
+                        orientation = LinearLayout.HORIZONTAL
+                        gravity = Gravity.TOP
+                        val lp = LinearLayout.LayoutParams(
+                            LinearLayout.LayoutParams.MATCH_PARENT,
+                            LinearLayout.LayoutParams.WRAP_CONTENT
+                        ).apply {
+                            if (idx > 0) topMargin = dpToPx(activity, 6)
+                        }
+                        layoutParams = lp
+                    }
+
+                    val badge = TextView(activity).apply {
+                        text = "${idx + 1}"
+                        textSize = 10f
+                        setTextColor(Color.WHITE)
+                        paint.isFakeBoldText = true
+                        gravity = Gravity.CENTER
+                        background = GradientDrawable().apply {
+                            shape = GradientDrawable.OVAL
+                            setColor(ContextCompat.getColor(context, R.color.primary))
+                        }
+                        layoutParams = LinearLayout.LayoutParams(dpToPx(activity, 16), dpToPx(activity, 16)).apply {
+                            topMargin = dpToPx(activity, 2)
+                            marginEnd = dpToPx(activity, 8)
+                        }
+                    }
+
+                    val stepTv = TextView(activity).apply {
+                        text = step
+                        textSize = 12f
+                        setTextColor(ContextCompat.getColor(context, R.color.text_primary))
+                        layoutParams = LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f)
+                    }
+
+                    stepRow.addView(badge)
+                    stepRow.addView(stepTv)
+                    stepsContainer.addView(stepRow)
+                }
+                content.addView(stepsContainer)
+
+                // 小贴士
+                if (item.tip.isNotBlank()) {
+                    val tipTv = TextView(activity).apply {
+                        text = "💡 贴士: ${item.tip}"
+                        textSize = 11f
+                        setTextColor(ContextCompat.getColor(context, R.color.primary))
+                        val lp = LinearLayout.LayoutParams(
+                            LinearLayout.LayoutParams.MATCH_PARENT,
+                            LinearLayout.LayoutParams.WRAP_CONTENT
+                        ).apply { topMargin = dpToPx(activity, 8) }
+                        layoutParams = lp
+                    }
+                    content.addView(tipTv)
+                }
+
+                card.addView(content)
+                binding.tutorialCardsContainer.addView(card)
+            }
+        }
+
+        fun updateChips() {
+            val chips = listOf(
+                Pair("all", binding.chipTutAll),
+                Pair("spatial", binding.chipTutSpatial),
+                Pair("asset", binding.chipTutAsset),
+                Pair("photo", binding.chipTutPhoto),
+                Pair("sync", binding.chipTutSync)
+            )
+
+            for ((cat, chip) in chips) {
+                if (cat == currentCategory) {
+                    chip.setBackgroundResource(R.drawable.bg_chip_active)
+                    chip.setTextColor(Color.WHITE)
+                    chip.paint.isFakeBoldText = true
+                } else {
+                    chip.setBackgroundResource(R.drawable.bg_chip_inactive)
+                    chip.setTextColor(ContextCompat.getColor(activity, R.color.text_secondary))
+                    chip.paint.isFakeBoldText = false
+                }
+            }
+            renderCards()
+        }
+
+        binding.chipTutAll.applyPressScaleAnimation(0.92f)
+        binding.chipTutAll.setOnClickListener { currentCategory = "all"; updateChips() }
+
+        binding.chipTutSpatial.applyPressScaleAnimation(0.92f)
+        binding.chipTutSpatial.setOnClickListener { currentCategory = "spatial"; updateChips() }
+
+        binding.chipTutAsset.applyPressScaleAnimation(0.92f)
+        binding.chipTutAsset.setOnClickListener { currentCategory = "asset"; updateChips() }
+
+        binding.chipTutPhoto.applyPressScaleAnimation(0.92f)
+        binding.chipTutPhoto.setOnClickListener { currentCategory = "photo"; updateChips() }
+
+        binding.chipTutSync.applyPressScaleAnimation(0.92f)
+        binding.chipTutSync.setOnClickListener { currentCategory = "sync"; updateChips() }
+
+        binding.btnCloseTutorial.applyPressScaleAnimation(0.90f)
+        binding.btnCloseTutorial.setOnClickListener { dialog.dismiss() }
+
+        binding.btnTutorialGotIt.applyPressScaleAnimation(0.94f)
+        binding.btnTutorialGotIt.setOnClickListener { dialog.dismiss() }
+
+        updateChips()
+        dialog.show()
+    }
+
+    private fun dpToPx(activity: Activity, dp: Int): Int {
+        return (dp * activity.resources.displayMetrics.density + 0.5f).toInt()
+    }
+}

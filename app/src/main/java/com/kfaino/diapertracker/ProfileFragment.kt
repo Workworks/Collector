@@ -59,6 +59,12 @@ class ProfileFragment : Fragment() {
         binding.btnUpdateVersion.applyPressScaleAnimation(0.94f)
         binding.btnAbout.applyPressScaleAnimation(0.94f)
 
+        // 0. 💡 功能全景与使用教程
+        binding.cardUserTutorial.applyPressScaleAnimation(0.96f)
+        binding.cardUserTutorial.setOnClickListener {
+            TutorialDialog.show(requireActivity())
+        }
+
         // 1. 分类管理
         binding.btnCategoryManage.setOnClickListener {
             CategoryManagerDialog.showManageDialog(requireContext(), store) {
