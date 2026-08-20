@@ -43,12 +43,11 @@ class ProfileFragment : Fragment() {
         super.onViewCreated(view, savedInstanceState)
 
         val verName = UpdateManager.getAppVersionName(requireContext())
-        binding.currentVersionBadge.text = "v$verName"
         val activePatch = HotPatchEngine.getActivePatchVersion(requireContext())
         if (activePatch != null) {
-            binding.currentPatchBadge.text = "⚡ v$activePatch 补丁"
+            binding.currentVersionBadge.text = "v$verName (⚡已热更)"
         } else {
-            binding.currentPatchBadge.text = "Base 纯净版"
+            binding.currentVersionBadge.text = "v$verName"
         }
         val isSimple = store.isSimpleMode()
         binding.cardUserTutorial.visibility = if (isSimple) View.GONE else View.VISIBLE

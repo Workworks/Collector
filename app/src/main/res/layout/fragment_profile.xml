@@ -569,7 +569,7 @@
                     <LinearLayout
                         android:id="@+id/btn_update_version"
                         android:layout_width="match_parent"
-                        android:layout_height="62dp"
+                        android:layout_height="58dp"
                         android:orientation="horizontal"
                         android:gravity="center_vertical"
                         android:paddingHorizontal="18dp"
@@ -584,29 +584,16 @@
                             app:tint="@color/primary"
                             android:contentDescription="检查与智能升级" />
 
-                        <LinearLayout
+                        <TextView
                             android:layout_width="0dp"
                             android:layout_height="wrap_content"
                             android:layout_weight="1"
-                            android:orientation="vertical"
-                            android:layout_marginStart="16dp">
-
-                            <TextView
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:text="检查与智能升级"
-                                android:textSize="16sp"
-                                android:textColor="@color/text_primary"
-                                android:fontFamily="sans-serif-medium" />
-
-                            <TextView
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:text="智能优先热补丁免重装，必要时全量更新"
-                                android:textSize="11sp"
-                                android:textColor="@color/text_secondary"
-                                android:layout_marginTop="2dp" />
-                        </LinearLayout>
+                            android:layout_marginStart="16dp"
+                            android:text="检查与智能升级"
+                            android:textSize="16sp"
+                            android:textColor="@color/text_primary"
+                            android:singleLine="true"
+                            android:fontFamily="sans-serif-medium" />
 
                         <TextView
                             android:id="@+id/current_version_badge"
@@ -614,20 +601,9 @@
                             android:layout_height="wrap_content"
                             android:text="v4.0.0"
                             android:textSize="13sp"
+                            android:textStyle="bold"
                             android:textColor="@color/primary"
                             android:layout_marginEnd="8dp" />
-
-                        <TextView
-                            android:id="@+id/current_patch_badge"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_marginEnd="8dp"
-                            android:background="@drawable/bg_chip_inactive"
-                            android:paddingHorizontal="8dp"
-                            android:paddingVertical="2dp"
-                            android:text="Base 纯净版"
-                            android:textColor="@color/text_secondary"
-                            android:textSize="11sp" />
 
                         <ImageView
                             android:layout_width="16dp"
