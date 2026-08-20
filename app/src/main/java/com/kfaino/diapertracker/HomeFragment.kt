@@ -131,23 +131,6 @@ class HomeFragment : Fragment() {
         }
 
         // 顶部操作按钮
-        binding.btnScanQrTop.applyPressScaleAnimation(0.90f)
-        binding.btnScanQrTop.setOnClickListener {
-            (activity as? MainActivity)?.startQrScanner()
-        }
-
-        binding.btnOpenFloorplanTop.applyPressScaleAnimation(0.90f)
-        binding.btnOpenFloorplanTop.setOnClickListener {
-            FloorPlanDialog.show(requireActivity(), store, isSelectMode = false)
-        }
-
-        binding.btnInventoryAuditTop.applyPressScaleAnimation(0.90f)
-        binding.btnInventoryAuditTop.setOnClickListener {
-            InventoryAuditDialog.startAudit(requireActivity(), store) {
-                refresh()
-            }
-        }
-
         binding.btnSearchItems.applyPressScaleAnimation(0.90f)
         binding.btnSearchItems.setOnClickListener {
             showSearchDialog()
@@ -156,6 +139,44 @@ class HomeFragment : Fragment() {
         binding.btnTopAdd.applyPressScaleAnimation(0.90f)
         binding.btnTopAdd.setOnClickListener {
             (activity as? MainActivity)?.showAddDialog(presetCategory = selectedCategory)
+        }
+
+        // 折叠 / 展开工具箱 (···)
+        binding.btnToggleToolsTop.applyPressScaleAnimation(0.90f)
+        binding.btnToggleToolsTop.setOnClickListener {
+            val isVisible = binding.layoutToolsBar.visibility == View.VISIBLE
+            if (isVisible) {
+                binding.layoutToolsBar.visibility = View.GONE
+                binding.btnToggleToolsTop.imageTintList = ContextCompat.getColorStateList(requireContext(), R.color.text_secondary)
+            } else {
+                binding.layoutToolsBar.visibility = View.VISIBLE
+                binding.btnToggleToolsTop.imageTintList = ContextCompat.getColorStateList(requireContext(), R.color.primary)
+            }
+        }
+
+        // 可折叠快捷工具箱按钮
+        binding.btnScanQrTop.applyPressScaleAnimation(0.92f)
+        binding.btnScanQrTop.setOnClickListener {
+            (activity as? MainActivity)?.startQrScanner()
+        }
+
+        binding.btnOpenFloorplanTop.applyPressScaleAnimation(0.92f)
+        binding.btnOpenFloorplanTop.setOnClickListener {
+            FloorPlanDialog.show(requireActivity(), store, isSelectMode = false)
+        }
+
+        binding.btnInventoryAuditTop.applyPressScaleAnimation(0.92f)
+        binding.btnInventoryAuditTop.setOnClickListener {
+            InventoryAuditDialog.startAudit(requireActivity(), store) {
+                refresh()
+            }
+        }
+
+        binding.btnLanSyncTop.applyPressScaleAnimation(0.92f)
+        binding.btnLanSyncTop.setOnClickListener {
+            LanSyncHelper.showLanSyncDialog(requireActivity(), store) {
+                refresh()
+            }
         }
 
         // 分段切换器 (物品 / 订阅)

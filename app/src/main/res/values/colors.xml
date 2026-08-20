@@ -10,6 +10,7 @@
     <!-- 强调色：活力暖琥珀 / 警告色 -->
     <color name="accent">#F59E0B</color>
     <color name="accent_dark">#D97706</color>
+    <color name="accent_blue">#0284C7</color>
     <color name="accent_surface">#FFFBEB</color>
     <color name="accent_surface_stroke">#FDE68A</color>
 
