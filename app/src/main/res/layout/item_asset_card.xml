@@ -86,6 +86,23 @@
                         android:visibility="gone" />
                 </LinearLayout>
 
+                <!-- 外借流转状态标签 -->
+                <TextView
+                    android:id="@+id/item_lending_badge"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="2dp"
+                    android:paddingHorizontal="6dp"
+                    android:paddingVertical="2dp"
+                    android:background="@drawable/bg_chip_inactive"
+                    android:text="📤 借给老王 · 剩 3 天"
+                    android:textSize="11sp"
+                    android:textStyle="bold"
+                    android:textColor="@color/accent_dark"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:visibility="gone" />
+
                 <!-- 退役归置或类型/保质期状态标签 -->
                 <TextView
                     android:id="@+id/item_retired_badge"

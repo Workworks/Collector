@@ -121,6 +121,34 @@ object InteractiveGuideTour {
                 }, 200)
             }
 
+            "lending_hub" -> {
+                activity.navigateToTab(0)
+                activity.binding.root.postDelayed({
+                    val toolsBar = activity.findViewById<View>(R.id.layout_tools_bar)
+                    toolsBar?.visibility = View.VISIBLE
+                    val target = activity.findViewById<View>(R.id.btn_lending_hub_top) ?: activity.binding.navHome
+                    overlay.showStep(
+                        stepIndex = 1,
+                        totalSteps = 1,
+                        title = "📤 实物外借与借还流转管理",
+                        desc = "点击「📤 借还流转」进入外借中心！支持借用人档案、归还期限倒计时、一键生成 1080P 电子借条与微信温馨催还海报，支持归还成色打卡！",
+                        actionHint = "👉 请点击「📤 借还流转」进入外借中心",
+                        targetView = target,
+                        onNext = {
+                            stopTour(activity)
+                            LendingManagerDialog.showLendingHubDialog(activity, store) {}
+                        },
+                        onExit = { stopTour(activity) },
+                        onTargetClick = {
+                            Handler(Looper.getMainLooper()).postDelayed({
+                                stopTour(activity)
+                                LendingManagerDialog.showLendingHubDialog(activity, store) {}
+                            }, 300)
+                        }
+                    )
+                }, 200)
+            }
+
             "ai_concierge" -> {
                 activity.navigateToTab(0)
                 activity.binding.root.postDelayed({

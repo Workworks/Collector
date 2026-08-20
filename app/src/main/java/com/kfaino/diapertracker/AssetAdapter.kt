@@ -19,7 +19,8 @@ class AssetAdapter(
     private val onLocationClick: ((Entry) -> Unit)? = null,
     private val onPhotoClick: ((Entry) -> Unit)? = null,
     private val onReceiptClick: ((Entry) -> Unit)? = null,
-    private val onCapsuleClick: ((Entry) -> Unit)? = null
+    private val onCapsuleClick: ((Entry) -> Unit)? = null,
+    private val onLendingClick: ((Entry) -> Unit)? = null
 ) : RecyclerView.Adapter<AssetAdapter.VH>() {
 
     private var items: List<Entry> = emptyList()
@@ -79,7 +80,27 @@ class AssetAdapter(
         b.itemName.text = entry.brand
         b.itemImportantTag.visibility = if (entry.isImportant) View.VISIBLE else View.GONE
 
-        // 3. 退役状态与归置标签
+        // 3. 借还流转与退役归置标签
+        if (entry.isLentOut) {
+            b.itemLendingBadge.visibility = View.VISIBLE
+            b.itemLendingBadge.text = entry.getLendingStatusText()
+            val isOverdue = entry.isLendingOverdue()
+            val textColor = if (isOverdue) ContextCompat.getColor(ctx, R.color.danger) else ContextCompat.getColor(ctx, R.color.accent_dark)
+            b.itemLendingBadge.setTextColor(textColor)
+            b.itemLendingBadge.applyPressScaleAnimation(0.92f)
+            b.itemLendingBadge.setOnClickListener {
+                onLendingClick?.invoke(entry) ?: run {
+                    (ctx as? Activity)?.let { act ->
+                        LendingManagerDialog.showLendingHubDialog(act, DataStore(ctx)) {
+                            // refresh
+                        }
+                    }
+                }
+            }
+        } else {
+            b.itemLendingBadge.visibility = View.GONE
+        }
+
         if (entry.isRetired) {
             b.itemRetiredBadge.visibility = View.VISIBLE
             val actionText = if (entry.retiredAction.isNotBlank()) entry.retiredAction else "已退役"

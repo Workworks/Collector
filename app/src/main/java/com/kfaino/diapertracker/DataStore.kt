@@ -97,6 +97,29 @@ class DataStore(private val ctx: Context) {
                     }
                 }
 
+                val lendingArr = o.optJSONArray("lending_hist")
+                val lendingList = mutableListOf<LendingRecord>()
+                if (lendingArr != null) {
+                    for (l in 0 until lendingArr.length()) {
+                        val lo = lendingArr.getJSONObject(l)
+                        lendingList.add(
+                            LendingRecord(
+                                id = lo.optString("id", java.util.UUID.randomUUID().toString()),
+                                borrowerName = lo.optString("b_name", ""),
+                                borrowerContact = lo.optString("b_contact", ""),
+                                lentDate = lo.optLong("l_date", System.currentTimeMillis()),
+                                expectedReturnDate = lo.optLong("exp_date", 0L),
+                                actualReturnDate = lo.optLong("act_date", 0L),
+                                deposit = lo.optDouble("dep", 0.0),
+                                notes = lo.optString("notes", ""),
+                                photoPath = lo.optString("photo", ""),
+                                status = lo.optString("status", "lent"),
+                                returnConditionRating = lo.optInt("rating", 5)
+                            )
+                        )
+                    }
+                }
+
                 result.add(
                     Entry(
                         id = o.optString("id", java.util.UUID.randomUUID().toString()),
@@ -143,7 +166,14 @@ class DataStore(private val ctx: Context) {
                         digitalSize = o.optString("dig_sz", ""),
                         digitalLicenseKey = o.optString("dig_key", ""),
                         backupStatus = o.optString("bak_st", "local"),
-                        memoryMoments = momentsList
+                        memoryMoments = momentsList,
+                        isLentOut = o.optBoolean("is_lent", false),
+                        currentBorrower = o.optString("c_borrower", ""),
+                        currentBorrowerContact = o.optString("c_contact", ""),
+                        currentLentDate = o.optLong("c_lent_ts", 0L),
+                        expectedReturnDate = o.optLong("exp_ret_ts", 0L),
+                        currentDeposit = o.optDouble("c_dep", 0.0),
+                        lendingHistory = lendingList
                     )
                 )
             }
@@ -181,6 +211,24 @@ class DataStore(private val ctx: Context) {
                         .put("date", m.date)
                         .put("emoji", m.moodEmoji)
                         .put("rating", m.rating)
+                )
+            }
+
+            val lendingArr = JSONArray()
+            for (l in e.lendingHistory) {
+                lendingArr.put(
+                    JSONObject()
+                        .put("id", l.id)
+                        .put("b_name", l.borrowerName)
+                        .put("b_contact", l.borrowerContact)
+                        .put("l_date", l.lentDate)
+                        .put("exp_date", l.expectedReturnDate)
+                        .put("act_date", l.actualReturnDate)
+                        .put("dep", l.deposit)
+                        .put("notes", l.notes)
+                        .put("photo", l.photoPath)
+                        .put("status", l.status)
+                        .put("rating", l.returnConditionRating)
                 )
             }
 
@@ -231,6 +279,13 @@ class DataStore(private val ctx: Context) {
                     .put("dig_key", e.digitalLicenseKey)
                     .put("bak_st", e.backupStatus)
                     .put("moments", momentsArr)
+                    .put("is_lent", e.isLentOut)
+                    .put("c_borrower", e.currentBorrower)
+                    .put("c_contact", e.currentBorrowerContact)
+                    .put("c_lent_ts", e.currentLentDate)
+                    .put("exp_ret_ts", e.expectedReturnDate)
+                    .put("c_dep", e.currentDeposit)
+                    .put("lending_hist", lendingArr)
             )
         }
         prefs.edit().putString(keyEntries, arr.toString()).apply()
@@ -984,6 +1039,109 @@ class DataStore(private val ctx: Context) {
         val entry = all[idx]
         val newMoments = entry.memoryMoments.filter { it.id != momentId }
         all[idx] = entry.copy(memoryMoments = newMoments)
+        saveAll(all)
+        return true
+    }
+
+    // ==================== 📤 实物外借与共享借还流转管理 ====================
+
+    /** 获取所有当前处于借出状态的资产 */
+    fun getLentOutAssets(): List<Entry> {
+        return loadAll().filter { it.isLentOut }
+    }
+
+    /** 获取所有借出已逾期的资产 */
+    fun getOverdueLendingAssets(): List<Entry> {
+        return loadAll().filter { it.isLendingOverdue() }
+    }
+
+    /** 获取所有历史借用人姓名列表 (用于自动补全) */
+    fun getAllBorrowerNames(): List<String> {
+        val names = mutableSetOf<String>()
+        for (e in loadAll()) {
+            if (e.currentBorrower.isNotBlank()) names.add(e.currentBorrower)
+            for (r in e.lendingHistory) {
+                if (r.borrowerName.isNotBlank()) names.add(r.borrowerName)
+            }
+        }
+        return names.toList()
+    }
+
+    /** 登记借出资产 */
+    fun lendAsset(
+        entryId: String,
+        borrowerName: String,
+        borrowerContact: String = "",
+        expectedReturnDate: Long = 0L,
+        deposit: Double = 0.0,
+        notes: String = "",
+        photoPath: String = ""
+    ): Boolean {
+        val all = loadAll().toMutableList()
+        val idx = all.indexOfFirst { it.id == entryId }
+        if (idx == -1) return false
+        val entry = all[idx]
+
+        val newRecord = LendingRecord(
+            id = java.util.UUID.randomUUID().toString(),
+            borrowerName = borrowerName,
+            borrowerContact = borrowerContact,
+            lentDate = System.currentTimeMillis(),
+            expectedReturnDate = expectedReturnDate,
+            actualReturnDate = 0L,
+            deposit = deposit,
+            notes = notes,
+            photoPath = photoPath,
+            status = "lent"
+        )
+
+        all[idx] = entry.copy(
+            isLentOut = true,
+            currentBorrower = borrowerName,
+            currentBorrowerContact = borrowerContact,
+            currentLentDate = System.currentTimeMillis(),
+            expectedReturnDate = expectedReturnDate,
+            currentDeposit = deposit,
+            lendingHistory = listOf(newRecord) + entry.lendingHistory
+        )
+        saveAll(all)
+        return true
+    }
+
+    /** 归还打卡登记 */
+    fun returnAsset(
+        entryId: String,
+        actualReturnDate: Long = System.currentTimeMillis(),
+        returnConditionRating: Int = 5,
+        notes: String = ""
+    ): Boolean {
+        val all = loadAll().toMutableList()
+        val idx = all.indexOfFirst { it.id == entryId }
+        if (idx == -1) return false
+        val entry = all[idx]
+
+        val updatedHistory = entry.lendingHistory.mapIndexed { index, record ->
+            if (index == 0 && (record.status == "lent" || record.actualReturnDate == 0L)) {
+                record.copy(
+                    actualReturnDate = actualReturnDate,
+                    status = "returned",
+                    returnConditionRating = returnConditionRating,
+                    notes = if (notes.isNotBlank()) "${record.notes}\n[归还备注] $notes".trim() else record.notes
+                )
+            } else {
+                record
+            }
+        }
+
+        all[idx] = entry.copy(
+            isLentOut = false,
+            currentBorrower = "",
+            currentBorrowerContact = "",
+            currentLentDate = 0L,
+            expectedReturnDate = 0L,
+            currentDeposit = 0.0,
+            lendingHistory = updatedHistory
+        )
         saveAll(all)
         return true
     }

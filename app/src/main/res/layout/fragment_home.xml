@@ -284,6 +284,7 @@
                 android:orientation="horizontal"
                 android:gravity="center"
                 android:paddingHorizontal="6dp"
+                android:layout_marginEnd="6dp"
                 android:background="@drawable/bg_chip_inactive"
                 android:backgroundTint="@color/input_bg"
                 android:clickable="true"
@@ -301,6 +302,36 @@
                     android:layout_height="wrap_content"
                     android:layout_marginStart="4dp"
                     android:text="局域网"
+                    android:textSize="12sp"
+                    android:textColor="@color/text_primary"
+                    android:fontFamily="sans-serif-medium" />
+            </LinearLayout>
+
+            <!-- 📤 实物借还流转 -->
+            <LinearLayout
+                android:id="@+id/btn_lending_hub_top"
+                android:layout_width="0dp"
+                android:layout_height="38dp"
+                android:layout_weight="1"
+                android:orientation="horizontal"
+                android:gravity="center"
+                android:paddingHorizontal="6dp"
+                android:background="@drawable/bg_chip_inactive"
+                android:backgroundTint="@color/input_bg"
+                android:clickable="true"
+                android:focusable="true">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="📤"
+                    android:textSize="14sp" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="4dp"
+                    android:text="借还流转"
                     android:textSize="12sp"
                     android:textColor="@color/text_primary"
                     android:fontFamily="sans-serif-medium" />

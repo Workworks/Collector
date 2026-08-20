@@ -88,6 +88,11 @@ class HomeFragment : Fragment() {
                 LifeCapsuleDialog.showCapsuleDialog(requireActivity(), store, entry) {
                     refresh()
                 }
+            },
+            onLendingClick = { entry ->
+                LendingManagerDialog.showLendingHubDialog(requireActivity(), store) {
+                    refresh()
+                }
             }
         )
 
@@ -180,6 +185,13 @@ class HomeFragment : Fragment() {
         binding.btnLanSyncTop.applyPressScaleAnimation(0.92f)
         binding.btnLanSyncTop.setOnClickListener {
             LanSyncHelper.showLanSyncDialog(requireActivity(), store) {
+                refresh()
+            }
+        }
+
+        binding.btnLendingHubTop.applyPressScaleAnimation(0.92f)
+        binding.btnLendingHubTop.setOnClickListener {
+            LendingManagerDialog.showLendingHubDialog(requireActivity(), store) {
                 refresh()
             }
         }
@@ -397,16 +409,33 @@ class HomeFragment : Fragment() {
     private fun showAssetMoreMenu(entry: Entry, anchor: View) {
         val popup = PopupMenu(requireContext(), anchor)
         popup.menu.add(0, 5, 0, "🎞️ 时光胶囊与生活画册")
-        popup.menu.add(0, 1, 1, if (entry.isRetired) "🟢 恢复为在役状态" else "📦 物品退役与待办归置 (闲鱼/赠送)")
-        popup.menu.add(0, 2, 2, "📍 查看位置轨迹")
-        popup.menu.add(0, 3, 3, "✏️ 编辑物品信息")
-        popup.menu.add(0, 4, 4, "🗑️ 删除此记录")
+        if (entry.isLentOut) {
+            popup.menu.add(0, 6, 1, "✅ 确认物品归还打卡")
+        } else {
+            popup.menu.add(0, 6, 1, "📤 登记物品借出")
+        }
+        popup.menu.add(0, 1, 2, if (entry.isRetired) "🟢 恢复为在役状态" else "📦 物品退役与待办归置 (闲鱼/赠送)")
+        popup.menu.add(0, 2, 3, "📍 查看位置轨迹")
+        popup.menu.add(0, 3, 4, "✏️ 编辑物品信息")
+        popup.menu.add(0, 4, 5, "🗑️ 删除此记录")
 
         popup.setOnMenuItemClickListener { item ->
             when (item.itemId) {
                 5 -> {
                     LifeCapsuleDialog.showCapsuleDialog(requireActivity(), store, entry) {
                         refresh()
+                    }
+                    true
+                }
+                6 -> {
+                    if (entry.isLentOut) {
+                        LendingManagerDialog.showReturnDialog(requireActivity(), store, entry) {
+                            refresh()
+                        }
+                    } else {
+                        LendingManagerDialog.showLendOutDialog(requireActivity(), store, entry) {
+                            refresh()
+                        }
                     }
                     true
                 }

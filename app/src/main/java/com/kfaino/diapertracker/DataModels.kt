@@ -2,6 +2,21 @@ package com.kfaino.diapertracker
 
 import java.util.UUID
 
+/** 物品外借流转与归还记录 */
+data class LendingRecord(
+    val id: String = UUID.randomUUID().toString(),
+    val borrowerName: String = "",                  // 借用人姓名 (如 "张三", "老王", "表弟")
+    val borrowerContact: String = "",               // 借用人联系方式 (手机/微信)
+    val lentDate: Long = System.currentTimeMillis(),// 借出交接日期
+    val expectedReturnDate: Long = 0L,              // 约定预计归还日期 (0表示未指定)
+    val actualReturnDate: Long = 0L,                // 实际归还日期 (0表示尚未归还)
+    val deposit: Double = 0.0,                      // 押金/租金 (元)
+    val notes: String = "",                         // 借出配件与交接说明 (如 "含原装充电器、保护包")
+    val photoPath: String = "",                     // 交接现场实拍留存照片
+    val status: String = "lent",                    // "lent" (借出中), "returned" (已归还), "overdue" (已逾期)
+    val returnConditionRating: Int = 5              // 归还时物品成色/完好度 (1~5星)
+)
+
 /** 物品时光胶囊与生活回忆瞬间 */
 data class ItemMemoryMoment(
     val id: String = UUID.randomUUID().toString(),
@@ -88,8 +103,49 @@ data class Entry(
     val backupStatus: String = "local",             // "local" (仅本地), "synced" (已备份网盘/NAS), "unbacked" (未备份)
 
     // 8. 物品时光胶囊与回忆录 (Life Memory Moments)
-    val memoryMoments: List<ItemMemoryMoment> = emptyList() // 时光回忆里程碑列表
+    val memoryMoments: List<ItemMemoryMoment> = emptyList(), // 时光回忆里程碑列表
+
+    // 9. 实物外借与共享流转体系 (Asset Lending & Circulation)
+    val isLentOut: Boolean = false,                 // 是否处于外借状态
+    val currentBorrower: String = "",               // 当前借用人姓名 (如 "张三", "老王")
+    val currentBorrowerContact: String = "",        // 当前借用人联系方式 (手机/微信)
+    val currentLentDate: Long = 0L,                 // 当前借出时间戳
+    val expectedReturnDate: Long = 0L,              // 约定预计归还日期 (0表示未指定)
+    val currentDeposit: Double = 0.0,               // 当前已付押金 (元)
+    val lendingHistory: List<LendingRecord> = emptyList() // 历史流转与借还记录
 ) {
+    /** 是否处于逾期未还状态 */
+    fun isLendingOverdue(): Boolean {
+        if (!isLentOut || expectedReturnDate <= 0L) return false
+        return System.currentTimeMillis() > expectedReturnDate
+    }
+
+    /** 获取借出流转状态文本 */
+    fun getLendingStatusText(): String {
+        if (!isLentOut) return "🟢 在库"
+        val now = System.currentTimeMillis()
+        if (expectedReturnDate > 0L) {
+            val diffMs = expectedReturnDate - now
+            val days = (diffMs / (24L * 60 * 60 * 1000)).toInt()
+            return if (days < 0) {
+                "⚠️ 借给 $currentBorrower · 逾期 ${Math.abs(days)} 天"
+            } else if (days == 0) {
+                "⏰ 借给 $currentBorrower · 今日到期"
+            } else {
+                "📤 借给 $currentBorrower · 剩 $days 天"
+            }
+        }
+        val daysLent = if (currentLentDate > 0) ((now - currentLentDate) / (24L * 60 * 60 * 1000)).toInt().coerceAtLeast(1) else 1
+        return "📤 借给 $currentBorrower · 已借 $daysLent 天"
+    }
+
+    /** 获取当前活跃的借出记录 */
+    fun getCurrentLendingRecord(): LendingRecord? {
+        if (!isLentOut) return null
+        return lendingHistory.firstOrNull { it.status == "lent" || it.actualReturnDate == 0L }
+            ?: lendingHistory.lastOrNull()
+    }
+
     /** 获取数字资产类型描述 */
     fun getDigitalTypeDisplayName(): String {
         return when (digitalType) {
