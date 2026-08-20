@@ -491,35 +491,23 @@ object InteractiveGuideTour {
             "hot_patch" -> {
                 activity.navigateToTab(3)
                 activity.binding.root.postDelayed({
-                    val target = activity.findViewById<View>(R.id.btn_hot_patch_update) ?: activity.binding.navProfile
+                    val target = activity.findViewById<View>(R.id.btn_update_version) ?: activity.binding.navProfile
                     overlay.showStep(
                         stepIndex = 1,
                         totalSteps = 1,
-                        title = "🎮 类似游戏极速热更新补丁",
-                        desc = "无需每次下载几十 MB 全量安装包，仅下载几百 KB 增量补丁，底层沙盒引擎动态加载，免系统安装弹窗，瞬间无感生效体验最新特性！",
-                        actionHint = "👉 请点击「极速热更新」检查可用补丁",
+                        title = "🚀 检查与智能升级系统",
+                        desc = "统一智能检测最新版本与增量热补丁！优先支持 ⚡ 免重装极速热更（秒级即时生效），必要时全量 APK 升级！",
+                        actionHint = "👉 请点击「检查与智能升级」检测可用更新",
                         targetView = target,
                         onNext = {
                             stopTour(activity)
-                            HotUpdateManager.checkHotPatch(activity) { info, err ->
-                                if (info != null) {
-                                    HotUpdateDialog.show(activity, info)
-                                } else {
-                                    Toast.makeText(activity, err ?: "当前已是最新状态，暂无可用热补丁", Toast.LENGTH_SHORT).show()
-                                }
-                            }
+                            UpdateManager.checkUpdate(activity, isManual = true)
                         },
                         onExit = { stopTour(activity) },
                         onTargetClick = {
                             Handler(Looper.getMainLooper()).postDelayed({
                                 stopTour(activity)
-                                HotUpdateManager.checkHotPatch(activity) { info, err ->
-                                    if (info != null) {
-                                        HotUpdateDialog.show(activity, info)
-                                    } else {
-                                        Toast.makeText(activity, err ?: "当前已是最新状态，暂无可用热补丁", Toast.LENGTH_SHORT).show()
-                                    }
-                                }
+                                UpdateManager.checkUpdate(activity, isManual = true)
                             }, 300)
                         }
                     )
@@ -765,12 +753,12 @@ object InteractiveGuideTour {
             8 -> {
                 activity.navigateToTab(3)
                 activity.binding.root.postDelayed({
-                    val target = activity.findViewById<View>(R.id.btn_hot_patch_update) ?: activity.binding.navProfile
+                    val target = activity.findViewById<View>(R.id.btn_update_version) ?: activity.binding.navProfile
                     overlay.showStep(
                         stepIndex = 8,
                         totalSteps = totalSteps,
-                        title = "🎮 极速热更新补丁系统",
-                        desc = "告别漫长的大包下载，仅下载几百 KB 增量补丁，底层沙盒引擎动态加载，免系统安装弹窗，瞬间无感生效体验最新特性！",
+                        title = "🚀 检查与智能升级系统",
+                        desc = "统一智能检测最新版本与增量热补丁！优先支持 ⚡ 免重装极速热更，秒级即时生效，必要时全量升级！",
                         actionHint = "👉 恭喜！您已完整掌握全部核心功能，点击完成教学！",
                         targetView = target,
                         onNext = { finishTour(activity) },

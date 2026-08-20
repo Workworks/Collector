@@ -47,6 +47,9 @@ object UpdateManager {
         val changelog: String,
         val apkDownloadUrl: String,
         val apkSize: Long,
+        val patchDownloadUrl: String = "",
+        val patchSize: Long = 0L,
+        val patchVersion: String = "",
         val publishedAt: String,
         val htmlUrl: String
     )
@@ -107,10 +110,11 @@ object UpdateManager {
                 val release = fetchLatestRelease(repo) ?: return@execute
                 if (!isNewerVersion(release.versionName, currentVer)) return@execute
 
+                if (release.apkDownloadUrl.isBlank()) return@execute
                 val saveDir = context.getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS) ?: context.cacheDir
                 val apkFile = File(saveDir, "Collecter_${release.versionName}.apk")
                 if (apkFile.exists() && apkFile.length() > 0 && (release.apkSize == 0L || apkFile.length() == release.apkSize)) {
-                    return@execute // 已经静默下载完成
+                    return@execute
                 }
 
                 val tempFile = File(saveDir, "Collecter_${release.versionName}.apk.tmp")
@@ -148,7 +152,7 @@ object UpdateManager {
     }
 
     /**
-     * 检查更新
+     * 智能统一检查更新 (优先热补丁秒级生效，必要时全量升级)
      * @param activity 当前 Activity
      * @param isManual true 表示用户手动点击；false 表示自动静默检测
      */
@@ -156,6 +160,7 @@ object UpdateManager {
         val store = DataStore(activity)
         val repo = store.getGithubRepo()
         val currentVer = getAppVersionName(activity)
+        val activePatch = HotPatchEngine.getActivePatchVersion(activity)
 
         var checkingDialog: AlertDialog? = null
         if (isManual) {
@@ -179,8 +184,10 @@ object UpdateManager {
                 checkingDialog?.dismiss()
 
                 if (releaseInfo != null) {
-                    val hasNew = isNewerVersion(releaseInfo.versionName, currentVer)
-                    if (hasNew) {
+                    val isBaseNewer = isNewerVersion(releaseInfo.versionName, currentVer)
+                    val hasUnappliedPatch = releaseInfo.patchDownloadUrl.isNotBlank() && (activePatch == null || isNewerVersion(releaseInfo.patchVersion.ifBlank { releaseInfo.versionName }, activePatch))
+
+                    if (isBaseNewer || hasUnappliedPatch) {
                         showUpdateAvailableDialog(activity, releaseInfo, currentVer)
                     } else {
                         if (isManual) {
@@ -251,6 +258,10 @@ object UpdateManager {
 
         var apkUrl = ""
         var apkSize = 0L
+        var patchUrl = ""
+        var patchSize = 0L
+        var patchVer = ""
+
         val assets = json.optJSONArray("assets")
         if (assets != null) {
             for (i in 0 until assets.length()) {
@@ -259,13 +270,17 @@ object UpdateManager {
                 if (name.endsWith(".apk", ignoreCase = true)) {
                     apkUrl = asset.optString("browser_download_url", "")
                     apkSize = asset.optLong("size", 0L)
-                    break
+                } else if (name.contains("patch", ignoreCase = true) && name.endsWith(".zip", ignoreCase = true)) {
+                    patchUrl = asset.optString("browser_download_url", "")
+                    patchSize = asset.optLong("size", 0L)
+                    val match = Regex("v?([0-9]+\\.[0-9]+\\.[0-9]+)").find(name)
+                    patchVer = match?.groupValues?.getOrNull(1) ?: versionName
                 }
             }
         }
 
-        if (apkUrl.isEmpty()) {
-            throw Exception("最新 Release ($tagName) 中未包含可供安装的 .apk 附件")
+        if (apkUrl.isEmpty() && patchUrl.isEmpty()) {
+            throw Exception("最新 Release ($tagName) 中未包含可供安装的 .apk 或热补丁")
         }
 
         return ReleaseInfo(
@@ -275,13 +290,16 @@ object UpdateManager {
             changelog = changelog,
             apkDownloadUrl = apkUrl,
             apkSize = apkSize,
+            patchDownloadUrl = patchUrl,
+            patchSize = patchSize,
+            patchVersion = patchVer,
             publishedAt = publishedAt,
             htmlUrl = htmlUrl
         )
     }
 
     /**
-     * 定制现代发现新版本弹窗 (支持秒装就绪判断)
+     * 定制现代发现新版本弹窗 (支持热更优先与全量智能分流)
      */
     private fun showUpdateAvailableDialog(
         activity: Activity,
@@ -297,11 +315,40 @@ object UpdateManager {
         binding.customUpdateChangelog.text = release.changelog.ifEmpty { "优化部分体验与修复已知问题。" }
         binding.customBtnCancel.applyPressScaleAnimation(0.92f)
         binding.customBtnUpdate.applyPressScaleAnimation(0.92f)
+        binding.customBtnHotPatch.applyPressScaleAnimation(0.92f)
 
         binding.customBtnCancel.setOnClickListener {
             dialog.dismiss()
         }
 
+        // 1. 如果存在热补丁，展示专属高亮提示与极速热更按钮
+        if (release.patchDownloadUrl.isNotBlank()) {
+            binding.layoutHotPatchBanner.visibility = View.VISIBLE
+            val patchSizeStr = if (release.patchSize > 0) " (约 ${formatFileSize(release.patchSize)})" else ""
+            binding.tvHotPatchBannerText.text = "⚡ 检测到免重装增量热补丁$patchSizeStr，体积小且免重新安装，即点即生效！"
+            binding.customBtnHotPatch.visibility = View.VISIBLE
+            binding.customBtnHotPatch.text = "⚡ 立即极速热更 (推荐免重装)"
+            binding.customBtnHotPatch.setOnClickListener {
+                dialog.dismiss()
+                val patchInfo = HotUpdateManager.HotPatchInfo(
+                    patchVersion = release.patchVersion.ifBlank { release.versionName },
+                    targetBaseVersion = currentVer,
+                    downloadUrl = release.patchDownloadUrl,
+                    sizeBytes = release.patchSize,
+                    md5 = "",
+                    changelog = release.changelog,
+                    title = release.title
+                )
+                HotUpdateDialog.show(activity, patchInfo)
+            }
+            binding.customBtnUpdate.text = "📦 全量 APK 更新"
+        } else {
+            binding.layoutHotPatchBanner.visibility = View.GONE
+            binding.customBtnHotPatch.visibility = View.GONE
+            binding.customBtnUpdate.text = "🚀 立即全量安装升级"
+        }
+
+        // 2. 全量 APK 下载与秒装
         val saveDir = activity.getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS) ?: activity.cacheDir
         val apkFile = File(saveDir, "Collecter_${release.versionName}.apk")
         val isPreloaded = apkFile.exists() && apkFile.length() > 0 && (release.apkSize == 0L || apkFile.length() == release.apkSize)
@@ -313,7 +360,6 @@ object UpdateManager {
                 installApk(activity, apkFile)
             }
         } else {
-            binding.customBtnUpdate.text = "🚀 立即极速更新"
             binding.customBtnUpdate.setOnClickListener {
                 dialog.dismiss()
                 startDownloadAndInstall(activity, release)

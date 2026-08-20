@@ -116,36 +116,87 @@
             android:lineSpacingExtra="3dp" />
     </ScrollView>
 
-    <!-- 底部双操作按钮 (卡片内固化排版，100% 显眼可视防遮挡) -->
+    <!-- 热补丁专属高亮提示条 (存在热补丁时显示) -->
+    <LinearLayout
+        android:id="@+id/layout_hot_patch_banner"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:background="@drawable/bg_chip_inactive"
+        android:backgroundTint="#1010B981"
+        android:padding="10dp"
+        android:visibility="gone"
+        android:layout_marginBottom="14dp">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="⚡"
+            android:textSize="14sp"
+            android:layout_marginEnd="6dp" />
+
+        <TextView
+            android:id="@+id/tv_hot_patch_banner_text"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="检测到增量热补丁，体积小且免重新安装，即点即用！"
+            android:textSize="11sp"
+            android:textColor="@color/primary"
+            android:fontFamily="sans-serif-medium" />
+    </LinearLayout>
+
+    <!-- 底部操作按钮：支持优先热更新与全量升级 -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="horizontal">
+        android:orientation="vertical">
 
+        <!-- 优先热更新按钮 (当可用时高亮显示) -->
         <com.google.android.material.button.MaterialButton
-            android:id="@+id/custom_btn_cancel"
-            style="?attr/materialButtonOutlinedStyle"
-            android:layout_width="0dp"
+            android:id="@+id/custom_btn_hot_patch"
+            android:layout_width="match_parent"
             android:layout_height="48dp"
-            android:layout_weight="1"
-            android:layout_marginEnd="10dp"
-            android:text="稍后提醒"
-            android:textSize="14sp"
-            android:textColor="@color/text_secondary"
-            app:strokeColor="@color/card_border"
-            app:cornerRadius="12dp" />
-
-        <com.google.android.material.button.MaterialButton
-            android:id="@+id/custom_btn_update"
-            android:layout_width="0dp"
-            android:layout_height="48dp"
-            android:layout_weight="1.6"
-            android:text="🚀 立即极速更新"
+            android:text="⚡ 极速免重装热更新 (推荐)"
             android:textSize="14sp"
             android:textStyle="bold"
             android:textColor="#FFFFFFFF"
             android:backgroundTint="@color/primary"
-            app:cornerRadius="12dp" />
+            app:cornerRadius="12dp"
+            android:visibility="gone"
+            android:layout_marginBottom="8dp" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/custom_btn_cancel"
+                style="?attr/materialButtonOutlinedStyle"
+                android:layout_width="0dp"
+                android:layout_height="46dp"
+                android:layout_weight="1"
+                android:layout_marginEnd="8dp"
+                android:text="稍后提醒"
+                android:textSize="13sp"
+                android:textColor="@color/text_secondary"
+                app:strokeColor="@color/card_border"
+                app:cornerRadius="12dp" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/custom_btn_update"
+                android:layout_width="0dp"
+                android:layout_height="46dp"
+                android:layout_weight="1.6"
+                android:text="🚀 全量 APK 更新"
+                android:textSize="13sp"
+                android:textStyle="bold"
+                android:textColor="#FFFFFFFF"
+                android:backgroundTint="@color/accent_dark"
+                app:cornerRadius="12dp" />
+        </LinearLayout>
     </LinearLayout>
 
 </LinearLayout>

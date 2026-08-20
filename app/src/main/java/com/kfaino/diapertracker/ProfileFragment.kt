@@ -69,7 +69,6 @@ class ProfileFragment : Fragment() {
         binding.btnTerms.applyPressScaleAnimation(0.94f)
         binding.btnPrivacy.applyPressScaleAnimation(0.94f)
         binding.btnUpdateVersion.applyPressScaleAnimation(0.94f)
-        binding.btnHotPatchUpdate.applyPressScaleAnimation(0.94f)
         binding.btnAbout.applyPressScaleAnimation(0.94f)
 
         // 0. 💡 功能全景与使用教程
@@ -137,21 +136,9 @@ class ProfileFragment : Fragment() {
             showDocDialog("隐私政策", "Collecter 尊重并严格保护所有用户的个人隐私。\n\n1. 本应用不会在后台收集、上传任何个人隐私敏感数据。\n2. 检查更新功能仅与公开的 GitHub Releases API 通信，用于获取最新版本信息。\n3. 所有空间平面图与资产记录仅保存在本地设备应用沙盒中。")
         }
 
-        // 8. 更新最新版本 (GitHub Releases 全量 APK)
+        // 8. 🚀 检查与智能升级 (智能优先免重装热更新，必要时全量 APK 升级)
         binding.btnUpdateVersion.setOnClickListener {
             UpdateManager.checkUpdate(requireActivity(), isManual = true)
-        }
-
-        // 8.1 🎮 极速热更新补丁 (增量动态免重装)
-        binding.btnHotPatchUpdate.setOnClickListener {
-            Toast.makeText(requireContext(), "🔍 正在检查增量热更新补丁...", Toast.LENGTH_SHORT).show()
-            HotUpdateManager.checkHotPatch(requireActivity()) { info, errorMsg ->
-                if (info != null) {
-                    HotUpdateDialog.show(requireActivity(), info)
-                } else {
-                    Toast.makeText(requireContext(), errorMsg ?: "当前已是最新状态，暂无可用热补丁", Toast.LENGTH_LONG).show()
-                }
-            }
         }
 
         // 9. 关于
