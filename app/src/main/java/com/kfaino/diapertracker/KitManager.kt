@@ -90,10 +90,12 @@ object KitManager {
 
     private fun createDefaultKits(): List<Kit> {
         return listOf(
-            Kit(name = "摄影外拍套装", icon = "📸", desc = "相机机身、大光圈镜头、备用电池、存储卡与三脚架"),
             Kit(name = "3天商务出差包", icon = "💼", desc = "笔记本电脑、便携拓展坞、剃须刀、洗漱分装瓶与降噪耳机"),
             Kit(name = "周末双人露营包", icon = "🏕️", desc = "双人帐篷、折叠蛋卷桌、营地氛围灯、便携卡式炉与防潮垫"),
-            Kit(name = "应急医疗急救包", icon = "🩹", desc = "碘伏消毒棉签、创可贴、体温计、退烧贴与医用纱布")
+            Kit(name = "亲子海岛度假包", icon = "🏖️", desc = "儿童防晒霜、泳衣泳镜、沙滩玩具、便携常备药与护照证件"),
+            Kit(name = "摄影外拍大师套装", icon = "📸", desc = "相机机身、大光圈镜头、备用电池、存储卡与三脚架"),
+            Kit(name = "家庭应急医疗急救包", icon = "🩹", desc = "碘伏消毒棉签、创可贴、体温计、退烧贴与医用纱布"),
+            Kit(name = "极简日常通勤EDC", icon = "🎒", desc = "随身工卡、机械钥匙、折叠伞、充电宝与纸巾")
         )
     }
 
@@ -219,7 +221,7 @@ object KitManager {
         dialog.show()
     }
 
-    /** 弹出沉浸式打包核对模式 */
+    /** 弹出场景套装装箱核对弹窗 (支持出发装箱与返程离店清点双向模式) */
     fun showKitChecklistDialog(activity: Activity, store: DataStore, kit: Kit) {
         val binding = DialogKitChecklistBinding.inflate(LayoutInflater.from(activity))
         val dialog = MaterialAlertDialogBuilder(activity)
@@ -229,33 +231,15 @@ object KitManager {
         dialog.window?.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
         dialog.window?.attributes?.windowAnimations = R.style.CustomDialogAnimation
 
+        var isDepartMode = true // true = 出发装箱, false = 返程清点
         binding.tvKitChecklistIcon.text = kit.icon
-        binding.tvKitChecklistName.text = "${kit.name} · 打包核对"
+        binding.tvKitChecklistName.text = "${kit.name} · 出发装箱"
+        binding.toggleGroupChecklistMode.check(R.id.btn_mode_depart)
         binding.btnCloseChecklist.applyPressScaleAnimation(0.92f)
         binding.btnCloseChecklist.setOnClickListener { dialog.dismiss() }
 
         val allEntries = store.loadAll()
         val kitEntries = allEntries.filter { it.id in kit.itemIds }
-
-        if (kitEntries.isEmpty()) {
-            val emptyMsg = TextView(activity).apply {
-                text = "💡 该套装尚未关联具体物品。\n点击下方按钮前往物品库快速添加！"
-                textSize = 13f
-                setTextColor(ContextCompat.getColor(activity, R.color.text_secondary))
-                gravity = android.view.Gravity.CENTER
-                setPadding(0, 20.dpToPx(activity), 0, 20.dpToPx(activity))
-            }
-            binding.layoutChecklistItems.addView(emptyMsg)
-            binding.btnAllChecked.text = "➕ 去关联物品"
-            binding.btnAllChecked.setOnClickListener {
-                dialog.dismiss()
-                showEditKitItemsDialog(activity, store, kit) {
-                    showKitChecklistDialog(activity, store, it)
-                }
-            }
-            dialog.show()
-            return
-        }
 
         val checkedStates = mutableMapOf<String, Boolean>()
         kitEntries.forEach { checkedStates[it.id] = false }
@@ -265,67 +249,88 @@ object KitManager {
             val total = kitEntries.size
             val percent = if (total > 0) (checkedCount * 100 / total) else 0
             binding.pbKitChecklist.progress = percent
-            binding.tvKitChecklistProgressDesc.text = "装箱进度：$checkedCount/$total 项 ($percent%)"
+            val modeName = if (isDepartMode) "装箱进度" else "返程清点"
+            binding.tvKitChecklistProgressDesc.text = "$modeName：$checkedCount/$total 项 ($percent%)"
 
             if (checkedCount == total) {
-                binding.btnAllChecked.text = "🎉 全套核对完成！点击打卡"
+                binding.btnAllChecked.text = if (isDepartMode) "🎉 全部装箱就绪！点击打卡" else "🏨 离店返程清点无遗漏！"
                 binding.btnAllChecked.backgroundTintList = ContextCompat.getColorStateList(activity, R.color.primary)
             } else {
-                binding.btnAllChecked.text = "完成装箱打卡 ($checkedCount/$total)"
+                binding.btnAllChecked.text = if (isDepartMode) "完成装箱打卡 ($checkedCount/$total)" else "完成清点打卡 ($checkedCount/$total)"
+                binding.btnAllChecked.backgroundTintList = ContextCompat.getColorStateList(activity, R.color.primary)
             }
         }
 
-        for (entry in kitEntries) {
-            val row = LinearLayout(activity).apply {
-                orientation = LinearLayout.HORIZONTAL
-                gravity = android.view.Gravity.CENTER_VERTICAL
-                background = ContextCompat.getDrawable(activity, R.drawable.bg_icon_circle_soft)
-                setPadding(10.dpToPx(activity), 8.dpToPx(activity), 10.dpToPx(activity), 8.dpToPx(activity))
-                val lp = LinearLayout.LayoutParams(
-                    LinearLayout.LayoutParams.MATCH_PARENT,
-                    LinearLayout.LayoutParams.WRAP_CONTENT
-                ).apply {
-                    bottomMargin = 6.dpToPx(activity)
+        fun renderItems() {
+            binding.layoutChecklistItems.removeAllViews()
+            for (entry in kitEntries) {
+                val row = LinearLayout(activity).apply {
+                    orientation = LinearLayout.HORIZONTAL
+                    gravity = android.view.Gravity.CENTER_VERTICAL
+                    background = ContextCompat.getDrawable(activity, R.drawable.bg_icon_circle_soft)
+                    setPadding(10.dpToPx(activity), 8.dpToPx(activity), 10.dpToPx(activity), 8.dpToPx(activity))
+                    val lp = LinearLayout.LayoutParams(
+                        LinearLayout.LayoutParams.MATCH_PARENT,
+                        LinearLayout.LayoutParams.WRAP_CONTENT
+                    ).apply {
+                        bottomMargin = 6.dpToPx(activity)
+                    }
+                    layoutParams = lp
                 }
-                layoutParams = lp
-            }
 
-            val cb = CheckBox(activity).apply {
-                isChecked = false
-                setOnCheckedChangeListener { _, isChecked ->
-                    checkedStates[entry.id] = isChecked
-                    updateProgress()
+                val cb = CheckBox(activity).apply {
+                    isChecked = checkedStates[entry.id] == true
+                    setOnCheckedChangeListener { _, isChecked ->
+                        checkedStates[entry.id] = isChecked
+                        updateProgress()
+                    }
                 }
+
+                val tvItemInfo = LinearLayout(activity).apply {
+                    orientation = LinearLayout.VERTICAL
+                    layoutParams = LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f)
+                }
+
+                val tvTitle = TextView(activity).apply {
+                    text = entry.brand
+                    textSize = 13f
+                    setTextColor(ContextCompat.getColor(activity, R.color.text_primary))
+                    setTypeface(typeface, android.graphics.Typeface.BOLD)
+                }
+
+                val tvLoc = TextView(activity).apply {
+                    text = "📍 存放: ${entry.location.ifBlank { "默认空间" }} (数量: ${entry.qty} ${entry.unit})"
+                    textSize = 11f
+                    setTextColor(ContextCompat.getColor(activity, R.color.text_secondary))
+                }
+
+                tvItemInfo.addView(tvTitle)
+                tvItemInfo.addView(tvLoc)
+
+                row.addView(cb)
+                row.addView(tvItemInfo)
+                row.setOnClickListener {
+                    cb.isChecked = !cb.isChecked
+                }
+
+                binding.layoutChecklistItems.addView(row)
             }
+        }
 
-            val tvItemInfo = LinearLayout(activity).apply {
-                orientation = LinearLayout.VERTICAL
-                layoutParams = LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f)
+        binding.toggleGroupChecklistMode.addOnButtonCheckedListener { _, checkedId, isChecked ->
+            if (isChecked) {
+                isDepartMode = (checkedId == R.id.btn_mode_depart)
+                binding.tvKitChecklistName.text = if (isDepartMode) "${kit.name} · 出发装箱" else "${kit.name} · 返程清点"
+                // 模式切换时重置勾选
+                kitEntries.forEach { checkedStates[it.id] = false }
+                renderItems()
+                updateProgress()
             }
+        }
 
-            val tvTitle = TextView(activity).apply {
-                text = entry.brand
-                textSize = 13f
-                setTextColor(ContextCompat.getColor(activity, R.color.text_primary))
-                setTypeface(typeface, android.graphics.Typeface.BOLD)
-            }
-
-            val tvLoc = TextView(activity).apply {
-                text = "📍 存放于: ${entry.location.ifBlank { "默认空间" }} (数量: ${entry.qty} ${entry.unit})"
-                textSize = 11f
-                setTextColor(ContextCompat.getColor(activity, R.color.text_secondary))
-            }
-
-            tvItemInfo.addView(tvTitle)
-            tvItemInfo.addView(tvLoc)
-
-            row.addView(cb)
-            row.addView(tvItemInfo)
-            row.setOnClickListener {
-                cb.isChecked = !cb.isChecked
-            }
-
-            binding.layoutChecklistItems.addView(row)
+        binding.btnExportPackingPoster.applyPressScaleAnimation(0.92f)
+        binding.btnExportPackingPoster.setOnClickListener {
+            exportPackingPoster(activity, kit, kitEntries, checkedStates, isDepartMode)
         }
 
         binding.btnAllChecked.applyPressScaleAnimation(0.92f)
@@ -333,13 +338,15 @@ object KitManager {
             val checkedCount = checkedStates.values.count { it }
             val total = kitEntries.size
             if (checkedCount == total) {
-                Toast.makeText(activity, "🎉 棒极了！【${kit.name}】全套装备已全部清点装箱完毕！", Toast.LENGTH_LONG).show()
+                val successMsg = if (isDepartMode) "🎉 太棒了！【${kit.name}】出行装备已全部装箱完毕，祝您旅途愉快！" else "🏨 赞！【${kit.name}】所有私人物品均已清点完毕，零遗漏！"
+                Toast.makeText(activity, successMsg, Toast.LENGTH_LONG).show()
                 dialog.dismiss()
             } else {
+                val remain = total - checkedCount
                 ModernDialogHelper.showConfirmDialog(
                     context = activity,
-                    title = "仍有未核对物品",
-                    message = "当前还有 ${total - checkedCount} 件物品尚未装箱，确定现在结束核对吗？",
+                    title = "仍有物品未打卡",
+                    message = "当前还有 $remain 件物品尚未打卡核对，确定现在结束核对吗？",
                     emoji = "⚠️",
                     positiveText = "结束核对",
                     negativeText = "继续清点"
@@ -351,6 +358,125 @@ object KitManager {
 
         updateProgress()
         dialog.show()
+    }
+
+    /** 导出 1080P 出行装备装箱清单高清海报 */
+    private fun exportPackingPoster(
+        activity: Activity,
+        kit: Kit,
+        entries: List<Entry>,
+        checkedStates: Map<String, Boolean>,
+        isDepartMode: Boolean
+    ) {
+        val width = 1080
+        val headerHeight = 340
+        val itemHeight = 110
+        val footerHeight = 160
+        val height = headerHeight + entries.size * itemHeight + footerHeight
+
+        val bitmap = android.graphics.Bitmap.createBitmap(width, height, android.graphics.Bitmap.Config.ARGB_8888)
+        val canvas = android.graphics.Canvas(bitmap)
+
+        // 背景 (深色黑曜石质感)
+        val bgPaint = android.graphics.Paint().apply {
+            color = Color.parseColor("#0F172A")
+            style = android.graphics.Paint.Style.FILL
+        }
+        canvas.drawRect(0f, 0f, width.toFloat(), height.toFloat(), bgPaint)
+
+        // 标题与副标题
+        val titlePaint = android.graphics.Paint(android.graphics.Paint.ANTI_ALIAS_FLAG).apply {
+            color = Color.WHITE
+            textSize = 50f
+            typeface = android.graphics.Typeface.create(android.graphics.Typeface.DEFAULT, android.graphics.Typeface.BOLD)
+        }
+        val subPaint = android.graphics.Paint(android.graphics.Paint.ANTI_ALIAS_FLAG).apply {
+            color = Color.parseColor("#10B981")
+            textSize = 28f
+        }
+        val metaPaint = android.graphics.Paint(android.graphics.Paint.ANTI_ALIAS_FLAG).apply {
+            color = Color.parseColor("#94A3B8")
+            textSize = 24f
+        }
+
+        val modeTitle = if (isDepartMode) "🛫 出发装箱清单" else "🏨 离店返程清点表"
+        canvas.drawText("${kit.icon} ${kit.name} · $modeTitle", 80f, 130f, titlePaint)
+        val checkedCount = checkedStates.values.count { it }
+        val percent = if (entries.isNotEmpty()) checkedCount * 100 / entries.size else 0
+        canvas.drawText("PACKING CHECKLIST · 核对进度: $checkedCount/${entries.size} ($percent%)", 80f, 185f, subPaint)
+
+        val sdf = java.text.SimpleDateFormat("yyyy-MM-dd HH:mm", java.util.Locale.getDefault())
+        canvas.drawText("生成时间: ${sdf.format(java.util.Date())}  ·  共收录 ${entries.size} 件专属装备", 80f, 240f, metaPaint)
+
+        val linePaint = android.graphics.Paint().apply {
+            color = Color.parseColor("#334155")
+            strokeWidth = 3f
+        }
+        canvas.drawLine(80f, 285f, (width - 80).toFloat(), 285f, linePaint)
+
+        // 绘制条目
+        var currentY = headerHeight.toFloat()
+        val cardPaint = android.graphics.Paint().apply {
+            color = Color.parseColor("#1E293B")
+            style = android.graphics.Paint.Style.FILL
+        }
+        val itemTitlePaint = android.graphics.Paint(android.graphics.Paint.ANTI_ALIAS_FLAG).apply {
+            color = Color.WHITE
+            textSize = 32f
+            typeface = android.graphics.Typeface.create(android.graphics.Typeface.DEFAULT, android.graphics.Typeface.BOLD)
+        }
+        val itemLocPaint = android.graphics.Paint(android.graphics.Paint.ANTI_ALIAS_FLAG).apply {
+            color = Color.parseColor("#94A3B8")
+            textSize = 22f
+        }
+        val checkTagPaint = android.graphics.Paint(android.graphics.Paint.ANTI_ALIAS_FLAG).apply {
+            textSize = 26f
+            typeface = android.graphics.Typeface.create(android.graphics.Typeface.DEFAULT, android.graphics.Typeface.BOLD)
+        }
+
+        for (e in entries) {
+            val isChecked = checkedStates[e.id] == true
+            val cardRect = android.graphics.RectF(80f, currentY, (width - 80).toFloat(), currentY + 90f)
+            canvas.drawRoundRect(cardRect, 14f, 14f, cardPaint)
+
+            if (isChecked) {
+                checkTagPaint.color = Color.parseColor("#10B981")
+                canvas.drawText("✅ 已装箱", 110f, currentY + 56f, checkTagPaint)
+            } else {
+                checkTagPaint.color = Color.parseColor("#F59E0B")
+                canvas.drawText("⬜ 待装箱", 110f, currentY + 56f, checkTagPaint)
+            }
+
+            canvas.drawText(e.brand, 270f, currentY + 44f, itemTitlePaint)
+            canvas.drawText("📍 存放: ${e.location.ifBlank { "默认储物区" }} (${e.qty} ${e.unit})", 270f, currentY + 76f, itemLocPaint)
+
+            currentY += itemHeight
+        }
+
+        // 底部水印
+        val footerPaint = android.graphics.Paint(android.graphics.Paint.ANTI_ALIAS_FLAG).apply {
+            color = Color.parseColor("#64748B")
+            textSize = 22f
+            textAlign = android.graphics.Paint.Align.CENTER
+        }
+        canvas.drawText("🎒 由 Collecter 场景化装备与智能收纳宇宙生成", (width / 2).toFloat(), (height - 50).toFloat(), footerPaint)
+
+        try {
+            val dir = activity.getExternalFilesDir(android.os.Environment.DIRECTORY_PICTURES) ?: activity.cacheDir
+            val file = java.io.File(dir, "Collecter_Packing_${kit.name}_${System.currentTimeMillis()}.png")
+            java.io.FileOutputStream(file).use { out ->
+                bitmap.compress(android.graphics.Bitmap.CompressFormat.PNG, 100, out)
+            }
+            ModernDialogHelper.showInfoDialog(
+                context = activity,
+                title = "🎉 出行清单海报已生成！",
+                emoji = "📜",
+                message = "1080P 出行装备清单已导出至：\n${file.absolutePath}\n\n已记录 ${entries.size} 件出行装备，可微信发送给同行亲友核对！",
+                buttonText = "收到"
+            )
+        } catch (e: Exception) {
+            Toast.makeText(activity, "导出失败: ${e.message}", Toast.LENGTH_SHORT).show()
+        }
     }
 
     /** 关联/编辑套装包含的物品 */

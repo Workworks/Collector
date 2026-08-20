@@ -21,7 +21,7 @@
             android:layout_height="38dp"
             android:gravity="center"
             android:textSize="20sp"
-            android:text="📸"
+            android:text="🎒"
             android:background="@drawable/bg_icon_circle_soft" />
 
         <LinearLayout
@@ -35,7 +35,7 @@
                 android:id="@+id/tv_kit_checklist_name"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="摄影外拍套装 · 打包核对"
+                android:text="出行装备套装 · 装箱核对"
                 android:textSize="16sp"
                 android:textStyle="bold"
                 android:textColor="@color/text_primary"
@@ -59,6 +59,54 @@
             app:tint="@color/text_secondary"
             android:background="?attr/selectableItemBackgroundBorderless"
             android:contentDescription="关闭" />
+    </LinearLayout>
+
+    <!-- 模式切换栏 (🛫 出发装箱 / 🏨 返程清点) + 导出海报 -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:layout_marginBottom="10dp">
+
+        <com.google.android.material.button.MaterialButtonToggleGroup
+            android:id="@+id/toggle_group_checklist_mode"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            app:singleSelection="true"
+            app:selectionRequired="true">
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btn_mode_depart"
+                style="?attr/materialButtonOutlinedStyle"
+                android:layout_width="0dp"
+                android:layout_height="36dp"
+                android:layout_weight="1"
+                android:text="🛫 出发装箱"
+                android:textSize="11sp"
+                android:paddingHorizontal="6dp" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btn_mode_return"
+                style="?attr/materialButtonOutlinedStyle"
+                android:layout_width="0dp"
+                android:layout_height="36dp"
+                android:layout_weight="1"
+                android:text="🏨 返程清点"
+                android:textSize="11sp"
+                android:paddingHorizontal="6dp" />
+        </com.google.android.material.button.MaterialButtonToggleGroup>
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btn_export_packing_poster"
+            style="@style/Widget.MaterialComponents.Button.TextButton"
+            android:layout_width="wrap_content"
+            android:layout_height="36dp"
+            android:text="📜 导出清单海报"
+            android:textSize="11sp"
+            android:textColor="@color/primary"
+            android:paddingHorizontal="8dp" />
     </LinearLayout>
 
     <!-- 动态进度条 -->
@@ -87,7 +135,7 @@
             android:orientation="vertical" />
     </ScrollView>
 
-    <!-- 底部按钮：扫码装箱 + 完成核对 -->
+    <!-- 底部按钮：完成打卡 -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -98,13 +146,13 @@
         <Button
             android:id="@+id/btn_all_checked"
             android:layout_width="match_parent"
-            android:layout_height="44dp"
-            android:backgroundTint="@color/primary"
-            android:text="🎉 完成装箱打卡"
-            android:textSize="13sp"
+            android:layout_height="48dp"
+            android:text="完成装箱打卡"
+            android:textSize="14sp"
             android:textStyle="bold"
             android:textColor="#FFFFFF"
-            app:cornerRadius="12dp" />
+            android:background="@drawable/bg_btn_primary"
+            android:backgroundTint="@color/primary" />
     </LinearLayout>
 
 </LinearLayout>

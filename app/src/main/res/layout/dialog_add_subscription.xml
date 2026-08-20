@@ -1,0 +1,431 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:background="@drawable/bg_dialog_card"
+    android:padding="20dp">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical">
+
+        <!-- 标题栏 -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:layout_marginBottom="16dp">
+
+            <TextView
+                android:layout_width="38dp"
+                android:layout_height="38dp"
+                android:text="📅"
+                android:textSize="20sp"
+                android:gravity="center"
+                android:background="@drawable/bg_icon_circle_soft"
+                android:layout_marginEnd="10dp" />
+
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:orientation="vertical">
+
+                <TextView
+                    android:id="@+id/tv_dialog_sub_title"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="📅 登记会员订阅与周期服务"
+                    android:textSize="18sp"
+                    android:textStyle="bold"
+                    android:textColor="@color/text_primary"
+                    android:fontFamily="sans-serif-medium" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="云存储、影音会员、AI工具与周期扣费服务"
+                    android:textSize="11sp"
+                    android:textColor="@color/text_secondary"
+                    android:layout_marginTop="2dp" />
+            </LinearLayout>
+
+            <ImageView
+                android:id="@+id/btn_close_add_sub"
+                android:layout_width="32dp"
+                android:layout_height="32dp"
+                android:src="@drawable/ic_close"
+                android:padding="6dp"
+                app:tint="@color/text_secondary"
+                android:background="?attr/selectableItemBackgroundBorderless"
+                android:contentDescription="关闭" />
+        </LinearLayout>
+
+        <!-- 1. 服务名称 -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="订阅服务/会员名称 *"
+            android:textSize="12sp"
+            android:textColor="@color/text_secondary"
+            android:layout_marginBottom="4dp" />
+
+        <com.google.android.material.textfield.TextInputLayout
+            style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="12dp"
+            app:boxStrokeColor="@color/primary"
+            app:boxCornerRadiusBottomEnd="10dp"
+            app:boxCornerRadiusBottomStart="10dp"
+            app:boxCornerRadiusTopEnd="10dp"
+            app:boxCornerRadiusTopStart="10dp"
+            app:hintEnabled="false">
+
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/et_sub_name"
+                android:layout_width="match_parent"
+                android:layout_height="44dp"
+                android:paddingHorizontal="14dp"
+                android:paddingVertical="0dp"
+                android:hint="例如: iCloud 2TB / Netflix / 腾讯视频VIP / ChatGPT Plus"
+                android:textSize="13sp"
+                android:textColor="@color/text_primary" />
+        </com.google.android.material.textfield.TextInputLayout>
+
+        <!-- 2. 订阅品类 -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="服务分类 *"
+            android:textSize="12sp"
+            android:textColor="@color/text_secondary"
+            android:layout_marginBottom="4dp" />
+
+        <HorizontalScrollView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:scrollbars="none"
+            android:layout_marginBottom="12dp">
+
+            <com.google.android.material.chip.ChipGroup
+                android:id="@+id/chip_group_sub_category"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                app:singleSelection="true"
+                app:selectionRequired="true">
+
+                <com.google.android.material.chip.Chip
+                    android:id="@+id/chip_sub_cat_cloud"
+                    style="@style/Widget.MaterialComponents.Chip.Choice"
+                    android:layout_width="wrap_content"
+                    android:layout_height="34dp"
+                    android:text="☁️ 云存储/网盘"
+                    android:checked="true"
+                    android:textSize="12sp"
+                    android:textColor="@color/text_primary"
+                    app:chipBackgroundColor="@color/bg_chip_selector" />
+
+                <com.google.android.material.chip.Chip
+                    android:id="@+id/chip_sub_cat_media"
+                    style="@style/Widget.MaterialComponents.Chip.Choice"
+                    android:layout_width="wrap_content"
+                    android:layout_height="34dp"
+                    android:text="🎬 影音视听"
+                    android:textSize="12sp"
+                    android:textColor="@color/text_primary"
+                    app:chipBackgroundColor="@color/bg_chip_selector" />
+
+                <com.google.android.material.chip.Chip
+                    android:id="@+id/chip_sub_cat_ai"
+                    style="@style/Widget.MaterialComponents.Chip.Choice"
+                    android:layout_width="wrap_content"
+                    android:layout_height="34dp"
+                    android:text="🤖 AI/生产力工具"
+                    android:textSize="12sp"
+                    android:textColor="@color/text_primary"
+                    app:chipBackgroundColor="@color/bg_chip_selector" />
+
+                <com.google.android.material.chip.Chip
+                    android:id="@+id/chip_sub_cat_life"
+                    style="@style/Widget.MaterialComponents.Chip.Choice"
+                    android:layout_width="wrap_content"
+                    android:layout_height="34dp"
+                    android:text="🛒 商超/生活权益"
+                    android:textSize="12sp"
+                    android:textColor="@color/text_primary"
+                    app:chipBackgroundColor="@color/bg_chip_selector" />
+
+                <com.google.android.material.chip.Chip
+                    android:id="@+id/chip_sub_cat_software"
+                    style="@style/Widget.MaterialComponents.Chip.Choice"
+                    android:layout_width="wrap_content"
+                    android:layout_height="34dp"
+                    android:text="💼 软件授权"
+                    android:textSize="12sp"
+                    android:textColor="@color/text_primary"
+                    app:chipBackgroundColor="@color/bg_chip_selector" />
+
+                <com.google.android.material.chip.Chip
+                    android:id="@+id/chip_sub_cat_other"
+                    style="@style/Widget.MaterialComponents.Chip.Choice"
+                    android:layout_width="wrap_content"
+                    android:layout_height="34dp"
+                    android:text="📦 其它订阅"
+                    android:textSize="12sp"
+                    android:textColor="@color/text_primary"
+                    app:chipBackgroundColor="@color/bg_chip_selector" />
+            </com.google.android.material.chip.ChipGroup>
+        </HorizontalScrollView>
+
+        <!-- 3. 周期与扣费金额 -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_marginBottom="12dp">
+
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1.2"
+                android:orientation="vertical"
+                android:layout_marginEnd="8dp">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="扣费周期 *"
+                    android:textSize="12sp"
+                    android:textColor="@color/text_secondary"
+                    android:layout_marginBottom="4dp" />
+
+                <com.google.android.material.chip.ChipGroup
+                    android:id="@+id/chip_group_sub_cycle"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    app:singleSelection="true"
+                    app:selectionRequired="true">
+
+                    <com.google.android.material.chip.Chip
+                        android:id="@+id/chip_cycle_month"
+                        style="@style/Widget.MaterialComponents.Chip.Choice"
+                        android:layout_width="wrap_content"
+                        android:layout_height="32dp"
+                        android:text="按月"
+                        android:checked="true"
+                        android:textSize="11sp"
+                        android:textColor="@color/text_primary"
+                        app:chipBackgroundColor="@color/bg_chip_selector" />
+
+                    <com.google.android.material.chip.Chip
+                        android:id="@+id/chip_cycle_year"
+                        style="@style/Widget.MaterialComponents.Chip.Choice"
+                        android:layout_width="wrap_content"
+                        android:layout_height="32dp"
+                        android:text="按年"
+                        android:textSize="11sp"
+                        android:textColor="@color/text_primary"
+                        app:chipBackgroundColor="@color/bg_chip_selector" />
+
+                    <com.google.android.material.chip.Chip
+                        android:id="@+id/chip_cycle_quarter"
+                        style="@style/Widget.MaterialComponents.Chip.Choice"
+                        android:layout_width="wrap_content"
+                        android:layout_height="32dp"
+                        android:text="按季"
+                        android:textSize="11sp"
+                        android:textColor="@color/text_primary"
+                        app:chipBackgroundColor="@color/bg_chip_selector" />
+
+                    <com.google.android.material.chip.Chip
+                        android:id="@+id/chip_cycle_week"
+                        style="@style/Widget.MaterialComponents.Chip.Choice"
+                        android:layout_width="wrap_content"
+                        android:layout_height="32dp"
+                        android:text="按周"
+                        android:textSize="11sp"
+                        android:textColor="@color/text_primary"
+                        app:chipBackgroundColor="@color/bg_chip_selector" />
+                </com.google.android.material.chip.ChipGroup>
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="0.9"
+                android:orientation="vertical"
+                android:layout_marginStart="8dp">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="每期扣费金额 (¥) *"
+                    android:textSize="12sp"
+                    android:textColor="@color/text_secondary"
+                    android:layout_marginBottom="4dp" />
+
+                <com.google.android.material.textfield.TextInputLayout
+                    style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    app:boxStrokeColor="@color/primary"
+                    app:boxCornerRadiusBottomEnd="10dp"
+                    app:boxCornerRadiusBottomStart="10dp"
+                    app:boxCornerRadiusTopEnd="10dp"
+                    app:boxCornerRadiusTopStart="10dp"
+                    app:hintEnabled="false">
+
+                    <com.google.android.material.textfield.TextInputEditText
+                        android:id="@+id/et_sub_price"
+                        android:layout_width="match_parent"
+                        android:layout_height="44dp"
+                        android:paddingHorizontal="14dp"
+                        android:paddingVertical="0dp"
+                        android:inputType="numberDecimal"
+                        android:hint="如: 15.00"
+                        android:textSize="14sp"
+                        android:textStyle="bold"
+                        android:textColor="@color/primary" />
+                </com.google.android.material.textfield.TextInputLayout>
+            </LinearLayout>
+        </LinearLayout>
+
+        <!-- 4. 下次续费/扣费日期 -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="下次续费/扣费日期 (点击选择) *"
+            android:textSize="12sp"
+            android:textColor="@color/text_secondary"
+            android:layout_marginBottom="4dp" />
+
+        <LinearLayout
+            android:id="@+id/btn_pick_sub_next_billing"
+            android:layout_width="match_parent"
+            android:layout_height="44dp"
+            android:background="@drawable/bg_chip_inactive"
+            android:gravity="center_vertical"
+            android:paddingHorizontal="14dp"
+            android:clickable="true"
+            android:focusable="true"
+            android:layout_marginBottom="12dp">
+
+            <TextView
+                android:id="@+id/tv_sub_next_billing_text"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="📅 下次续费日: 2026-09-20"
+                android:textSize="13sp"
+                android:textColor="@color/text_primary" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="更改 ➔"
+                android:textSize="12sp"
+                android:textColor="@color/primary" />
+        </LinearLayout>
+
+        <!-- 5. 自动续费开关与支付渠道 -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:background="@drawable/bg_changelog_box"
+            android:padding="12dp"
+            android:layout_marginBottom="12dp">
+
+            <CheckBox
+                android:id="@+id/cb_sub_auto_renew"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="🔄 开启自动续费"
+                android:checked="true"
+                android:textSize="13sp"
+                android:textColor="@color/text_primary" />
+
+            <EditText
+                android:id="@+id/et_sub_payment_channel"
+                android:layout_width="0dp"
+                android:layout_height="36dp"
+                android:layout_weight="1"
+                android:layout_marginStart="10dp"
+                android:background="@drawable/bg_input_box"
+                android:paddingHorizontal="10dp"
+                android:hint="支付渠道: 如微信扣款/Apple ID"
+                android:textSize="11sp"
+                android:textColor="@color/text_primary" />
+        </LinearLayout>
+
+        <!-- 6. 备注与绑卡账号 -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="备注与账号说明"
+            android:textSize="12sp"
+            android:textColor="@color/text_secondary"
+            android:layout_marginBottom="4dp" />
+
+        <com.google.android.material.textfield.TextInputLayout
+            style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="16dp"
+            app:boxStrokeColor="@color/primary"
+            app:boxCornerRadiusBottomEnd="10dp"
+            app:boxCornerRadiusBottomStart="10dp"
+            app:boxCornerRadiusTopEnd="10dp"
+            app:boxCornerRadiusTopStart="10dp"
+            app:hintEnabled="false">
+
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/et_sub_notes"
+                android:layout_width="match_parent"
+                android:layout_height="56dp"
+                android:paddingHorizontal="14dp"
+                android:paddingVertical="8dp"
+                android:gravity="top"
+                android:hint="例如: 家庭共享 5 人车位 / 绑定招行 VISA 信用卡"
+                android:textSize="13sp"
+                android:textColor="@color/text_primary" />
+        </com.google.android.material.textfield.TextInputLayout>
+
+        <!-- 底部操作按钮 -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btn_cancel_add_sub"
+                style="?attr/materialButtonOutlinedStyle"
+                android:layout_width="0dp"
+                android:layout_height="48dp"
+                android:layout_weight="1"
+                android:layout_marginEnd="8dp"
+                android:text="取消"
+                android:textSize="14sp"
+                android:textColor="@color/text_secondary"
+                app:strokeColor="@color/card_border"
+                app:cornerRadius="12dp" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btn_save_sub"
+                android:layout_width="0dp"
+                android:layout_height="48dp"
+                android:layout_weight="1.5"
+                android:text="💾 保存订阅服务"
+                android:textSize="14sp"
+                android:textStyle="bold"
+                android:textColor="#FFFFFFFF"
+                android:backgroundTint="@color/primary"
+                app:cornerRadius="12dp" />
+        </LinearLayout>
+    </LinearLayout>
+</ScrollView>

@@ -307,6 +307,7 @@ object FamilyVaultDialog {
             "household" to "👨‍👩‍👧 居民户口簿",
             "marriage" to "💍 结婚证/公证书",
             "property" to "🏠 不动产权证",
+            "insurance" to "🛡️ 商业保单 (车险/重疾/医疗/意外)",
             "contract" to "📄 电子劳动/租赁合同",
             "other" to "📑 其他重要凭证"
         )

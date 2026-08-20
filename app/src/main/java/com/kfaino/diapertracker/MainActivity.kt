@@ -291,7 +291,27 @@ class MainActivity : AppCompatActivity() {
                         .setDuration(220)
                         .setInterpolator(android.view.animation.OvershootInterpolator(2.2f))
                         .start()
-                    showAddDialog()
+
+                    val homeFragment = supportFragmentManager.findFragmentById(R.id.fragment_container) as? HomeFragment
+                    if (homeFragment != null) {
+                        when (homeFragment.getSelectedTab()) {
+                            1 -> {
+                                SubscriptionManagerDialog.showAddOrEditSubscriptionDialog(this, store, null) {
+                                    homeFragment.refresh()
+                                }
+                            }
+                            2 -> {
+                                DigitalAssetManagerDialog.showAddOrEditDigitalDialog(this, store, null) {
+                                    homeFragment.refresh()
+                                }
+                            }
+                            else -> {
+                                showAddDialog()
+                            }
+                        }
+                    } else {
+                        showAddDialog()
+                    }
                 }
                 .start()
         }
@@ -869,12 +889,10 @@ class MainActivity : AppCompatActivity() {
             }
         }
 
-        dialogBinding.cbIsSubscriptionAsset.isChecked = isSubscription
-        dialogBinding.layoutSubAssetDetails.visibility = if (isSubscription) View.VISIBLE else View.GONE
-        dialogBinding.cbIsSubscriptionAsset.setOnCheckedChangeListener { _, isChecked ->
-            isSubscription = isChecked
-            dialogBinding.layoutSubAssetDetails.visibility = if (isChecked) View.VISIBLE else View.GONE
-        }
+        // 8. 订阅选项在实物模式中隐藏 (订阅由专属订阅弹窗独立管理)
+        dialogBinding.cbIsSubscriptionAsset.visibility = View.GONE
+        dialogBinding.layoutSubAssetDetails.visibility = View.GONE
+        isSubscription = false
 
         // 9. 重要物品防丢标记
         dialogBinding.cbIsImportant.isChecked = isImportant

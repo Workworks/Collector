@@ -98,7 +98,9 @@ class HomeFragment : Fragment() {
 
         subscriptionAdapter = SubscriptionAdapter(
             onSubClick = { sub ->
-                (activity as? MainActivity)?.showEditDialog(sub)
+                SubscriptionManagerDialog.showAddOrEditSubscriptionDialog(requireActivity(), store, sub) {
+                    refresh()
+                }
             },
             onMoreClick = { sub, anchorView ->
                 showSubMoreMenu(sub, anchorView)
@@ -129,15 +131,23 @@ class HomeFragment : Fragment() {
             showSearchDialog()
         }
 
-        // 3. 记一笔快捷入口
+        // 3. 记一笔快捷入口 (随着实物、订阅、数字相册 Tab 切换不同的专属录入弹窗)
         binding.btnTopAdd.applyPressScaleAnimation(0.92f)
         binding.btnTopAdd.setOnClickListener {
-            if (selectedTab == 2) {
-                DigitalAssetManagerDialog.showAddOrEditDigitalDialog(requireActivity(), store, null) {
-                    refresh()
+            when (selectedTab) {
+                1 -> {
+                    SubscriptionManagerDialog.showAddOrEditSubscriptionDialog(requireActivity(), store, null) {
+                        refresh()
+                    }
                 }
-            } else {
-                (activity as? MainActivity)?.showAddDialog(presetCategory = selectedCategory)
+                2 -> {
+                    DigitalAssetManagerDialog.showAddOrEditDigitalDialog(requireActivity(), store, null) {
+                        refresh()
+                    }
+                }
+                else -> {
+                    (activity as? MainActivity)?.showAddDialog(presetCategory = selectedCategory)
+                }
             }
         }
 
@@ -745,6 +755,8 @@ class HomeFragment : Fragment() {
             binding.tvEmptyText.text = "暂无订阅资产 (如 iCloud、宽带、ChatGPT)\n点击下方 + 新增订阅"
         }
     }
+
+    fun getSelectedTab(): Int = selectedTab
 
     override fun onDestroyView() {
         super.onDestroyView()

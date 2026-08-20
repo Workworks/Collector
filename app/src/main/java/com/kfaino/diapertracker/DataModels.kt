@@ -398,6 +398,7 @@ data class IdentityDocument(
             "household" -> "👨‍👩‍👧 居民户口簿"
             "marriage" -> "💍 结婚证/公证书"
             "property" -> "🏠 不动产权证"
+            "insurance" -> "🛡️ 商业保单契约"
             "contract" -> "📄 电子劳动/租赁合同"
             else -> "📑 重要证照凭证"
         }
