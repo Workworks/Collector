@@ -470,3 +470,135 @@ data class MedicineRecord(
         }
     }
 }
+
+// =========================================================================
+// 🥦 第一性原理收纳：冰箱冷冻与食材生鲜鲜度库模型 (Food & Fresh Vault)
+// =========================================================================
+
+data class FoodRecord(
+    val id: String = UUID.randomUUID().toString(),
+    val name: String = "",                          // 食材名称 (如 "安格斯原切牛排", "鲜牛奶", "有机菠菜", "自制冷冻水饺")
+    val zone: String = "freezer",                   // 分区温区: "freezer" (❄️ 冷冻室), "fridge" (🧊 冷藏室), "pantry" (🫙 干货调味), "room" (🍞 常温果蔬)
+    val qty: Double = 1.0,                          // 数量
+    val unit: String = "份",                        // 单位: 份, 袋, 盒, 瓶, kg, g, 斤
+    val location: String = "冰箱冷冻二层",          // 具体位置
+    val purchaseDate: Long = System.currentTimeMillis(), // 买入/冷冻日期
+    val expiryDate: Long = 0L,                      // 保质期截止日 (0表示长期)
+    val isOpened: Boolean = false,                  // 是否已开封
+    val openedAt: Long = 0L,                        // 开封时间戳
+    val openedValidityDays: Int = 0,                // 开封后建议几天内吃完 (如鲜奶开封 3 天, 0表示按原保质期)
+    val photoPath: String = "",                     // 照片
+    val notes: String = "",                         // 烹饪灵感/解冻提醒/备注
+    val isConsumed: Boolean = false                 // 是否已吃完/已出清
+) {
+    /** 计算实际有效截止时间戳 (综合原保质期与开封后保鲜期) */
+    fun getEffectiveExpiryDate(): Long {
+        if (isOpened && openedValidityDays > 0 && openedAt > 0L) {
+            val openedExpire = openedAt + (openedValidityDays.toLong() * 24 * 60 * 60 * 1000)
+            return if (expiryDate > 0L) Math.min(expiryDate, openedExpire) else openedExpire
+        }
+        return expiryDate
+    }
+
+    /** 是否已过期 */
+    fun isExpired(): Boolean {
+        val eff = getEffectiveExpiryDate()
+        if (eff <= 0L) return false
+        return System.currentTimeMillis() > eff
+    }
+
+    /** 是否临期急需消灭 (3 天内) */
+    fun isExpiringSoon(): Boolean {
+        val eff = getEffectiveExpiryDate()
+        if (eff <= 0L) return false
+        val diffMs = eff - System.currentTimeMillis()
+        return diffMs in 0..(3L * 24 * 60 * 60 * 1000)
+    }
+
+    /** 剩余保鲜天数 */
+    fun getRemainingDays(): Int {
+        val eff = getEffectiveExpiryDate()
+        if (eff <= 0L) return 9999
+        val diffMs = eff - System.currentTimeMillis()
+        return (diffMs / (24L * 60 * 60 * 1000)).toInt()
+    }
+
+    /** 获取鲜度状态文本描述 */
+    fun getFreshnessStatusText(): String {
+        val eff = getEffectiveExpiryDate()
+        if (eff <= 0L) return "🟢 长期在库"
+        val days = getRemainingDays()
+        return if (days < 0) {
+            "🔴 已过期 ${Math.abs(days)} 天 (⚠️ 请勿食用)"
+        } else if (days <= 3) {
+            "⏳ 仅剩 $days 天 (🍳 建议今晚消灭)"
+        } else if (days <= 7) {
+            "🟡 剩余 $days 天 (保鲜中)"
+        } else {
+            "🟢 极鲜 (剩余 $days 天)"
+        }
+    }
+
+    /** 获取分区温区中文名称 */
+    fun getZoneDisplayName(): String {
+        return when (zone) {
+            "freezer" -> "❄️ 冷冻室"
+            "fridge" -> "🧊 冷藏室"
+            "pantry" -> "🫙 干货调味"
+            "room" -> "🍞 常温果蔬"
+            else -> "📦 食品储藏"
+        }
+    }
+}
+
+// =========================================================================
+// 🏆 第一性原理收纳：全家成长履历与职业荣誉考级勋章馆模型 (Honor & Credentials)
+// =========================================================================
+
+data class HonorCredential(
+    val id: String = UUID.randomUUID().toString(),
+    val member: String = "本人",                    // 成员归属: "本人", "伴侣", "孩子", "父亲", "母亲"
+    val category: String = "career",                // "degree" (🎓 学历学位), "career" (💼 职业资质/职称), "exam" (🏅 考级认证), "competition" (🏆 竞赛获奖/荣誉), "medal" (🎖️ 赛事勋章)
+    val title: String = "",                         // 证书/荣誉名称 (如 "软件设计师 (中级)", "英皇钢琴八级", "全国少儿英语竞赛一等奖")
+    val certNumber: String = "",                    // 证书编号/统一序列号
+    val issuer: String = "",                        // 颁发机构/发证部门 (如 "中华人民共和国人力资源和社会保障部")
+    val issueDate: Long = 0L,                       // 获得/发证时间戳
+    val expiryDate: Long = 0L,                      // 有效期截止日 / 复审年审日期 (0表示终身有效)
+    val scoreOrLevel: String = "",                  // 成绩/等级/名次 (如 "优秀", "一等奖", "92分")
+    val photoPath: String = "",                     // 证书原件/奖状扫描照
+    val verifyUrl: String = "",                     // 官方查验网址/验证链接
+    val notes: String = ""                          // 成长足迹故事/备注
+) {
+    /** 是否需要在 90 天内复审/换证 */
+    fun isExpiringSoon(): Boolean {
+        if (expiryDate <= 0L) return false
+        val diffMs = expiryDate - System.currentTimeMillis()
+        return diffMs in 0..(90L * 24 * 60 * 60 * 1000)
+    }
+
+    /** 是否已过复审换证有效期 */
+    fun isExpired(): Boolean {
+        if (expiryDate <= 0L) return false
+        return System.currentTimeMillis() > expiryDate
+    }
+
+    /** 获取脱敏证书编号 (如 202401********8899) */
+    fun getMaskedCertNumber(): String {
+        if (certNumber.length <= 6) return certNumber
+        val prefix = certNumber.take(4)
+        val suffix = certNumber.takeLast(4)
+        return "$prefix${"*".repeat((certNumber.length - 8).coerceAtLeast(4))}$suffix"
+    }
+
+    /** 获取分类中文名称 */
+    fun getCategoryDisplayName(): String {
+        return when (category) {
+            "degree" -> "🎓 学历学位"
+            "career" -> "💼 职业资格与职称"
+            "exam" -> "🏅 技能考级认证"
+            "competition" -> "🏆 竞赛荣誉与奖状"
+            "medal" -> "🎖️ 赛事勋章与奖牌"
+            else -> "📑 荣誉证书"
+        }
+    }
+}

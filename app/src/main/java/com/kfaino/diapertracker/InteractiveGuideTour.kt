@@ -27,12 +27,16 @@ object InteractiveGuideTour {
     private val demoVoucherIds = mutableSetOf<String>()
     private val demoIdentityDocIds = mutableSetOf<String>()
     private val demoMedicineIds = mutableSetOf<String>()
+    private val demoFoodIds = mutableSetOf<String>()
+    private val demoHonorIds = mutableSetOf<String>()
 
     /** 注册教程演练期间创建的演示数据 (用于在教程结束/退出时自动原封不动删除) */
     fun registerDemoEntry(id: String) = demoEntryIds.add(id)
     fun registerDemoVoucher(id: String) = demoVoucherIds.add(id)
     fun registerDemoIdentityDoc(id: String) = demoIdentityDocIds.add(id)
     fun registerDemoMedicine(id: String) = demoMedicineIds.add(id)
+    fun registerDemoFood(id: String) = demoFoodIds.add(id)
+    fun registerDemoHonor(id: String) = demoHonorIds.add(id)
 
     /** 执行沙盒演示数据彻底回滚清理，确保不影响真实资产记录 */
     private fun cleanupDemoData(activity: Activity) {
@@ -65,6 +69,20 @@ object InteractiveGuideTour {
             store.saveMedicines(all)
             cleanedCount += demoMedicineIds.size
             demoMedicineIds.clear()
+        }
+
+        if (demoFoodIds.isNotEmpty()) {
+            val all = store.getFoods().filterNot { demoFoodIds.contains(it.id) }
+            store.saveFoods(all)
+            cleanedCount += demoFoodIds.size
+            demoFoodIds.clear()
+        }
+
+        if (demoHonorIds.isNotEmpty()) {
+            val all = store.getHonorCredentials().filterNot { demoHonorIds.contains(it.id) }
+            store.saveHonorCredentials(all)
+            cleanedCount += demoHonorIds.size
+            demoHonorIds.clear()
         }
 
         if (cleanedCount > 0) {
@@ -278,6 +296,95 @@ object InteractiveGuideTour {
                             Handler(Looper.getMainLooper()).postDelayed({
                                 stopTour(activity)
                                 FamilyMedicineDialog.showMedicineVaultDialog(activity, store) {}
+                            }, 300)
+                        }
+                    )
+                }, 200)
+            }
+
+            "food_vault" -> {
+                activity.navigateToTab(0)
+                activity.binding.root.postDelayed({
+                    val toolsBar = activity.findViewById<View>(R.id.layout_tools_bar)
+                    toolsBar?.visibility = View.VISIBLE
+                    val target = activity.findViewById<View>(R.id.btn_food_vault_top) ?: activity.binding.navHome
+
+                    // 注入沙盒演示数据 (退出教程自动清理)
+                    val demoFoodId = "demo_food_tour_" + System.currentTimeMillis()
+                    val demoFood = FoodRecord(
+                        id = demoFoodId,
+                        name = "安格斯原切雪花牛排 (教程示例)",
+                        zone = "freezer",
+                        qty = 2.0,
+                        unit = "袋",
+                        location = "冰箱冷冻二层",
+                        expiryDate = System.currentTimeMillis() + 2L * 24 * 60 * 60 * 1000,
+                        notes = "适合提前冷藏解冻香煎 (演练结束自动删除)"
+                    )
+                    registerDemoFood(demoFoodId)
+                    store.addOrUpdateFood(demoFood)
+
+                    overlay.showStep(
+                        stepIndex = 1,
+                        totalSteps = 1,
+                        title = "🥦 冰箱冷冻与食材生鲜鲜度库",
+                        desc = "点击「🥦 食材鲜度库」进入保鲜展厅！支持冷冻/冷藏/调味温区分区管理，开封保鲜倒计时，点击「🍳 今晚清库存」一秒找出临期食材！",
+                        actionHint = "👉 请点击「🥦 食材鲜度库」进入体验",
+                        targetView = target,
+                        onNext = {
+                            stopTour(activity)
+                            FoodVaultDialog.show(activity, store) {}
+                        },
+                        onExit = { stopTour(activity) },
+                        onTargetClick = {
+                            Handler(Looper.getMainLooper()).postDelayed({
+                                stopTour(activity)
+                                FoodVaultDialog.show(activity, store) {}
+                            }, 300)
+                        }
+                    )
+                }, 200)
+            }
+
+            "honor_vault" -> {
+                activity.navigateToTab(0)
+                activity.binding.root.postDelayed({
+                    val toolsBar = activity.findViewById<View>(R.id.layout_tools_bar)
+                    toolsBar?.visibility = View.VISIBLE
+                    val target = activity.findViewById<View>(R.id.btn_honor_vault_top) ?: activity.binding.navHome
+
+                    // 注入沙盒演示数据 (退出教程自动清理)
+                    val demoHonorId = "demo_honor_tour_" + System.currentTimeMillis()
+                    val demoHonor = HonorCredential(
+                        id = demoHonorId,
+                        member = "本人",
+                        category = "career",
+                        title = "国家计算机技术与软件资格认证 (教程示例)",
+                        certNumber = "2024098877665544",
+                        issuer = "中华人民共和国人力资源和社会保障部",
+                        issueDate = System.currentTimeMillis(),
+                        scoreOrLevel = "优秀",
+                        notes = "一次性高分通过 (演练结束自动删除)"
+                    )
+                    registerDemoHonor(demoHonorId)
+                    store.addOrUpdateHonorCredential(demoHonor)
+
+                    overlay.showStep(
+                        stepIndex = 1,
+                        totalSteps = 1,
+                        title = "🏆 全家成长履历与荣誉勋章馆",
+                        desc = "点击「🏆 荣誉勋章馆」进入荣誉殿堂！全家学历学位、职业职称、考级奖状分类归档，支持证书号脱敏一键复制与 1080P 人生高光足迹长卷导出！",
+                        actionHint = "👉 请点击「🏆 荣誉勋章馆」进入体验",
+                        targetView = target,
+                        onNext = {
+                            stopTour(activity)
+                            HonorVaultDialog.show(activity, store) {}
+                        },
+                        onExit = { stopTour(activity) },
+                        onTargetClick = {
+                            Handler(Looper.getMainLooper()).postDelayed({
+                                stopTour(activity)
+                                HonorVaultDialog.show(activity, store) {}
                             }, 300)
                         }
                     )

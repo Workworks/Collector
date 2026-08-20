@@ -217,6 +217,20 @@ class HomeFragment : Fragment() {
             }
         }
 
+        binding.btnFoodVaultTop.applyPressScaleAnimation(0.92f)
+        binding.btnFoodVaultTop.setOnClickListener {
+            FoodVaultDialog.show(requireActivity(), store) {
+                refresh()
+            }
+        }
+
+        binding.btnHonorVaultTop.applyPressScaleAnimation(0.92f)
+        binding.btnHonorVaultTop.setOnClickListener {
+            HonorVaultDialog.show(requireActivity(), store) {
+                refresh()
+            }
+        }
+
         // 分段切换器 (实物 / 数字相册 / 订阅)
         binding.tabItems.applyPressScaleAnimation(0.94f)
         binding.tabDigitalAssets.applyPressScaleAnimation(0.94f)

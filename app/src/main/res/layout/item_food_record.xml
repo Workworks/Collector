@@ -1,0 +1,130 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:background="@drawable/bg_changelog_box"
+    android:padding="14dp"
+    android:layout_marginBottom="10dp">
+
+    <!-- 顶部名称与温区/鲜度徽章 -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:layout_marginBottom="6dp">
+
+        <TextView
+            android:id="@+id/item_food_name"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="安格斯原切牛排"
+            android:textSize="15sp"
+            android:textStyle="bold"
+            android:textColor="@color/text_primary"
+            android:fontFamily="sans-serif-medium" />
+
+        <TextView
+            android:id="@+id/item_food_zone_badge"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="❄️ 冷冻室"
+            android:textSize="11sp"
+            android:textColor="@color/text_secondary"
+            android:background="@drawable/bg_chip_inactive"
+            android:paddingHorizontal="8dp"
+            android:paddingVertical="2dp"
+            android:layout_marginEnd="6dp" />
+
+        <TextView
+            android:id="@+id/item_food_freshness_badge"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="🟢 极鲜"
+            android:textSize="11sp"
+            android:textStyle="bold"
+            android:textColor="@color/primary"
+            android:background="@drawable/bg_chip_inactive"
+            android:paddingHorizontal="8dp"
+            android:paddingVertical="2dp" />
+    </LinearLayout>
+
+    <!-- 位置与存量 -->
+    <TextView
+        android:id="@+id/item_food_location_qty"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="📍 冰箱冷冻二层  ·  📦 存量: 2 袋"
+        android:textSize="12sp"
+        android:textColor="@color/text_secondary"
+        android:layout_marginBottom="4dp" />
+
+    <!-- 开封状态 -->
+    <TextView
+        android:id="@+id/item_food_opened_status"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="⚡ 已开封 1天 (建议 3 天内)"
+        android:textSize="11sp"
+        android:textColor="@color/accent_dark"
+        android:visibility="gone"
+        android:layout_marginBottom="4dp" />
+
+    <!-- 备注/烹饪灵感 -->
+    <TextView
+        android:id="@+id/item_food_notes"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="💡 提前冷藏解冻，适合香煎"
+        android:textSize="11sp"
+        android:textColor="@color/text_hint"
+        android:visibility="gone"
+        android:layout_marginBottom="8dp" />
+
+    <!-- 底部操作按钮栏 -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:layout_marginTop="4dp">
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btn_item_consume_food"
+            style="@style/Widget.MaterialComponents.Button.TextButton"
+            android:layout_width="wrap_content"
+            android:layout_height="36dp"
+            android:text="🍳 消耗 -1"
+            android:textSize="12sp"
+            android:textColor="@color/primary"
+            android:paddingHorizontal="10dp" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btn_item_open_food"
+            style="@style/Widget.MaterialComponents.Button.TextButton"
+            android:layout_width="wrap_content"
+            android:layout_height="36dp"
+            android:text="📦 开封打卡"
+            android:textSize="12sp"
+            android:textColor="@color/accent_dark"
+            android:paddingHorizontal="10dp" />
+
+        <View
+            android:layout_width="0dp"
+            android:layout_height="1dp"
+            android:layout_weight="1" />
+
+        <ImageButton
+            android:id="@+id/btn_item_delete_food"
+            android:layout_width="32dp"
+            android:layout_height="32dp"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:src="@drawable/ic_delete"
+            app:tint="@color/text_hint"
+            android:contentDescription="移出食材" />
+    </LinearLayout>
+
+</LinearLayout>

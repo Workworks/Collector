@@ -1421,4 +1421,184 @@ class DataStore(private val ctx: Context) {
             saveMedicines(list)
         }
     }
+
+    // =========================================================================
+    // 🥦 第一性原理收纳：冰箱冷冻与食材生鲜鲜度库 (Food & Fresh Vault)
+    // =========================================================================
+
+    private val keyFoods = "vault_foods_v1"
+
+    fun getFoods(): List<FoodRecord> {
+        val raw = prefs.getString(keyFoods, null) ?: return emptyList()
+        return try {
+            val arr = JSONArray(raw)
+            val list = mutableListOf<FoodRecord>()
+            for (i in 0 until arr.length()) {
+                val o = arr.getJSONObject(i)
+                list.add(
+                    FoodRecord(
+                        id = o.optString("id", UUID.randomUUID().toString()),
+                        name = o.optString("name", ""),
+                        zone = o.optString("zone", "freezer"),
+                        qty = o.optDouble("qty", 1.0),
+                        unit = o.optString("unit", "份"),
+                        location = o.optString("loc", "冰箱冷冻二层"),
+                        purchaseDate = o.optLong("p_date", System.currentTimeMillis()),
+                        expiryDate = o.optLong("e_date", 0L),
+                        isOpened = o.optBoolean("opened", false),
+                        openedAt = o.optLong("o_date", 0L),
+                        openedValidityDays = o.optInt("o_days", 0),
+                        photoPath = o.optString("photo", ""),
+                        notes = o.optString("notes", ""),
+                        isConsumed = o.optBoolean("consumed", false)
+                    )
+                )
+            }
+            list
+        } catch (_: Exception) {
+            emptyList()
+        }
+    }
+
+    fun saveFoods(list: List<FoodRecord>) {
+        val arr = JSONArray()
+        for (f in list) {
+            arr.put(
+                JSONObject()
+                    .put("id", f.id)
+                    .put("name", f.name)
+                    .put("zone", f.zone)
+                    .put("qty", f.qty)
+                    .put("unit", f.unit)
+                    .put("loc", f.location)
+                    .put("p_date", f.purchaseDate)
+                    .put("e_date", f.expiryDate)
+                    .put("opened", f.isOpened)
+                    .put("o_date", f.openedAt)
+                    .put("o_days", f.openedValidityDays)
+                    .put("photo", f.photoPath)
+                    .put("notes", f.notes)
+                    .put("consumed", f.isConsumed)
+            )
+        }
+        prefs.edit().putString(keyFoods, arr.toString()).apply()
+    }
+
+    fun addOrUpdateFood(food: FoodRecord) {
+        val list = getFoods().toMutableList()
+        val idx = list.indexOfFirst { it.id == food.id }
+        if (idx != -1) {
+            list[idx] = food
+        } else {
+            list.add(0, food)
+        }
+        saveFoods(list)
+    }
+
+    fun deleteFood(foodId: String) {
+        val list = getFoods().filter { it.id != foodId }
+        saveFoods(list)
+    }
+
+    /** 食材开封保鲜打卡 */
+    fun markFoodOpened(foodId: String) {
+        val list = getFoods().toMutableList()
+        val idx = list.indexOfFirst { it.id == foodId }
+        if (idx != -1) {
+            list[idx] = list[idx].copy(
+                isOpened = true,
+                openedAt = System.currentTimeMillis()
+            )
+            saveFoods(list)
+        }
+    }
+
+    /** 烹饪/消耗食材打卡 (扣减数量或标记吃完) */
+    fun consumeFood(foodId: String, delta: Double = 1.0) {
+        val list = getFoods().toMutableList()
+        val idx = list.indexOfFirst { it.id == foodId }
+        if (idx != -1) {
+            val item = list[idx]
+            val newQty = (item.qty - delta).coerceAtLeast(0.0)
+            list[idx] = item.copy(
+                qty = newQty,
+                isConsumed = newQty <= 0.0
+            )
+            saveFoods(list)
+        }
+    }
+
+    // =========================================================================
+    // 🏆 第一性原理收纳：全家成长履历与职业荣誉考级勋章馆 (Honor & Credentials)
+    // =========================================================================
+
+    private val keyHonors = "vault_honors_v1"
+
+    fun getHonorCredentials(): List<HonorCredential> {
+        val raw = prefs.getString(keyHonors, null) ?: return emptyList()
+        return try {
+            val arr = JSONArray(raw)
+            val list = mutableListOf<HonorCredential>()
+            for (i in 0 until arr.length()) {
+                val o = arr.getJSONObject(i)
+                list.add(
+                    HonorCredential(
+                        id = o.optString("id", UUID.randomUUID().toString()),
+                        member = o.optString("mem", "本人"),
+                        category = o.optString("cat", "career"),
+                        title = o.optString("title", ""),
+                        certNumber = o.optString("cnum", ""),
+                        issuer = o.optString("issuer", ""),
+                        issueDate = o.optLong("iss_d", 0L),
+                        expiryDate = o.optLong("exp_d", 0L),
+                        scoreOrLevel = o.optString("score", ""),
+                        photoPath = o.optString("photo", ""),
+                        verifyUrl = o.optString("vurl", ""),
+                        notes = o.optString("notes", "")
+                    )
+                )
+            }
+            list
+        } catch (_: Exception) {
+            emptyList()
+        }
+    }
+
+    fun saveHonorCredentials(list: List<HonorCredential>) {
+        val arr = JSONArray()
+        for (h in list) {
+            arr.put(
+                JSONObject()
+                    .put("id", h.id)
+                    .put("mem", h.member)
+                    .put("cat", h.category)
+                    .put("title", h.title)
+                    .put("cnum", h.certNumber)
+                    .put("issuer", h.issuer)
+                    .put("iss_d", h.issueDate)
+                    .put("exp_d", h.expiryDate)
+                    .put("score", h.scoreOrLevel)
+                    .put("photo", h.photoPath)
+                    .put("vurl", h.verifyUrl)
+                    .put("notes", h.notes)
+            )
+        }
+        prefs.edit().putString(keyHonors, arr.toString()).apply()
+    }
+
+    fun addOrUpdateHonorCredential(honor: HonorCredential) {
+        val list = getHonorCredentials().toMutableList()
+        val idx = list.indexOfFirst { it.id == honor.id }
+        if (idx != -1) {
+            list[idx] = honor
+        } else {
+            list.add(0, honor)
+        }
+        saveHonorCredentials(list)
+    }
+
+    fun deleteHonorCredential(honorId: String) {
+        val list = getHonorCredentials().filter { it.id != honorId }
+        saveHonorCredentials(list)
+    }
 }

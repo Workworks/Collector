@@ -437,6 +437,75 @@
                     android:fontFamily="sans-serif-medium" />
             </LinearLayout>
         </LinearLayout>
+
+        <!-- 第四行 (第一性原理全维度收纳)：食材鲜度库、成长荣誉馆 -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_marginTop="6dp">
+
+            <!-- 🥦 食材鲜度库 -->
+            <LinearLayout
+                android:id="@+id/btn_food_vault_top"
+                android:layout_width="0dp"
+                android:layout_height="38dp"
+                android:layout_weight="1"
+                android:orientation="horizontal"
+                android:gravity="center"
+                android:paddingHorizontal="6dp"
+                android:layout_marginEnd="6dp"
+                android:background="@drawable/bg_chip_inactive"
+                android:backgroundTint="@color/input_bg"
+                android:clickable="true"
+                android:focusable="true">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="🥦"
+                    android:textSize="14sp" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="4dp"
+                    android:text="食材鲜度库"
+                    android:textSize="12sp"
+                    android:textColor="@color/text_primary"
+                    android:fontFamily="sans-serif-medium" />
+            </LinearLayout>
+
+            <!-- 🏆 荣誉勋章馆 -->
+            <LinearLayout
+                android:id="@+id/btn_honor_vault_top"
+                android:layout_width="0dp"
+                android:layout_height="38dp"
+                android:layout_weight="1"
+                android:orientation="horizontal"
+                android:gravity="center"
+                android:paddingHorizontal="6dp"
+                android:background="@drawable/bg_chip_inactive"
+                android:backgroundTint="@color/input_bg"
+                android:clickable="true"
+                android:focusable="true">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="🏆"
+                    android:textSize="14sp" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="4dp"
+                    android:text="荣誉勋章馆"
+                    android:textSize="12sp"
+                    android:textColor="@color/text_primary"
+                    android:fontFamily="sans-serif-medium" />
+            </LinearLayout>
+        </LinearLayout>
     </LinearLayout>
 
     <androidx.core.widget.NestedScrollView
