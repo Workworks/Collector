@@ -4,7 +4,7 @@ plugins {
 }
 
 group = "com.kfaino.collector"
-version = "4.1.0"
+version = "4.1.1"
 
 application {
     mainClass.set("com.kfaino.collector.desktop.MainKt")
@@ -37,5 +37,5 @@ tasks.jar {
     })
     archiveBaseName.set("Collecter-Desktop")
     archiveClassifier.set("")
-    archiveVersion.set("4.0.0")
+    archiveVersion.set(project.version.toString())
 }

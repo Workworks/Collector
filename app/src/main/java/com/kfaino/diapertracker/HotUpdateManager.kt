@@ -13,6 +13,8 @@ import java.util.concurrent.Executors
 
 /**
  * 类游戏极速热更新下载、校验与版本管理引擎
+ * - 内置多镜像极速 CDN 备用通道（ghfast.top、mirror.ghproxy.com、ghproxy.net）与直连容灾
+ * - 智能跟随 301/302 重定向，解决国内网络直连 GitHub Releases 443 超时问题
  */
 object HotUpdateManager {
 
@@ -29,32 +31,37 @@ object HotUpdateManager {
     private val executor = Executors.newSingleThreadExecutor()
 
     fun checkHotPatch(context: Context, onResult: (HotPatchInfo?, String?) -> Unit) {
+        System.setProperty("java.net.preferIPv4Stack", "true")
+        System.setProperty("java.net.preferIPv6Addresses", "false")
+
         val baseVer = UpdateManager.getAppVersionName(context)
         val activePatchVer = HotPatchEngine.getActivePatchVersion(context)
         val store = DataStore(context)
         val repo = store.getGithubRepo().ifBlank { "Workworks/Collector" }
         val apiUrls = listOf(
-            "https://api.github.com/repos/$repo/releases/latest",
             "https://ghfast.top/https://api.github.com/repos/$repo/releases/latest",
-            "https://mirror.ghproxy.com/https://api.github.com/repos/$repo/releases/latest"
+            "https://mirror.ghproxy.com/https://api.github.com/repos/$repo/releases/latest",
+            "https://ghproxy.net/https://api.github.com/repos/$repo/releases/latest",
+            "https://api.github.com/repos/$repo/releases/latest"
         )
 
         executor.execute {
             var lastError = "无法连接至 GitHub 仓库"
             for (apiUrl in apiUrls) {
+                var conn: HttpURLConnection? = null
                 try {
-                    val conn = URI.create(apiUrl).toURL().openConnection() as HttpURLConnection
-                    conn.connectTimeout = 8000
-                    conn.readTimeout = 8000
-                    conn.setRequestProperty("User-Agent", "Collecter-HotPatch-Client")
+                    conn = openConnectionWithRedirects(apiUrl, 6000)
                     conn.setRequestProperty("Accept", "application/vnd.github.v3+json")
 
-                    if (conn.responseCode != 200) {
+                    if (conn.responseCode !in 200..299) {
                         lastError = "获取版本信息失败 (HTTP ${conn.responseCode})"
+                        conn.disconnect()
                         continue
                     }
 
                     val jsonStr = conn.inputStream.bufferedReader(StandardCharsets.UTF_8).use { it.readText() }
+                    conn.disconnect()
+
                     val root = JSONObject(jsonStr)
                     val releaseName = root.optString("name", "最新热补丁")
                     val body = root.optString("body", "包含关键性能优化与问题修复")
@@ -67,12 +74,12 @@ object HotUpdateManager {
                     for (i in 0 until assets.length()) {
                         val asset = assets.getJSONObject(i)
                         val name = asset.optString("name", "")
-                        // 匹配形如 collecter-patch-v3.0.1.zip 或 patch-v3.0.1.zip
+                        // 匹配形如 collecter-patch-v4.1.0.zip 或 patch-v4.1.0.zip
                         if (name.contains("patch") && name.endsWith(".zip")) {
                             patchUrl = asset.optString("browser_download_url", "")
                             patchSize = asset.optLong("size", 0L)
                             val match = Regex("v?([0-9]+\\.[0-9]+\\.[0-9]+)").find(name)
-                            patchVer = match?.groupValues?.getOrNull(1) ?: "3.0.1"
+                            patchVer = match?.groupValues?.getOrNull(1) ?: "4.1.0"
                             break
                         }
                     }
@@ -106,6 +113,7 @@ object HotUpdateManager {
                     }
                     return@execute
                 } catch (e: Exception) {
+                    conn?.disconnect()
                     lastError = "网络连接异常: ${e.localizedMessage}"
                 }
             }
@@ -122,66 +130,127 @@ object HotUpdateManager {
         onProgress: (percent: Int, speedKb: Long) -> Unit,
         onCompleted: (Boolean, String?) -> Unit
     ) {
+        System.setProperty("java.net.preferIPv4Stack", "true")
+        System.setProperty("java.net.preferIPv6Addresses", "false")
+
         executor.execute {
-            var tempFile: File? = null
-            try {
-                val tempDir = File(context.cacheDir, "patch_download").apply { mkdirs() }
-                tempFile = File(tempDir, "patch_${info.patchVersion}.zip")
+            val tempDir = File(context.cacheDir, "patch_download").apply { mkdirs() }
+            val tempFile = File(tempDir, "patch_${info.patchVersion}.zip")
 
-                val conn = URI.create(info.downloadUrl).toURL().openConnection() as HttpURLConnection
-                conn.connectTimeout = 10000
-                conn.readTimeout = 10000
-                conn.setRequestProperty("User-Agent", "Collecter-HotPatch-Client")
+            val urlsToTry = listOf(
+                "https://ghfast.top/${info.downloadUrl}",
+                "https://mirror.ghproxy.com/${info.downloadUrl}",
+                "https://ghproxy.net/${info.downloadUrl}",
+                info.downloadUrl
+            )
 
-                val totalBytes = if (conn.contentLengthLong > 0) conn.contentLengthLong else info.sizeBytes
-                val inStream = conn.inputStream
-                val outStream = FileOutputStream(tempFile)
+            var lastError = "下载失败"
+            var success = false
 
-                val buffer = ByteArray(8192)
-                var downloadedBytes = 0L
-                var lastTime = System.currentTimeMillis()
-                var bytesInSecond = 0L
+            for (urlStr in urlsToTry) {
+                var conn: HttpURLConnection? = null
+                try {
+                    if (tempFile.exists()) tempFile.delete()
 
-                var read: Int
-                while (inStream.read(buffer).also { read = it } != -1) {
-                    outStream.write(buffer, 0, read)
-                    downloadedBytes += read
-                    bytesInSecond += read
+                    conn = openConnectionWithRedirects(urlStr, 7000)
+                    if (conn.responseCode !in 200..299) {
+                        lastError = "HTTP ${conn.responseCode}"
+                        conn.disconnect()
+                        continue
+                    }
 
-                    val now = System.currentTimeMillis()
-                    if (now - lastTime >= 500) {
-                        val speedKb = (bytesInSecond * 1000) / ((now - lastTime) * 1024)
-                        val percent = if (totalBytes > 0) ((downloadedBytes * 100) / totalBytes).toInt() else 0
-                        (context as? Activity)?.runOnUiThread {
-                            onProgress(percent.coerceIn(0, 100), speedKb)
+                    val totalBytes = if (conn.contentLengthLong > 0) conn.contentLengthLong else info.sizeBytes
+                    val inStream = conn.inputStream
+                    val outStream = FileOutputStream(tempFile)
+
+                    val buffer = ByteArray(8192)
+                    var downloadedBytes = 0L
+                    var lastTime = System.currentTimeMillis()
+                    var bytesInSecond = 0L
+
+                    var read: Int
+                    while (inStream.read(buffer).also { read = it } != -1) {
+                        outStream.write(buffer, 0, read)
+                        downloadedBytes += read
+                        bytesInSecond += read
+
+                        val now = System.currentTimeMillis()
+                        if (now - lastTime >= 400 || downloadedBytes == totalBytes) {
+                            val speedKb = (bytesInSecond * 1000) / ((now - lastTime).coerceAtLeast(1) * 1024)
+                            val percent = if (totalBytes > 0) ((downloadedBytes * 100) / totalBytes).toInt() else 0
+                            (context as? Activity)?.runOnUiThread {
+                                onProgress(percent.coerceIn(0, 100), speedKb)
+                            }
+                            lastTime = now
+                            bytesInSecond = 0L
                         }
-                        lastTime = now
-                        bytesInSecond = 0L
                     }
-                }
 
-                outStream.flush()
-                outStream.close()
-                inStream.close()
+                    outStream.flush()
+                    outStream.close()
+                    inStream.close()
+                    conn.disconnect()
 
-                // 应用热补丁
-                val success = HotPatchEngine.applyPatchZip(context, tempFile)
-                tempFile.delete()
+                    // 应用热补丁
+                    val patchApplied = HotPatchEngine.applyPatchZip(context, tempFile)
+                    tempFile.delete()
 
-                (context as? Activity)?.runOnUiThread {
-                    if (success) {
-                        onCompleted(true, null)
+                    if (patchApplied) {
+                        success = true
+                        (context as? Activity)?.runOnUiThread {
+                            onCompleted(true, null)
+                        }
+                        break
                     } else {
-                        onCompleted(false, "补丁包校验或解压失败")
+                        lastError = "补丁包校验或解压失败"
                     }
+                } catch (e: Exception) {
+                    conn?.disconnect()
+                    tempFile.delete()
+                    lastError = e.localizedMessage ?: "网络连接异常"
                 }
-            } catch (e: Exception) {
-                tempFile?.delete()
+            }
+
+            if (!success) {
+                tempFile.delete()
                 (context as? Activity)?.runOnUiThread {
-                    onCompleted(false, "下载失败: ${e.localizedMessage}")
+                    onCompleted(false, "下载失败: $lastError\n请检查网络或稍后重试")
                 }
             }
         }
+    }
+
+    /** 智能跟随重定向的 HTTP 连接器 */
+    private fun openConnectionWithRedirects(initialUrl: String, timeoutMs: Int): HttpURLConnection {
+        var currentUrl = initialUrl
+        var redirects = 0
+        while (redirects < 5) {
+            val url = URI.create(currentUrl).toURL()
+            val conn = (url.openConnection() as HttpURLConnection).apply {
+                connectTimeout = timeoutMs
+                readTimeout = timeoutMs
+                instanceFollowRedirects = true
+                setRequestProperty("User-Agent", "Collecter-HotPatch-Client/4.1.0 (Android; Mobile)")
+                setRequestProperty("Accept", "*/*")
+            }
+
+            val code = conn.responseCode
+            if (code in listOf(HttpURLConnection.HTTP_MOVED_PERM, HttpURLConnection.HTTP_MOVED_TEMP, HttpURLConnection.HTTP_SEE_OTHER, 307, 308)) {
+                val location = conn.getHeaderField("Location")
+                conn.disconnect()
+                if (!location.isNullOrBlank()) {
+                    currentUrl = if (location.startsWith("http://") || location.startsWith("https://")) {
+                        location
+                    } else {
+                        URI.create(currentUrl).resolve(location).toString()
+                    }
+                    redirects++
+                    continue
+                }
+            }
+            return conn
+        }
+        throw Exception("重定向过多 ($initialUrl)")
     }
 
     fun checkSilently(activity: Activity) {

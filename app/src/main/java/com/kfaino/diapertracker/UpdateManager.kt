@@ -119,9 +119,10 @@ object UpdateManager {
 
                 val tempFile = File(saveDir, "Collecter_${release.versionName}.apk.tmp")
                 val urlsToTry = listOf(
-                    release.apkDownloadUrl,
                     "https://ghfast.top/${release.apkDownloadUrl}",
-                    "https://mirror.ghproxy.com/${release.apkDownloadUrl}"
+                    "https://mirror.ghproxy.com/${release.apkDownloadUrl}",
+                    "https://ghproxy.net/${release.apkDownloadUrl}",
+                    release.apkDownloadUrl
                 )
 
                 for (currentUrl in urlsToTry) {
@@ -211,9 +212,10 @@ object UpdateManager {
         System.setProperty("java.net.preferIPv6Addresses", "false")
 
         val apiUrls = listOf(
-            "https://api.github.com/repos/$repo/releases/latest",
             "https://ghfast.top/https://api.github.com/repos/$repo/releases/latest",
-            "https://mirror.ghproxy.com/https://api.github.com/repos/$repo/releases/latest"
+            "https://mirror.ghproxy.com/https://api.github.com/repos/$repo/releases/latest",
+            "https://ghproxy.net/https://api.github.com/repos/$repo/releases/latest",
+            "https://api.github.com/repos/$repo/releases/latest"
         )
 
         var lastException: Exception? = null
@@ -397,9 +399,10 @@ object UpdateManager {
         val apkFile = File(saveDir, "Collecter_${release.versionName}.apk")
 
         val urlsToTry = listOf(
-            release.apkDownloadUrl,
             "https://ghfast.top/${release.apkDownloadUrl}",
-            "https://mirror.ghproxy.com/${release.apkDownloadUrl}"
+            "https://mirror.ghproxy.com/${release.apkDownloadUrl}",
+            "https://ghproxy.net/${release.apkDownloadUrl}",
+            release.apkDownloadUrl
         )
 
         downloadThread = Thread {
