@@ -13,6 +13,8 @@
     <color name="accent_blue">#0284C7</color>
     <color name="accent_surface">#FFFBEB</color>
     <color name="accent_surface_stroke">#FDE68A</color>
+    <color name="warning">#F59E0B</color>
+    <color name="success">#10B981</color>
 
     <!-- 减少/出库 警示红 -->
     <color name="danger">#EF4444</color>

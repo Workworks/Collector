@@ -2,6 +2,17 @@ package com.kfaino.diapertracker
 
 import java.util.UUID
 
+/** 物品时光胶囊与生活回忆瞬间 */
+data class ItemMemoryMoment(
+    val id: String = UUID.randomUUID().toString(),
+    val title: String = "",                         // 时光事件标题 (如 "带它登顶泰山看日出", "录制第一支吉他弹唱")
+    val story: String = "",                         // 回忆故事 / 心得随笔
+    val photoPath: String = "",                     // 故事现场实拍/相片留存
+    val date: Long = System.currentTimeMillis(),    // 发生日期
+    val moodEmoji: String = "✨",                   // 心情/氛围 Emoji (如 "🏔️", "❤️", "🎂", "🎸", "🚗")
+    val rating: Int = 5                             // 心动/真香指数 (1~5星)
+)
+
 /** 物品挪动与位置变迁历史记录 */
 data class LocationMovement(
     val location: String,                           // 放置地点名称 (如 "主卧衣柜二层")
@@ -66,8 +77,38 @@ data class Entry(
     val receiptPath: String = "",                   // 购买发票/凭证/保修卡照片文件名/相对路径
 
     // 6. 安全库存预警体系
-    val minStockThreshold: Int = 0                  // 最低安全库存预警阈值 (0=不预警, >0=当在库数量<=该值时触发补货清单)
+    val minStockThreshold: Int = 0,                 // 最低安全库存预警阈值 (0=不预警, >0=当在库数量<=该值时触发补货清单)
+
+    // 7. 数字与电子资产体系 (Digital Assets & Electronic Albums)
+    val isDigital: Boolean = false,                 // 是否为数字/电子资产 (相册集/软件Key/域名/数字藏品/教程)
+    val digitalType: String = "album",             // "album" (照片相册/回忆集), "software" (软件/游戏/授权Key), "domain" (域名/网站), "doc" (电子书/课程/资料包)
+    val digitalUrl: String = "",                    // 访问链接 / 网盘存储路径 / 本地路径
+    val digitalSize: String = "",                   // 容量大小 (如 "128 GB", "4.2 MB")
+    val digitalLicenseKey: String = "",             // 激活码 / 许可证 / 授权凭证 (可快速一键复制)
+    val backupStatus: String = "local",             // "local" (仅本地), "synced" (已备份网盘/NAS), "unbacked" (未备份)
+
+    // 8. 物品时光胶囊与回忆录 (Life Memory Moments)
+    val memoryMoments: List<ItemMemoryMoment> = emptyList() // 时光回忆里程碑列表
 ) {
+    /** 获取数字资产类型描述 */
+    fun getDigitalTypeDisplayName(): String {
+        return when (digitalType) {
+            "album" -> "📷 照片相册集"
+            "software" -> "🔑 软件/游戏授权"
+            "domain" -> "🌐 域名/网站"
+            "doc" -> "📚 文档/课程资料"
+            else -> "💾 数字资产"
+        }
+    }
+
+    /** 获取时光胶囊总回忆数 */
+    fun getMemoryCount(): Int = memoryMoments.size
+
+    /** 获取平均心动真香评分 */
+    fun getAverageRating(): Float {
+        if (memoryMoments.isEmpty()) return 5.0f
+        return memoryMoments.map { it.rating }.average().toFloat()
+    }
     /** 是否处于低库存缺货预警状态 */
     fun isLowStock(): Boolean {
         return isIn && !isRetired && minStockThreshold > 0 && qty <= minStockThreshold

@@ -1,0 +1,260 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:background="@drawable/bg_dialog_card"
+    android:padding="20dp">
+
+    <!-- 1. 顶栏：标题与关闭 -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:layout_marginBottom="12dp">
+
+        <TextView
+            android:layout_width="38dp"
+            android:layout_height="38dp"
+            android:text="💾"
+            android:textSize="20sp"
+            android:gravity="center"
+            android:background="@drawable/bg_icon_circle_soft"
+            android:layout_marginEnd="10dp" />
+
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:orientation="vertical">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="数字相册与电子资产展厅"
+                android:textSize="18sp"
+                android:textStyle="bold"
+                android:textColor="@color/text_primary"
+                android:fontFamily="sans-serif-medium" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="照片回忆相册、正版软件Key、域名与数字资料库"
+                android:textSize="12sp"
+                android:textColor="@color/text_secondary"
+                android:layout_marginTop="2dp" />
+        </LinearLayout>
+
+        <ImageView
+            android:id="@+id/btn_close_digital_vault"
+            android:layout_width="32dp"
+            android:layout_height="32dp"
+            android:src="@drawable/ic_close"
+            android:padding="6dp"
+            app:tint="@color/text_secondary"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:contentDescription="关闭" />
+    </LinearLayout>
+
+    <!-- 2. 统计卡片 (总数、总容量、备份健康度) -->
+    <com.google.android.material.card.MaterialCardView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        app:cardCornerRadius="14dp"
+        app:cardElevation="0dp"
+        app:cardBackgroundColor="@color/card"
+        app:strokeColor="@color/card_border"
+        app:strokeWidth="1dp"
+        android:layout_marginBottom="12dp">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:padding="12dp"
+            android:gravity="center_vertical">
+
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:gravity="center"
+                android:orientation="vertical">
+
+                <TextView
+                    android:id="@+id/tv_digital_total_count"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="8 项"
+                    android:textSize="16sp"
+                    android:textStyle="bold"
+                    android:textColor="@color/text_primary" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="数字资产总数"
+                    android:textSize="11sp"
+                    android:textColor="@color/text_secondary"
+                    android:layout_marginTop="2dp" />
+            </LinearLayout>
+
+            <View
+                android:layout_width="1dp"
+                android:layout_height="28dp"
+                android:background="@color/card_border" />
+
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:gravity="center"
+                android:orientation="vertical">
+
+                <TextView
+                    android:id="@+id/tv_digital_total_size"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="384 GB"
+                    android:textSize="16sp"
+                    android:textStyle="bold"
+                    android:textColor="@color/primary" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="已登记容量"
+                    android:textSize="11sp"
+                    android:textColor="@color/text_secondary"
+                    android:layout_marginTop="2dp" />
+            </LinearLayout>
+
+            <View
+                android:layout_width="1dp"
+                android:layout_height="28dp"
+                android:background="@color/card_border" />
+
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:gravity="center"
+                android:orientation="vertical">
+
+                <TextView
+                    android:id="@+id/tv_digital_backup_rate"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="100%"
+                    android:textSize="16sp"
+                    android:textStyle="bold"
+                    android:textColor="@color/success" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="云端备份率"
+                    android:textSize="11sp"
+                    android:textColor="@color/text_secondary"
+                    android:layout_marginTop="2dp" />
+            </LinearLayout>
+        </LinearLayout>
+    </com.google.android.material.card.MaterialCardView>
+
+    <!-- 3. 类型切换 Chip 栏 -->
+    <HorizontalScrollView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:scrollbars="none"
+        android:layout_marginBottom="10dp">
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
+
+            <TextView
+                android:id="@+id/tab_digital_all"
+                android:layout_width="wrap_content"
+                android:layout_height="32dp"
+                android:text="全部"
+                android:textSize="12sp"
+                android:textStyle="bold"
+                android:gravity="center"
+                android:paddingHorizontal="14dp"
+                android:background="@drawable/bg_chip_active"
+                android:textColor="#FFFFFF"
+                android:layout_marginEnd="6dp" />
+
+            <TextView
+                android:id="@+id/tab_digital_album"
+                android:layout_width="wrap_content"
+                android:layout_height="32dp"
+                android:text="📷 相册回忆集"
+                android:textSize="12sp"
+                android:gravity="center"
+                android:paddingHorizontal="12dp"
+                android:background="@drawable/bg_chip_inactive"
+                android:textColor="@color/text_secondary"
+                android:layout_marginEnd="6dp" />
+
+            <TextView
+                android:id="@+id/tab_digital_software"
+                android:layout_width="wrap_content"
+                android:layout_height="32dp"
+                android:text="🔑 软件/游戏Key"
+                android:textSize="12sp"
+                android:gravity="center"
+                android:paddingHorizontal="12dp"
+                android:background="@drawable/bg_chip_inactive"
+                android:textColor="@color/text_secondary"
+                android:layout_marginEnd="6dp" />
+
+            <TextView
+                android:id="@+id/tab_digital_domain"
+                android:layout_width="wrap_content"
+                android:layout_height="32dp"
+                android:text="🌐 域名/文档"
+                android:textSize="12sp"
+                android:gravity="center"
+                android:paddingHorizontal="12dp"
+                android:background="@drawable/bg_chip_inactive"
+                android:textColor="@color/text_secondary" />
+        </LinearLayout>
+    </HorizontalScrollView>
+
+    <!-- 4. 数字资产列表滚动容器 -->
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="280dp"
+        android:overScrollMode="never"
+        android:scrollbars="vertical"
+        android:layout_marginBottom="14dp">
+
+        <LinearLayout
+            android:id="@+id/digital_assets_list_container"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+
+            <!-- 动态注入数字资产卡片 -->
+        </LinearLayout>
+    </ScrollView>
+
+    <!-- 5. 底部添加按钮 -->
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/btn_add_new_digital_asset"
+        android:layout_width="match_parent"
+        android:layout_height="46dp"
+        android:text="➕ 登记数字相册 / 电子资产"
+        android:textSize="14sp"
+        android:textStyle="bold"
+        android:textColor="#FFFFFF"
+        android:backgroundTint="@color/primary"
+        app:cornerRadius="12dp" />
+
+</LinearLayout>

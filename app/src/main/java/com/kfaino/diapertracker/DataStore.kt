@@ -78,6 +78,25 @@ class DataStore(private val ctx: Context) {
                 val ts = o.optLong("ts", System.currentTimeMillis())
                 val pDate = o.optLong("p_date", ts)
 
+                val momentsArr = o.optJSONArray("moments")
+                val momentsList = mutableListOf<ItemMemoryMoment>()
+                if (momentsArr != null) {
+                    for (m in 0 until momentsArr.length()) {
+                        val mo = momentsArr.getJSONObject(m)
+                        momentsList.add(
+                            ItemMemoryMoment(
+                                id = mo.optString("id", java.util.UUID.randomUUID().toString()),
+                                title = mo.optString("title", ""),
+                                story = mo.optString("story", ""),
+                                photoPath = mo.optString("photo", ""),
+                                date = mo.optLong("date", System.currentTimeMillis()),
+                                moodEmoji = mo.optString("emoji", "✨"),
+                                rating = mo.optInt("rating", 5)
+                            )
+                        )
+                    }
+                }
+
                 result.add(
                     Entry(
                         id = o.optString("id", java.util.UUID.randomUUID().toString()),
@@ -117,7 +136,14 @@ class DataStore(private val ctx: Context) {
                         expiryDate = o.optLong("e_date", 0L),
                         photoPath = o.optString("img_p", ""),
                         receiptPath = o.optString("rec_p", ""),
-                        minStockThreshold = o.optInt("min_th", 0)
+                        minStockThreshold = o.optInt("min_th", 0),
+                        isDigital = o.optBoolean("is_dig", false),
+                        digitalType = o.optString("dig_type", "album"),
+                        digitalUrl = o.optString("dig_url", ""),
+                        digitalSize = o.optString("dig_sz", ""),
+                        digitalLicenseKey = o.optString("dig_key", ""),
+                        backupStatus = o.optString("bak_st", "local"),
+                        memoryMoments = momentsList
                     )
                 )
             }
@@ -141,6 +167,20 @@ class DataStore(private val ctx: Context) {
                         .put("py", h.pinY.toDouble())
                         .put("ts", h.movedAt)
                         .put("note", h.note)
+                )
+            }
+
+            val momentsArr = JSONArray()
+            for (m in e.memoryMoments) {
+                momentsArr.put(
+                    JSONObject()
+                        .put("id", m.id)
+                        .put("title", m.title)
+                        .put("story", m.story)
+                        .put("photo", m.photoPath)
+                        .put("date", m.date)
+                        .put("emoji", m.moodEmoji)
+                        .put("rating", m.rating)
                 )
             }
 
@@ -184,6 +224,13 @@ class DataStore(private val ctx: Context) {
                     .put("img_p", e.photoPath)
                     .put("rec_p", e.receiptPath)
                     .put("min_th", e.minStockThreshold)
+                    .put("is_dig", e.isDigital)
+                    .put("dig_type", e.digitalType)
+                    .put("dig_url", e.digitalUrl)
+                    .put("dig_sz", e.digitalSize)
+                    .put("dig_key", e.digitalLicenseKey)
+                    .put("bak_st", e.backupStatus)
+                    .put("moments", momentsArr)
             )
         }
         prefs.edit().putString(keyEntries, arr.toString()).apply()
@@ -891,5 +938,53 @@ class DataStore(private val ctx: Context) {
         sb.append("----------------------------\n")
         sb.append("共计 ${lowStock.size} 项物品急需补货采购")
         return sb.toString()
+    }
+
+    // ==================== 🎞️ 时光胶囊与数字资产扩展管理 ====================
+
+    /** 获取所有数字与电子资产（电子相册、软件授权、数字文档等） */
+    fun getDigitalAssets(): List<Entry> {
+        return loadAll().filter { it.isDigital }
+    }
+
+    /** 获取所有带有生活时光回忆瞬间的资产 */
+    fun getMemoryAssets(): List<Entry> {
+        return loadAll().filter { it.memoryMoments.isNotEmpty() }
+    }
+
+    /** 为指定资产追加一条时光回忆瞬间 */
+    fun addMemoryMoment(entryId: String, moment: ItemMemoryMoment): Boolean {
+        val all = loadAll().toMutableList()
+        val idx = all.indexOfFirst { it.id == entryId }
+        if (idx == -1) return false
+        val entry = all[idx]
+        val newMoments = (entry.memoryMoments + moment).sortedByDescending { it.date }
+        all[idx] = entry.copy(memoryMoments = newMoments)
+        saveAll(all)
+        return true
+    }
+
+    /** 更新指定资产的某条时光回忆瞬间 */
+    fun updateMemoryMoment(entryId: String, moment: ItemMemoryMoment): Boolean {
+        val all = loadAll().toMutableList()
+        val idx = all.indexOfFirst { it.id == entryId }
+        if (idx == -1) return false
+        val entry = all[idx]
+        val newMoments = entry.memoryMoments.map { if (it.id == moment.id) moment else it }.sortedByDescending { it.date }
+        all[idx] = entry.copy(memoryMoments = newMoments)
+        saveAll(all)
+        return true
+    }
+
+    /** 删除指定资产的某条时光回忆瞬间 */
+    fun deleteMemoryMoment(entryId: String, momentId: String): Boolean {
+        val all = loadAll().toMutableList()
+        val idx = all.indexOfFirst { it.id == entryId }
+        if (idx == -1) return false
+        val entry = all[idx]
+        val newMoments = entry.memoryMoments.filter { it.id != momentId }
+        all[idx] = entry.copy(memoryMoments = newMoments)
+        saveAll(all)
+        return true
     }
 }

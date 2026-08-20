@@ -83,6 +83,11 @@ class HomeFragment : Fragment() {
             },
             onReceiptClick = { entry ->
                 PhotoPreviewDialog.show(requireActivity(), "${entry.brand} · 购买发票/保修卡凭证", entry.receiptPath)
+            },
+            onCapsuleClick = { entry ->
+                LifeCapsuleDialog.showCapsuleDialog(requireActivity(), store, entry) {
+                    refresh()
+                }
             }
         )
 
@@ -113,32 +118,22 @@ class HomeFragment : Fragment() {
             }
         }
 
-        // 2. 局域网极速互传
-        binding.btnLanSyncTop.applyPressScaleAnimation(0.90f)
-        binding.btnLanSyncTop.setOnClickListener {
-            LanSyncHelper.showLanSyncDialog(requireActivity(), store) {
-                refresh()
-            }
-        }
-
-        // 3. 智能采购清单一键生成与复制
-        binding.btnGenerateReplenishmentList.applyPressScaleAnimation(0.92f)
-        binding.btnGenerateReplenishmentList.setOnClickListener {
-            val text = store.generateReplenishmentListText()
-            val cm = requireContext().getSystemService(android.content.Context.CLIPBOARD_SERVICE) as android.content.ClipboardManager
-            cm.setPrimaryClip(android.content.ClipData.newPlainText("Collecter 待采购清单", text))
-            Toast.makeText(requireContext(), "🎉 智能采购清单已复制到剪贴板！可直接粘贴至微信或购物平台", Toast.LENGTH_LONG).show()
-        }
-
-        // 顶部操作按钮
-        binding.btnSearchItems.applyPressScaleAnimation(0.90f)
+        // 2. 搜索过滤
+        binding.btnSearchItems.applyPressScaleAnimation(0.92f)
         binding.btnSearchItems.setOnClickListener {
             showSearchDialog()
         }
 
-        binding.btnTopAdd.applyPressScaleAnimation(0.90f)
+        // 3. 记一笔快捷入口
+        binding.btnTopAdd.applyPressScaleAnimation(0.92f)
         binding.btnTopAdd.setOnClickListener {
-            (activity as? MainActivity)?.showAddDialog(presetCategory = selectedCategory)
+            if (selectedTab == 2) {
+                DigitalAssetManagerDialog.showAddOrEditDigitalDialog(requireActivity(), store, null) {
+                    refresh()
+                }
+            } else {
+                (activity as? MainActivity)?.showAddDialog(presetCategory = selectedCategory)
+            }
         }
 
         // 折叠 / 展开工具箱 (···)
@@ -189,12 +184,17 @@ class HomeFragment : Fragment() {
             }
         }
 
-        // 分段切换器 (物品 / 订阅)
+        // 分段切换器 (实物 / 数字相册 / 订阅)
         binding.tabItems.applyPressScaleAnimation(0.94f)
+        binding.tabDigitalAssets.applyPressScaleAnimation(0.94f)
         binding.tabSubs.applyPressScaleAnimation(0.94f)
 
         binding.tabItems.setOnClickListener {
             switchMainTab(0)
+        }
+
+        binding.tabDigitalAssets.setOnClickListener {
+            switchMainTab(2)
         }
 
         binding.tabSubs.setOnClickListener {
@@ -204,36 +204,66 @@ class HomeFragment : Fragment() {
 
     private fun switchMainTab(tab: Int) {
         selectedTab = tab
-        if (tab == 0) {
-            // 切换为【物品】
-            binding.tabItems.setBackgroundResource(R.drawable.bg_chip_active)
-            binding.tabItems.backgroundTintList = null
-            binding.tabItems.setTextColor(Color.WHITE)
-            binding.tabItems.paint.isFakeBoldText = true
+        val activeBg = R.drawable.bg_chip_active
+        val transparent = Color.TRANSPARENT
+        val white = Color.WHITE
+        val secColor = ContextCompat.getColor(requireContext(), R.color.text_secondary)
 
-            binding.tabSubs.setBackgroundColor(Color.TRANSPARENT)
-            binding.tabSubs.backgroundTintList = null
-            binding.tabSubs.setTextColor(ContextCompat.getColor(requireContext(), R.color.text_secondary))
-            binding.tabSubs.paint.isFakeBoldText = false
+        when (tab) {
+            0 -> {
+                // 实物 Tab
+                binding.tabItems.setBackgroundResource(activeBg)
+                binding.tabItems.setTextColor(white)
+                binding.tabItems.paint.isFakeBoldText = true
 
-            binding.cardMyAssets.visibility = View.VISIBLE
-            binding.cardMySubscriptions.visibility = View.GONE
-            binding.rvAssetList.adapter = assetAdapter
-        } else {
-            // 切换为【订阅】
-            binding.tabSubs.setBackgroundResource(R.drawable.bg_chip_active)
-            binding.tabSubs.backgroundTintList = null
-            binding.tabSubs.setTextColor(Color.WHITE)
-            binding.tabSubs.paint.isFakeBoldText = true
+                binding.tabDigitalAssets.setBackgroundColor(transparent)
+                binding.tabDigitalAssets.setTextColor(secColor)
+                binding.tabDigitalAssets.paint.isFakeBoldText = false
 
-            binding.tabItems.setBackgroundColor(Color.TRANSPARENT)
-            binding.tabItems.backgroundTintList = null
-            binding.tabItems.setTextColor(ContextCompat.getColor(requireContext(), R.color.text_secondary))
-            binding.tabItems.paint.isFakeBoldText = false
+                binding.tabSubs.setBackgroundColor(transparent)
+                binding.tabSubs.setTextColor(secColor)
+                binding.tabSubs.paint.isFakeBoldText = false
 
-            binding.cardMyAssets.visibility = View.GONE
-            binding.cardMySubscriptions.visibility = View.VISIBLE
-            binding.rvAssetList.adapter = subscriptionAdapter
+                binding.cardMyAssets.visibility = View.VISIBLE
+                binding.cardMySubscriptions.visibility = View.GONE
+                binding.rvAssetList.adapter = assetAdapter
+            }
+            2 -> {
+                // 数字相册 Tab
+                binding.tabDigitalAssets.setBackgroundResource(activeBg)
+                binding.tabDigitalAssets.setTextColor(white)
+                binding.tabDigitalAssets.paint.isFakeBoldText = true
+
+                binding.tabItems.setBackgroundColor(transparent)
+                binding.tabItems.setTextColor(secColor)
+                binding.tabItems.paint.isFakeBoldText = false
+
+                binding.tabSubs.setBackgroundColor(transparent)
+                binding.tabSubs.setTextColor(secColor)
+                binding.tabSubs.paint.isFakeBoldText = false
+
+                binding.cardMyAssets.visibility = View.VISIBLE
+                binding.cardMySubscriptions.visibility = View.GONE
+                binding.rvAssetList.adapter = assetAdapter
+            }
+            else -> {
+                // 订阅 Tab
+                binding.tabSubs.setBackgroundResource(activeBg)
+                binding.tabSubs.setTextColor(white)
+                binding.tabSubs.paint.isFakeBoldText = true
+
+                binding.tabItems.setBackgroundColor(transparent)
+                binding.tabItems.setTextColor(secColor)
+                binding.tabItems.paint.isFakeBoldText = false
+
+                binding.tabDigitalAssets.setBackgroundColor(transparent)
+                binding.tabDigitalAssets.setTextColor(secColor)
+                binding.tabDigitalAssets.paint.isFakeBoldText = false
+
+                binding.cardMyAssets.visibility = View.GONE
+                binding.cardMySubscriptions.visibility = View.VISIBLE
+                binding.rvAssetList.adapter = subscriptionAdapter
+            }
         }
         refresh()
     }
@@ -366,13 +396,20 @@ class HomeFragment : Fragment() {
 
     private fun showAssetMoreMenu(entry: Entry, anchor: View) {
         val popup = PopupMenu(requireContext(), anchor)
-        popup.menu.add(0, 1, 0, if (entry.isRetired) "🟢 恢复为在役状态" else "📦 物品退役与待办归置 (闲鱼/赠送)")
-        popup.menu.add(0, 2, 1, "📍 查看位置轨迹")
-        popup.menu.add(0, 3, 2, "✏️ 编辑物品信息")
-        popup.menu.add(0, 4, 3, "🗑️ 删除此记录")
+        popup.menu.add(0, 5, 0, "🎞️ 时光胶囊与生活画册")
+        popup.menu.add(0, 1, 1, if (entry.isRetired) "🟢 恢复为在役状态" else "📦 物品退役与待办归置 (闲鱼/赠送)")
+        popup.menu.add(0, 2, 2, "📍 查看位置轨迹")
+        popup.menu.add(0, 3, 3, "✏️ 编辑物品信息")
+        popup.menu.add(0, 4, 4, "🗑️ 删除此记录")
 
         popup.setOnMenuItemClickListener { item ->
             when (item.itemId) {
+                5 -> {
+                    LifeCapsuleDialog.showCapsuleDialog(requireActivity(), store, entry) {
+                        refresh()
+                    }
+                    true
+                }
                 1 -> {
                     if (entry.isRetired) {
                         store.setRetired(entry.id, false)
@@ -549,9 +586,35 @@ class HomeFragment : Fragment() {
         }
 
         // 2. 根据选中的 Tab 填充数据
-        if (selectedTab == 0 || isSimple) {
+        if (selectedTab == 2) {
+            // 【📷 数字相册 & 电子资产 Tab】
+            val digitalEntries = allEntries.filter { it.isDigital }
+            val albumCount = digitalEntries.count { it.digitalType == "album" }
+            val softwareCount = digitalEntries.count { it.digitalType == "software" }
+            val otherDigital = digitalEntries.size - albumCount - softwareCount
+            val totalWorth = digitalEntries.sumOf { it.price }
+
+            binding.tvActiveRetiredRatio.text = "$albumCount 相册 / $softwareCount 授权"
+            binding.tvTotalAssetAmount.text = "${digitalEntries.size} 项数字资产"
+            binding.tvTotalDailyCost.text = "¥${String.format(Locale.getDefault(), "%,.2f", totalWorth)}"
+
+            var filtered = digitalEntries
+            if (selectedCategory != null) {
+                filtered = filtered.filter { it.category == selectedCategory }
+            }
+            filtered = when (selectedSortType) {
+                0 -> filtered.sortedByDescending { it.getDaysOwned() }
+                1 -> filtered.sortedByDescending { it.price }
+                else -> filtered.sortedByDescending { it.ts }
+            }
+
+            assetAdapter.submitList(filtered)
+            binding.layoutEmptyAssets.visibility = if (filtered.isEmpty()) View.VISIBLE else View.GONE
+            binding.tvEmptyText.text = "暂无数字相册或电子资产\n点击右上角 + 登记您的第一份数字回忆/授权Key"
+
+        } else if (selectedTab == 0 || isSimple) {
             // 【物品 Tab】
-            val nonSubs = allEntries.filter { !it.isSubscription }
+            val nonSubs = allEntries.filter { !it.isSubscription && !it.isDigital }
             val activeCount = nonSubs.count { !it.isRetired }
             val retiredCount = nonSubs.count { it.isRetired }
             val totalAssetWorth = nonSubs.filter { it.isIn && !it.isRetired }.sumOf { it.price * it.qty }

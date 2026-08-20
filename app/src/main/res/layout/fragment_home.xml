@@ -321,9 +321,9 @@
             android:paddingHorizontal="16dp"
             android:paddingBottom="90dp">
 
-            <!-- 物品 / 订阅 药丸胶囊分段选择器 -->
+            <!-- 物品 / 数字相册 / 订阅 药丸胶囊分段选择器 -->
             <LinearLayout
-                android:layout_width="168dp"
+                android:layout_width="250dp"
                 android:layout_height="38dp"
                 android:layout_marginTop="8dp"
                 android:layout_marginBottom="14dp"
@@ -339,11 +339,25 @@
                     android:layout_height="match_parent"
                     android:layout_weight="1"
                     android:gravity="center"
-                    android:text="物品"
-                    android:textSize="14sp"
+                    android:text="实物"
+                    android:textSize="13sp"
                     android:textStyle="bold"
                     android:textColor="#FFFFFF"
                     android:background="@drawable/bg_chip_active"
+                    android:clickable="true"
+                    android:focusable="true" />
+
+                <!-- 数字相册 Tab -->
+                <TextView
+                    android:id="@+id/tab_digital_assets"
+                    android:layout_width="0dp"
+                    android:layout_height="match_parent"
+                    android:layout_weight="1.3"
+                    android:gravity="center"
+                    android:text="📷 数字相册"
+                    android:textSize="13sp"
+                    android:textColor="@color/text_secondary"
+                    android:background="@android:color/transparent"
                     android:clickable="true"
                     android:focusable="true" />
 
@@ -355,7 +369,7 @@
                     android:layout_weight="1"
                     android:gravity="center"
                     android:text="订阅"
-                    android:textSize="14sp"
+                    android:textSize="13sp"
                     android:textColor="@color/text_secondary"
                     android:background="@android:color/transparent"
                     android:clickable="true"

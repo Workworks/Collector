@@ -173,6 +173,24 @@
                 android:layout_height="1dp"
                 android:layout_weight="1" />
 
+            <!-- 时光胶囊回忆徽章 -->
+            <TextView
+                android:id="@+id/item_capsule_badge"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginEnd="6dp"
+                android:paddingHorizontal="7dp"
+                android:paddingVertical="3dp"
+                android:background="@drawable/bg_chip_active"
+                android:backgroundTint="@color/input_bg"
+                android:text="🎞️ 回忆"
+                android:textSize="11sp"
+                android:textColor="@color/primary"
+                android:textStyle="bold"
+                android:clickable="true"
+                android:focusable="true"
+                android:visibility="gone" />
+
             <!-- 发票凭证快捷徽章 -->
             <TextView
                 android:id="@+id/item_receipt_badge"

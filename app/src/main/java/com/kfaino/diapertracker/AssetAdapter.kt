@@ -18,7 +18,8 @@ class AssetAdapter(
     private val onMoreClick: (Entry, View) -> Unit,
     private val onLocationClick: ((Entry) -> Unit)? = null,
     private val onPhotoClick: ((Entry) -> Unit)? = null,
-    private val onReceiptClick: ((Entry) -> Unit)? = null
+    private val onReceiptClick: ((Entry) -> Unit)? = null,
+    private val onCapsuleClick: ((Entry) -> Unit)? = null
 ) : RecyclerView.Adapter<AssetAdapter.VH>() {
 
     private var items: List<Entry> = emptyList()
@@ -43,7 +44,16 @@ class AssetAdapter(
         b.btnItemMore.setOnClickListener { onMoreClick(entry, it) }
 
         // 1. 图标/实物缩略图
-        val emoji = getCategoryEmoji(entry.category)
+        val emoji = if (entry.isDigital) {
+            when (entry.digitalType) {
+                "album" -> "📷"
+                "software" -> "🔑"
+                "domain" -> "🌐"
+                else -> "📚"
+            }
+        } else {
+            getCategoryEmoji(entry.category)
+        }
         b.itemIconBadge.text = emoji
 
         if (entry.photoPath.isNotBlank()) {
@@ -80,44 +90,69 @@ class AssetAdapter(
             b.itemDaysOwned.setTextColor(ContextCompat.getColor(ctx, R.color.text_primary))
         }
 
-        // 4. 按物品管理类型（折旧 / 保质期 / 长期耐用 / 消耗品）差异化展示指标
+        // 4. 按物品管理类型（数字资产 / 折旧 / 保质期 / 长期耐用 / 消耗品）差异化展示指标
         val totalVal = entry.price * entry.qty
         b.itemOriginalPrice.text = "¥${String.format(Locale.getDefault(), "%,.2f", totalVal)}"
 
-        when (entry.assetType) {
-            "expiring" -> {
-                // 保质期物品：显示到期倒计时与到期日期，不显示折旧费
-                if (entry.expiryDate > 0) {
-                    val statusText = entry.getExpiryStatusText()
-                    b.itemDaysOwned.text = statusText
-                    b.itemDaysLabel.text = ""
-                    val expDateStr = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(Date(entry.expiryDate))
-                    b.itemDailyCost.text = "到期: $expDateStr"
-                } else {
-                    b.itemDaysOwned.text = "保质期"
-                    b.itemDaysLabel.text = ""
-                    b.itemDailyCost.text = "未设到期日"
+        if (entry.isDigital) {
+            b.itemDaysOwned.text = if (entry.digitalSize.isNotBlank()) entry.digitalSize else "数字"
+            b.itemDaysLabel.text = ""
+            b.itemDailyCost.text = entry.getDigitalTypeDisplayName()
+        } else {
+            when (entry.assetType) {
+                "expiring" -> {
+                    // 保质期物品：显示到期倒计时与到期日期，不显示折旧费
+                    if (entry.expiryDate > 0) {
+                        val statusText = entry.getExpiryStatusText()
+                        b.itemDaysOwned.text = statusText
+                        b.itemDaysLabel.text = ""
+                        val expDateStr = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(Date(entry.expiryDate))
+                        b.itemDailyCost.text = "到期: $expDateStr"
+                    } else {
+                        b.itemDaysOwned.text = "保质期"
+                        b.itemDaysLabel.text = ""
+                        b.itemDailyCost.text = "未设到期日"
+                    }
+                }
+                "durable" -> {
+                    // 长期耐用品：显示拥有天数，不计折旧
+                    b.itemDaysOwned.text = "${entry.getDaysOwned()}"
+                    b.itemDaysLabel.text = " 天"
+                    b.itemDailyCost.text = "🛋️ 长期耐用品"
+                }
+                "consumable" -> {
+                    // 日常消耗品：显示库存数量
+                    b.itemDaysOwned.text = "${entry.qty}"
+                    b.itemDaysLabel.text = " ${entry.unit}"
+                    b.itemDailyCost.text = "📦 日常耗材"
+                }
+                else -> {
+                    // 折旧资产 (depreciating)：显示拥有天数与日均折旧成本
+                    b.itemDaysOwned.text = "${entry.getDaysOwned()}"
+                    b.itemDaysLabel.text = " 天"
+                    val dailyCost = entry.getDailyCost()
+                    b.itemDailyCost.text = "¥${String.format(Locale.getDefault(), "%.2f", dailyCost)}/天"
                 }
             }
-            "durable" -> {
-                // 长期耐用品：显示拥有天数，不计折旧
-                b.itemDaysOwned.text = "${entry.getDaysOwned()}"
-                b.itemDaysLabel.text = " 天"
-                b.itemDailyCost.text = "🛋️ 长期耐用品"
+        }
+
+        // 4.5. 时光胶囊回忆徽章
+        val mCount = entry.memoryMoments.size
+        if (mCount > 0 || entry.isDigital) {
+            b.itemCapsuleBadge.visibility = View.VISIBLE
+            b.itemCapsuleBadge.text = if (mCount > 0) "🎞️ $mCount 段回忆" else "🎞️ 写回忆"
+            b.itemCapsuleBadge.applyPressScaleAnimation(0.92f)
+            b.itemCapsuleBadge.setOnClickListener {
+                onCapsuleClick?.invoke(entry) ?: run {
+                    (ctx as? Activity)?.let { act ->
+                        LifeCapsuleDialog.showCapsuleDialog(act, DataStore(ctx), entry) {
+                            // refresh handled outside
+                        }
+                    }
+                }
             }
-            "consumable" -> {
-                // 日常消耗品：显示库存数量
-                b.itemDaysOwned.text = "${entry.qty}"
-                b.itemDaysLabel.text = " ${entry.unit}"
-                b.itemDailyCost.text = "📦 日常耗材"
-            }
-            else -> {
-                // 折旧资产 (depreciating)：显示拥有天数与日均折旧成本
-                b.itemDaysOwned.text = "${entry.getDaysOwned()}"
-                b.itemDaysLabel.text = " 天"
-                val dailyCost = entry.getDailyCost()
-                b.itemDailyCost.text = "¥${String.format(Locale.getDefault(), "%.2f", dailyCost)}/天"
-            }
+        } else {
+            b.itemCapsuleBadge.visibility = View.GONE
         }
 
         // 5. 发票凭证快捷徽章

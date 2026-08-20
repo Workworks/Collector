@@ -68,6 +68,59 @@ object InteractiveGuideTour {
         val store = DataStore(activity)
 
         when (featureKey) {
+            "life_capsule" -> {
+                activity.navigateToTab(0)
+                activity.binding.root.postDelayed({
+                    val target = activity.findViewById<View>(R.id.item_capsule_badge)
+                        ?: activity.findViewById<View>(R.id.rv_asset_list)
+                        ?: activity.binding.navHome
+                    overlay.showStep(
+                        stepIndex = 1,
+                        totalSteps = 1,
+                        title = "🎞️ 物品时光胶囊与生活画册回忆录",
+                        desc = "点击卡片上的「🎞️ 回忆」或更多菜单中的「时光胶囊」，您可以为该物品记录生活高光故事、发生日期与 1~5 星真香体验，更可一键导出 1080P 高清拍立得长图海报！",
+                        actionHint = "👉 点击高亮卡片体验时光胶囊回忆流与画册生成",
+                        targetView = target,
+                        onNext = {
+                            stopTour(activity)
+                            val firstEntry = store.loadAll().firstOrNull()
+                            if (firstEntry != null) {
+                                LifeCapsuleDialog.showCapsuleDialog(activity, store, firstEntry) {}
+                            } else {
+                                Toast.makeText(activity, "请先记一笔物品以体验时光胶囊", Toast.LENGTH_SHORT).show()
+                            }
+                        },
+                        onExit = { stopTour(activity) }
+                    )
+                }, 200)
+            }
+
+            "digital_vault" -> {
+                activity.navigateToTab(0)
+                activity.binding.root.postDelayed({
+                    val target = activity.findViewById<View>(R.id.tab_digital_assets) ?: activity.binding.navHome
+                    overlay.showStep(
+                        stepIndex = 1,
+                        totalSteps = 1,
+                        title = "📷 数字相册与电子资产专属展厅",
+                        desc = "点击「📷 数字相册」切换至数字资产专属展厅！支持珍贵照片回忆相册、软件授权Key、域名与数字资料库集中归档、容量统计与备份追踪！",
+                        actionHint = "👉 请点击「📷 数字相册」或点击完成",
+                        targetView = target,
+                        onNext = {
+                            stopTour(activity)
+                            DigitalAssetManagerDialog.showDigitalVaultDialog(activity, store) {}
+                        },
+                        onExit = { stopTour(activity) },
+                        onTargetClick = {
+                            Handler(Looper.getMainLooper()).postDelayed({
+                                stopTour(activity)
+                                DigitalAssetManagerDialog.showDigitalVaultDialog(activity, store) {}
+                            }, 300)
+                        }
+                    )
+                }, 200)
+            }
+
             "ai_concierge" -> {
                 activity.navigateToTab(0)
                 activity.binding.root.postDelayed({
