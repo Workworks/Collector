@@ -4,6 +4,7 @@ import android.content.Context
 import androidx.appcompat.app.AppCompatDelegate
 import org.json.JSONArray
 import org.json.JSONObject
+import java.util.UUID
 
 /** 基于 SharedPreferences 的高可用持久化层，管理物品折旧、在役/退役待办归置、周期订阅资产与空间位置 */
 class DataStore(private val ctx: Context) {
@@ -1144,5 +1145,280 @@ class DataStore(private val ctx: Context) {
         )
         saveAll(all)
         return true
+    }
+
+    // =========================================================================
+    // 🎟️ 第一性原理收纳：时效权益与卡券票据收纳馆 (Voucher & Privilege Vault)
+    // =========================================================================
+
+    private val keyVouchers = "vault_vouchers_v1"
+
+    fun getVouchers(): List<VoucherRecord> {
+        val raw = prefs.getString(keyVouchers, null) ?: return emptyList()
+        return try {
+            val arr = JSONArray(raw)
+            val list = mutableListOf<VoucherRecord>()
+            for (i in 0 until arr.length()) {
+                val o = arr.getJSONObject(i)
+                list.add(
+                    VoucherRecord(
+                        id = o.optString("id", UUID.randomUUID().toString()),
+                        title = o.optString("title", ""),
+                        type = o.optString("type", "coupon"),
+                        valueAmount = o.optDouble("val", 0.0),
+                        minSpend = o.optDouble("min", 0.0),
+                        remainingTimes = o.optInt("rem_t", 1),
+                        totalTimes = o.optInt("tot_t", 1),
+                        startDate = o.optLong("s_date", System.currentTimeMillis()),
+                        expiryDate = o.optLong("e_date", 0L),
+                        code = o.optString("code", ""),
+                        platform = o.optString("plat", ""),
+                        photoPath = o.optString("photo", ""),
+                        notes = o.optString("notes", ""),
+                        isUsed = o.optBoolean("used", false),
+                        usedAt = o.optLong("used_at", 0L)
+                    )
+                )
+            }
+            list
+        } catch (_: Exception) {
+            emptyList()
+        }
+    }
+
+    fun saveVouchers(list: List<VoucherRecord>) {
+        val arr = JSONArray()
+        for (v in list) {
+            arr.put(
+                JSONObject()
+                    .put("id", v.id)
+                    .put("title", v.title)
+                    .put("type", v.type)
+                    .put("val", v.valueAmount)
+                    .put("min", v.minSpend)
+                    .put("rem_t", v.remainingTimes)
+                    .put("tot_t", v.totalTimes)
+                    .put("s_date", v.startDate)
+                    .put("e_date", v.expiryDate)
+                    .put("code", v.code)
+                    .put("plat", v.platform)
+                    .put("photo", v.photoPath)
+                    .put("notes", v.notes)
+                    .put("used", v.isUsed)
+                    .put("used_at", v.usedAt)
+            )
+        }
+        prefs.edit().putString(keyVouchers, arr.toString()).apply()
+    }
+
+    fun addOrUpdateVoucher(voucher: VoucherRecord) {
+        val list = getVouchers().toMutableList()
+        val idx = list.indexOfFirst { it.id == voucher.id }
+        if (idx != -1) {
+            list[idx] = voucher
+        } else {
+            list.add(0, voucher)
+        }
+        saveVouchers(list)
+    }
+
+    fun deleteVoucher(voucherId: String) {
+        val list = getVouchers().filter { it.id != voucherId }
+        saveVouchers(list)
+    }
+
+    /** 次卡一键减扣 1 次 */
+    fun useTimesCardOneTime(voucherId: String): Boolean {
+        val list = getVouchers().toMutableList()
+        val idx = list.indexOfFirst { it.id == voucherId }
+        if (idx == -1) return false
+        val card = list[idx]
+        val newRemaining = (card.remainingTimes - 1).coerceAtLeast(0)
+        val isNowUsed = newRemaining == 0
+        list[idx] = card.copy(
+            remainingTimes = newRemaining,
+            isUsed = isNowUsed,
+            usedAt = if (isNowUsed) System.currentTimeMillis() else card.usedAt
+        )
+        saveVouchers(list)
+        return true
+    }
+
+    /** 标记卡券已核销/已使用 */
+    fun markVoucherUsed(voucherId: String, used: Boolean) {
+        val list = getVouchers().toMutableList()
+        val idx = list.indexOfFirst { it.id == voucherId }
+        if (idx != -1) {
+            list[idx] = list[idx].copy(
+                isUsed = used,
+                usedAt = if (used) System.currentTimeMillis() else 0L
+            )
+            saveVouchers(list)
+        }
+    }
+
+    // =========================================================================
+    // 🪪 第一性原理收纳：家庭多成员证照与敏感凭证 (Family Identity & Safe)
+    // =========================================================================
+
+    private val keyIdentityDocs = "vault_identity_docs_v1"
+
+    fun getIdentityDocs(): List<IdentityDocument> {
+        val raw = prefs.getString(keyIdentityDocs, null) ?: return emptyList()
+        return try {
+            val arr = JSONArray(raw)
+            val list = mutableListOf<IdentityDocument>()
+            for (i in 0 until arr.length()) {
+                val o = arr.getJSONObject(i)
+                list.add(
+                    IdentityDocument(
+                        id = o.optString("id", UUID.randomUUID().toString()),
+                        member = o.optString("mem", "本人"),
+                        docType = o.optString("dtype", "id_card"),
+                        docNumber = o.optString("dnum", ""),
+                        nameOnDoc = o.optString("name", ""),
+                        issueDate = o.optLong("iss_d", 0L),
+                        expiryDate = o.optLong("exp_d", 0L),
+                        frontPhotoPath = o.optString("f_photo", ""),
+                        backPhotoPath = o.optString("b_photo", ""),
+                        issuingAuthority = o.optString("auth", ""),
+                        notes = o.optString("notes", "")
+                    )
+                )
+            }
+            list
+        } catch (_: Exception) {
+            emptyList()
+        }
+    }
+
+    fun saveIdentityDocs(list: List<IdentityDocument>) {
+        val arr = JSONArray()
+        for (d in list) {
+            arr.put(
+                JSONObject()
+                    .put("id", d.id)
+                    .put("mem", d.member)
+                    .put("dtype", d.docType)
+                    .put("dnum", d.docNumber)
+                    .put("name", d.nameOnDoc)
+                    .put("iss_d", d.issueDate)
+                    .put("exp_d", d.expiryDate)
+                    .put("f_photo", d.frontPhotoPath)
+                    .put("b_photo", d.backPhotoPath)
+                    .put("auth", d.issuingAuthority)
+                    .put("notes", d.notes)
+            )
+        }
+        prefs.edit().putString(keyIdentityDocs, arr.toString()).apply()
+    }
+
+    fun addOrUpdateIdentityDoc(doc: IdentityDocument) {
+        val list = getIdentityDocs().toMutableList()
+        val idx = list.indexOfFirst { it.id == doc.id }
+        if (idx != -1) {
+            list[idx] = doc
+        } else {
+            list.add(0, doc)
+        }
+        saveIdentityDocs(list)
+    }
+
+    fun deleteIdentityDoc(docId: String) {
+        val list = getIdentityDocs().filter { it.id != docId }
+        saveIdentityDocs(list)
+    }
+
+    // =========================================================================
+    // 💊 第一性原理收纳：家庭智能健康药箱 (Medicine & Scenario Vault)
+    // =========================================================================
+
+    private val keyMedicines = "vault_medicines_v1"
+
+    fun getMedicines(): List<MedicineRecord> {
+        val raw = prefs.getString(keyMedicines, null) ?: return emptyList()
+        return try {
+            val arr = JSONArray(raw)
+            val list = mutableListOf<MedicineRecord>()
+            for (i in 0 until arr.length()) {
+                val o = arr.getJSONObject(i)
+                list.add(
+                    MedicineRecord(
+                        id = o.optString("id", UUID.randomUUID().toString()),
+                        name = o.optString("name", ""),
+                        category = o.optString("cat", "fever"),
+                        form = o.optString("form", "片剂"),
+                        qty = o.optInt("qty", 1),
+                        unit = o.optString("unit", "盒"),
+                        location = o.optString("loc", "家庭急救药箱"),
+                        dosage = o.optString("dos", ""),
+                        targetAudience = o.optString("aud", "全家通用"),
+                        expiryDate = o.optLong("e_date", 0L),
+                        isOpened = o.optBoolean("opened", false),
+                        openedAt = o.optLong("o_date", 0L),
+                        openedValidityDays = o.optInt("o_days", 0),
+                        photoPath = o.optString("photo", ""),
+                        contraindications = o.optString("contra", "")
+                    )
+                )
+            }
+            list
+        } catch (_: Exception) {
+            emptyList()
+        }
+    }
+
+    fun saveMedicines(list: List<MedicineRecord>) {
+        val arr = JSONArray()
+        for (m in list) {
+            arr.put(
+                JSONObject()
+                    .put("id", m.id)
+                    .put("name", m.name)
+                    .put("cat", m.category)
+                    .put("form", m.form)
+                    .put("qty", m.qty)
+                    .put("unit", m.unit)
+                    .put("loc", m.location)
+                    .put("dos", m.dosage)
+                    .put("aud", m.targetAudience)
+                    .put("e_date", m.expiryDate)
+                    .put("opened", m.isOpened)
+                    .put("o_date", m.openedAt)
+                    .put("o_days", m.openedValidityDays)
+                    .put("photo", m.photoPath)
+                    .put("contra", m.contraindications)
+            )
+        }
+        prefs.edit().putString(keyMedicines, arr.toString()).apply()
+    }
+
+    fun addOrUpdateMedicine(medicine: MedicineRecord) {
+        val list = getMedicines().toMutableList()
+        val idx = list.indexOfFirst { it.id == medicine.id }
+        if (idx != -1) {
+            list[idx] = medicine
+        } else {
+            list.add(0, medicine)
+        }
+        saveMedicines(list)
+    }
+
+    fun deleteMedicine(medicineId: String) {
+        val list = getMedicines().filter { it.id != medicineId }
+        saveMedicines(list)
+    }
+
+    /** 药品开封打卡 */
+    fun markMedicineOpened(medicineId: String) {
+        val list = getMedicines().toMutableList()
+        val idx = list.indexOfFirst { it.id == medicineId }
+        if (idx != -1) {
+            list[idx] = list[idx].copy(
+                isOpened = true,
+                openedAt = System.currentTimeMillis()
+            )
+            saveMedicines(list)
+        }
     }
 }

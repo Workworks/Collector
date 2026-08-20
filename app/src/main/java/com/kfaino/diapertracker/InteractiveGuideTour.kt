@@ -149,6 +149,90 @@ object InteractiveGuideTour {
                 }, 200)
             }
 
+            "voucher_vault" -> {
+                activity.navigateToTab(0)
+                activity.binding.root.postDelayed({
+                    val toolsBar = activity.findViewById<View>(R.id.layout_tools_bar)
+                    toolsBar?.visibility = View.VISIBLE
+                    val target = activity.findViewById<View>(R.id.btn_voucher_vault_top) ?: activity.binding.navHome
+                    overlay.showStep(
+                        stepIndex = 1,
+                        totalSteps = 1,
+                        title = "🎟️ 时效权益与卡券票据收纳馆",
+                        desc = "点击「🎟️ 时效卡券」进入卡券馆！优惠券、代金券、洗车/理发次卡与会员专属权益统一归拢，3天内临期自动置顶强预警，支持次卡一键扣减与券码复制！",
+                        actionHint = "👉 请点击「🎟️ 时效卡券」进入收纳馆",
+                        targetView = target,
+                        onNext = {
+                            stopTour(activity)
+                            VoucherVaultDialog.showVoucherVaultDialog(activity, store) {}
+                        },
+                        onExit = { stopTour(activity) },
+                        onTargetClick = {
+                            Handler(Looper.getMainLooper()).postDelayed({
+                                stopTour(activity)
+                                VoucherVaultDialog.showVoucherVaultDialog(activity, store) {}
+                            }, 300)
+                        }
+                    )
+                }, 200)
+            }
+
+            "family_vault" -> {
+                activity.navigateToTab(0)
+                activity.binding.root.postDelayed({
+                    val toolsBar = activity.findViewById<View>(R.id.layout_tools_bar)
+                    toolsBar?.visibility = View.VISIBLE
+                    val target = activity.findViewById<View>(R.id.btn_family_vault_top) ?: activity.binding.navHome
+                    overlay.showStep(
+                        stepIndex = 1,
+                        totalSteps = 1,
+                        title = "🪪 家庭多成员证照安全夹",
+                        desc = "点击「🪪 证照安全夹」进入证照夹！全家身份证、护照、户口本分类归档，证号一键脱敏复制，到期换证提前预警！",
+                        actionHint = "👉 请点击「🪪 证照安全夹」进入证照夹",
+                        targetView = target,
+                        onNext = {
+                            stopTour(activity)
+                            FamilyVaultDialog.showFamilyVaultDialog(activity, store) {}
+                        },
+                        onExit = { stopTour(activity) },
+                        onTargetClick = {
+                            Handler(Looper.getMainLooper()).postDelayed({
+                                stopTour(activity)
+                                FamilyVaultDialog.showFamilyVaultDialog(activity, store) {}
+                            }, 300)
+                        }
+                    )
+                }, 200)
+            }
+
+            "medicine_vault" -> {
+                activity.navigateToTab(0)
+                activity.binding.root.postDelayed({
+                    val toolsBar = activity.findViewById<View>(R.id.layout_tools_bar)
+                    toolsBar?.visibility = View.VISIBLE
+                    val target = activity.findViewById<View>(R.id.btn_family_medicine_top) ?: activity.binding.navHome
+                    overlay.showStep(
+                        stepIndex = 1,
+                        totalSteps = 1,
+                        title = "💊 家庭智能健康药箱",
+                        desc = "点击「💊 家庭药箱」进入家庭药箱！支持按病症（🤒发烧/🤧感冒/🤢肠胃/🩹外伤）对症速查，开封倒计时打卡，过期药品显著飘红【🚫 严禁服用】！",
+                        actionHint = "👉 请点击「💊 家庭药箱」进入药箱",
+                        targetView = target,
+                        onNext = {
+                            stopTour(activity)
+                            FamilyMedicineDialog.showMedicineVaultDialog(activity, store) {}
+                        },
+                        onExit = { stopTour(activity) },
+                        onTargetClick = {
+                            Handler(Looper.getMainLooper()).postDelayed({
+                                stopTour(activity)
+                                FamilyMedicineDialog.showMedicineVaultDialog(activity, store) {}
+                            }, 300)
+                        }
+                    )
+                }, 200)
+            }
+
             "ai_concierge" -> {
                 activity.navigateToTab(0)
                 activity.binding.root.postDelayed({

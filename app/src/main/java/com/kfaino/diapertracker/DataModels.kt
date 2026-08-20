@@ -292,3 +292,181 @@ data class Ledger(
     val desc: String = "个人与家庭资产",
     val createdAt: Long = System.currentTimeMillis()
 )
+
+// =========================================================================
+// 🎟️ 第一性原理收纳：时效权益与卡券票据收纳模型 (Voucher & Privilege)
+// =========================================================================
+
+data class VoucherRecord(
+    val id: String = UUID.randomUUID().toString(),
+    val title: String = "",                         // 券名/权益名称 (如 "美团外卖满30减10", "途虎洗车次卡", "星巴克大杯兑换券")
+    val type: String = "coupon",                    // "coupon" (满减/立减优惠券), "times_card" (计次卡), "cash_voucher" (代金券), "privilege" (会员月度权益)
+    val valueAmount: Double = 0.0,                  // 面额金额 (如 10.0 元, 50.0 元)
+    val minSpend: Double = 0.0,                     // 门槛要求 (如 满30元 可用, 0为无门槛)
+    val remainingTimes: Int = 1,                    // 次卡剩余可用次数
+    val totalTimes: Int = 1,                        // 次卡总次数
+    val startDate: Long = System.currentTimeMillis(), // 生效时间
+    val expiryDate: Long = 0L,                      // 到期时间 (0表示长期有效)
+    val code: String = "",                          // 核销码/券码/兑换码
+    val platform: String = "",                      // 适用平台/商家 (如 "美团", "京东", "山姆", "线下门店")
+    val photoPath: String = "",                     // 卡券截图/条码凭证照片
+    val notes: String = "",                         // 使用规则与限制说明
+    val isUsed: Boolean = false,                    // 是否已用完/已核销
+    val usedAt: Long = 0L                           // 核销归档时间戳
+) {
+    /** 是否在 3 天内即将到期 */
+    fun isExpiringSoon(): Boolean {
+        if (isUsed || expiryDate <= 0L) return false
+        val diffMs = expiryDate - System.currentTimeMillis()
+        return diffMs in 0..(3L * 24 * 60 * 60 * 1000)
+    }
+
+    /** 是否已过期作废 */
+    fun isExpired(): Boolean {
+        if (isUsed || expiryDate <= 0L) return false
+        return System.currentTimeMillis() > expiryDate
+    }
+
+    /** 获取类型中文名称 */
+    fun getTypeDisplayName(): String {
+        return when (type) {
+            "coupon" -> "🎟️ 满减优惠券"
+            "times_card" -> "🎫 计次服务卡"
+            "cash_voucher" -> "💰 无门槛代金券"
+            "privilege" -> "👑 会员专属权益"
+            else -> "🎟️ 权益券"
+        }
+    }
+
+    /** 获取面额显示文本 */
+    fun getDisplayValue(): String {
+        return if (type == "times_card") {
+            "余 $remainingTimes/$totalTimes 次"
+        } else if (valueAmount > 0) {
+            "¥${if (valueAmount % 1.0 == 0.0) valueAmount.toInt().toString() else String.format("%.2f", valueAmount)}"
+        } else {
+            "专享权益"
+        }
+    }
+}
+
+// =========================================================================
+// 🪪 第一性原理收纳：家庭多成员证照与敏感凭证模型 (Family Identity & Safe)
+// =========================================================================
+
+data class IdentityDocument(
+    val id: String = UUID.randomUUID().toString(),
+    val member: String = "本人",                    // 成员归属: "本人", "伴侣", "孩子", "父亲", "母亲", "长辈"
+    val docType: String = "id_card",                // "id_card" (身份证), "passport" (护照), "hk_macau_pass" (港澳通行证), "driver_license" (驾驶证), "household" (户口本), "marriage" (结婚证), "property" (房产证), "contract" (合同), "other" (其他)
+    val docNumber: String = "",                     // 证件号码 / 统一信用代码
+    val nameOnDoc: String = "",                     // 证件姓名
+    val issueDate: Long = 0L,                       // 签发日期
+    val expiryDate: Long = 0L,                      // 有效期截止日 (0表示长期有效)
+    val frontPhotoPath: String = "",                // 正面扫描/实拍照
+    val backPhotoPath: String = "",                 // 反面扫描/国徽面照
+    val issuingAuthority: String = "",              // 签发机关
+    val notes: String = ""                          // 备注
+) {
+    /** 是否在 180 天 (半年) 内即将到期需换证 */
+    fun isExpiringSoon(): Boolean {
+        if (expiryDate <= 0L) return false
+        val diffMs = expiryDate - System.currentTimeMillis()
+        return diffMs in 0..(180L * 24 * 60 * 60 * 1000)
+    }
+
+    /** 是否已过期 */
+    fun isExpired(): Boolean {
+        if (expiryDate <= 0L) return false
+        return System.currentTimeMillis() > expiryDate
+    }
+
+    /** 获取脱敏证件号 (例如 110101********1234) */
+    fun getMaskedNumber(): String {
+        if (docNumber.length <= 6) return docNumber
+        val prefix = docNumber.take(4)
+        val suffix = docNumber.takeLast(4)
+        return "$prefix${"*".repeat((docNumber.length - 8).coerceAtLeast(4))}$suffix"
+    }
+
+    /** 获取证件类型中文名 */
+    fun getDocTypeDisplayName(): String {
+        return when (docType) {
+            "id_card" -> "🪪 居民身份证"
+            "passport" -> "🛂 出入境护照"
+            "hk_macau_pass" -> "🧳 港澳通行证"
+            "driver_license" -> "🚗 机动车驾驶证"
+            "household" -> "👨‍👩‍👧 居民户口簿"
+            "marriage" -> "💍 结婚证/公证书"
+            "property" -> "🏠 不动产权证"
+            "contract" -> "📄 电子劳动/租赁合同"
+            else -> "📑 重要证照凭证"
+        }
+    }
+}
+
+// =========================================================================
+// 💊 第一性原理收纳：家庭智能健康药箱模型 (Medicine & Scenario Vault)
+// =========================================================================
+
+data class MedicineRecord(
+    val id: String = UUID.randomUUID().toString(),
+    val name: String = "",                          // 药品名称 (如 "布洛芬缓释胶囊", "氯雷他定片", "左氧氟沙星滴眼液")
+    val category: String = "fever",                 // "fever" (发热镇痛), "cold" (感冒咳嗽), "digest" (肠胃消化), "trauma" (外伤消炎), "allergy" (抗过敏), "chronic" (慢病常备), "other" (其他)
+    val form: String = "片剂",                      // 剂型: "片剂", "胶囊", "颗粒/冲剂", "口服液", "外用喷剂/眼药水", "敷料/贴膏"
+    val qty: Int = 1,                               // 余量
+    val unit: String = "盒",                        // 单位: 盒, 瓶, 支, 板, 袋
+    val location: String = "家庭急救药箱",          // 存放位置
+    val dosage: String = "",                        // 用法用量 (如 "成人一次 1 粒，一日 2 次，饭后温水服用")
+    val targetAudience: String = "全家通用",        // 适用人群: "全家通用", "成人专用", "儿童专用"
+    val expiryDate: Long = 0L,                      // 未开封保质期
+    val isOpened: Boolean = false,                  // 是否已开封
+    val openedAt: Long = 0L,                        // 开封时间戳
+    val openedValidityDays: Int = 0,                // 开封后有效期天数 (如滴眼液开封 28 天到期, 0表示按原保质期)
+    val photoPath: String = "",                     // 包装盒/说明书照片
+    val contraindications: String = ""              // 禁忌与注意事项 (如 "服药期间严禁饮酒")
+) {
+    /** 计算实际有效截止时间戳 (综合原保质期与开封后时效) */
+    fun getEffectiveExpiryDate(): Long {
+        if (isOpened && openedValidityDays > 0 && openedAt > 0L) {
+            val openedExpire = openedAt + (openedValidityDays.toLong() * 24 * 60 * 60 * 1000)
+            return if (expiryDate > 0L) Math.min(expiryDate, openedExpire) else openedExpire
+        }
+        return expiryDate
+    }
+
+    /** 是否已过期 */
+    fun isExpired(): Boolean {
+        val eff = getEffectiveExpiryDate()
+        if (eff <= 0L) return false
+        return System.currentTimeMillis() > eff
+    }
+
+    /** 获取过期状态描述 */
+    fun getExpiryStatusText(): String {
+        val eff = getEffectiveExpiryDate()
+        if (eff <= 0L) return "🟢 长期有效"
+        val now = System.currentTimeMillis()
+        val diffMs = eff - now
+        val days = (diffMs / (24L * 60 * 60 * 1000)).toInt()
+        return if (days < 0) {
+            "🔴 已过期 ${Math.abs(days)} 天 (🚫 严禁服用)"
+        } else if (days <= 30) {
+            "⏳ 仅剩 $days 天到期 (请尽快使用)"
+        } else {
+            "🟢 剩余 $days 天"
+        }
+    }
+
+    /** 获取分类中文名称 */
+    fun getCategoryDisplayName(): String {
+        return when (category) {
+            "fever" -> "🤒 发烧镇痛"
+            "cold" -> "🤧 感冒咳嗽"
+            "digest" -> "🤢 肠胃消化"
+            "trauma" -> "🩹 外伤消炎"
+            "allergy" -> "🌿 抗过敏"
+            "chronic" -> "💊 慢病常备"
+            else -> "📦 其他常备"
+        }
+    }
+}

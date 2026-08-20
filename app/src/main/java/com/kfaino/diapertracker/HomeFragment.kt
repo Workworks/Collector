@@ -196,6 +196,27 @@ class HomeFragment : Fragment() {
             }
         }
 
+        binding.btnVoucherVaultTop.applyPressScaleAnimation(0.92f)
+        binding.btnVoucherVaultTop.setOnClickListener {
+            VoucherVaultDialog.showVoucherVaultDialog(requireActivity(), store) {
+                refresh()
+            }
+        }
+
+        binding.btnFamilyVaultTop.applyPressScaleAnimation(0.92f)
+        binding.btnFamilyVaultTop.setOnClickListener {
+            FamilyVaultDialog.showFamilyVaultDialog(requireActivity(), store) {
+                refresh()
+            }
+        }
+
+        binding.btnFamilyMedicineTop.applyPressScaleAnimation(0.92f)
+        binding.btnFamilyMedicineTop.setOnClickListener {
+            FamilyMedicineDialog.showMedicineVaultDialog(requireActivity(), store) {
+                refresh()
+            }
+        }
+
         // 分段切换器 (实物 / 数字相册 / 订阅)
         binding.tabItems.applyPressScaleAnimation(0.94f)
         binding.tabDigitalAssets.applyPressScaleAnimation(0.94f)
