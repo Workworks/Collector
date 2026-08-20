@@ -10,9 +10,9 @@ import android.widget.Toast
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 
 /**
- * 🎯 手把手全景互动引导教学与各功能单项跟手演练控制器 (Interactive Step-by-Step Guided Tour)
+ * 🎯 手把手全景互动引导教学与全功能单项跟手演练控制器 (Interactive Step-by-Step Guided Tour)
  * - 支持全景贯穿大漫游教学
- * - 支持全部 22+ 个功能点的单项手把手跟手演练
+ * - 支持全部 28 个细分功能点的单项手把手跟手演练
  * - 结合 GuideOverlayView 实现像素级聚光灯镂空与呼吸光晕
  * - 教学期间严格屏蔽非引导控件误触，支持随时点击「✕ 退出教程」中断退出与完成打卡
  */
@@ -357,6 +357,93 @@ object InteractiveGuideTour {
                                 }
                             }, 300)
                         }
+                    )
+                }, 250)
+            }
+
+            "bluetooth_nfc" -> {
+                activity.navigateToTab(0)
+                activity.binding.root.postDelayed({
+                    val toolsBar = activity.findViewById<View>(R.id.layout_tools_bar)
+                    toolsBar?.visibility = View.VISIBLE
+                    val target = activity.findViewById<View>(R.id.btn_open_floorplan_top) ?: activity.binding.navHome
+                    overlay.showStep(
+                        stepIndex = 1,
+                        totalSteps = 1,
+                        title = "🖨️ 蓝牙标签机直连与 NFC 碰一碰寻物",
+                        desc = "在空间平面图中点击任意房间的「生成二维码标签」，即可通过蓝牙直连 58/80mm 热敏便携打印机打印物理贴纸，或一键将收纳箱写入 NFC 贴纸，手机碰一碰零点击识别展开！",
+                        actionHint = "👉 点击「空间地图」体验硬件扩展",
+                        targetView = target,
+                        onNext = {
+                            stopTour(activity)
+                            FloorPlanDialog.show(activity, store, isSelectMode = false)
+                        },
+                        onExit = { stopTour(activity) },
+                        onTargetClick = {
+                            Handler(Looper.getMainLooper()).postDelayed({
+                                stopTour(activity)
+                                FloorPlanDialog.show(activity, store, isSelectMode = false)
+                            }, 300)
+                        }
+                    )
+                }, 200)
+            }
+
+            "date_picker" -> {
+                activity.navigateToTab(0)
+                activity.binding.root.postDelayed({
+                    val target = activity.binding.fabAdd
+                    overlay.showStep(
+                        stepIndex = 1,
+                        totalSteps = 1,
+                        title = "📅 现代化全景日期选择器",
+                        desc = "在记账时点击购入日期或生产日期，可一秒展开 1980~2035 跨年代网格直达，支持「昨天」、「1个月前」、「1年前」、「3年前」快捷时间标签与相对天数直观感知！",
+                        actionHint = "👉 点击「+」打开记账窗口体验日期选择器",
+                        targetView = target,
+                        onNext = {
+                            stopTour(activity)
+                            activity.showAddDialog()
+                        },
+                        onExit = { stopTour(activity) },
+                        onTargetClick = {
+                            Handler(Looper.getMainLooper()).postDelayed({ stopTour(activity) }, 300)
+                        }
+                    )
+                }, 200)
+            }
+
+            "safety_stock" -> {
+                activity.navigateToTab(0)
+                activity.binding.root.postDelayed({
+                    val target = activity.findViewById<View>(R.id.btn_ai_concierge_top) ?: activity.binding.navHome
+                    val toolsBar = activity.findViewById<View>(R.id.layout_tools_bar)
+                    toolsBar?.visibility = View.VISIBLE
+                    overlay.showStep(
+                        stepIndex = 1,
+                        totalSteps = 1,
+                        title = "⚠️ 耗材安全库存预警与采购单",
+                        desc = "为生活耗材设定最低安全库存线。当库存触底时，首页顶部自动浮现告急卡片，支持「一键生成采购单」汇总缺货差额并复制到剪贴板！",
+                        actionHint = "👉 点击完成了解耗材管理",
+                        targetView = target,
+                        onNext = { stopTour(activity) },
+                        onExit = { stopTour(activity) }
+                    )
+                }, 200)
+            }
+
+            "csv_export" -> {
+                activity.navigateToTab(3)
+                activity.binding.root.postDelayed({
+                    val target = activity.findViewById<View>(R.id.btn_backup_restore) ?: activity.binding.navProfile
+                    overlay.showStep(
+                        stepIndex = 1,
+                        totalSteps = 1,
+                        title = "📊 Excel 兼容 CSV 资产总表导出",
+                        desc = "一键导出包含全部品名、分类、折旧、单价、拥有天数与日均成本的 CSV 表格，自带 UTF-8 BOM 编码，完美兼容电脑 Excel 与微信直接打开！",
+                        actionHint = "👉 点击「数据备份与导出」体验 CSV 导出",
+                        targetView = target,
+                        onNext = { stopTour(activity) },
+                        onExit = { stopTour(activity) }
                     )
                 }, 250)
             }
