@@ -617,6 +617,61 @@
                         android:layout_marginStart="56dp"
                         android:background="@color/card_border" />
 
+                    <!-- 极速热更新补丁 (免重装动态生效) -->
+                    <LinearLayout
+                        android:id="@+id/btn_hot_patch_update"
+                        android:layout_width="match_parent"
+                        android:layout_height="58dp"
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical"
+                        android:paddingHorizontal="18dp"
+                        android:clickable="true"
+                        android:focusable="true"
+                        android:background="?attr/selectableItemBackground">
+
+                        <ImageView
+                            android:layout_width="22dp"
+                            android:layout_height="22dp"
+                            android:src="@drawable/ic_rocket"
+                            app:tint="@color/accent_dark"
+                            android:contentDescription="极速热更新补丁" />
+
+                        <TextView
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:layout_marginStart="16dp"
+                            android:text="🎮 极速热更新补丁"
+                            android:textSize="16sp"
+                            android:textColor="@color/text_primary"
+                            android:fontFamily="sans-serif-medium" />
+
+                        <TextView
+                            android:id="@+id/current_patch_badge"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginEnd="8dp"
+                            android:background="@drawable/bg_chip_inactive"
+                            android:paddingHorizontal="8dp"
+                            android:paddingVertical="3dp"
+                            android:text="⚡ 动态补丁"
+                            android:textColor="@color/accent_dark"
+                            android:textSize="12sp" />
+
+                        <ImageView
+                            android:layout_width="16dp"
+                            android:layout_height="16dp"
+                            android:src="@drawable/ic_arrow_right"
+                            app:tint="@color/text_hint"
+                            android:contentDescription="进入" />
+                    </LinearLayout>
+
+                    <View
+                        android:layout_width="match_parent"
+                        android:layout_height="1dp"
+                        android:layout_marginStart="56dp"
+                        android:background="@color/card_border" />
+
                     <!-- 关于 -->
                     <LinearLayout
                         android:id="@+id/btn_about"

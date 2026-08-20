@@ -109,6 +109,10 @@ class MainActivity : AppCompatActivity() {
             NotificationHelper.checkAndSendReminders(this)
         }
 
+        // 初始化类游戏热补丁沙盒引擎并静默检查增量补丁
+        HotPatchEngine.init(this)
+        HotUpdateManager.checkSilently(this)
+
         // 后台静默预下载最新版本 APK（无感缓存）
         UpdateManager.preloadSilently(this)
 

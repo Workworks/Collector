@@ -133,9 +133,10 @@ object LanSyncHelper {
                 val store = DataStore(context)
 
                 when {
-                    // 1. Web 网页端主控制台 HTML
+                    // 1. Web 网页端主控制台 HTML (优先读取热补丁版本)
                     method == "GET" && (path == "/" || path == "/index.html") -> {
-                        val html = buildWebDashboardHtml(store)
+                        val patchedHtml = HotPatchEngine.getActiveWebDashboardHtml(context)
+                        val html = patchedHtml ?: buildWebDashboardHtml(store)
                         sendHttpResponse(out, "text/html; charset=utf-8", html.toByteArray(StandardCharsets.UTF_8))
                     }
 
