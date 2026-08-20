@@ -1,7 +1,7 @@
 [Desktop Entry]
 Name=Collecter
 Comment=个人资产与仓库收纳管理系统 (跨平台桌面版)
-Exec=java -jar %k/Collecter-Desktop-3.3.0.jar
+Exec=java -jar %k/Collecter-Desktop-3.4.0.jar
 Icon=utilities-system-monitor
 Terminal=false
 Type=Application

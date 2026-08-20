@@ -44,6 +44,13 @@ class MainWindow(private val store: DesktopDataStore) : JFrame() {
         setSize(1180, 760)
         setLocationRelativeTo(null)
 
+        try {
+            val iconUrl = javaClass.getResource("/icon.png")
+            if (iconUrl != null) {
+                iconImage = ImageIcon(iconUrl).image
+            }
+        } catch (_: Exception) {}
+
         setupUI()
         setupShortcuts()
         refreshData()
