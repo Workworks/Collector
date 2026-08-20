@@ -93,33 +93,34 @@
             android:background="?attr/selectableItemBackgroundBorderless" />
     </LinearLayout>
 
-    <!-- 可折叠二级快捷工具箱面板 (默认收起，点击 ··· 展开) -->
-    <HorizontalScrollView
+    <!-- 可折叠二级快捷工具箱面板 (默认收起，点击 ··· 展开，双行网格平铺展示) -->
+    <LinearLayout
         android:id="@+id/layout_tools_bar"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:scrollbars="none"
-        android:overScrollMode="never"
+        android:orientation="vertical"
         android:paddingHorizontal="16dp"
         android:paddingBottom="10dp"
         android:visibility="gone"
         android:background="@color/background">
 
+        <!-- 第一行：智能管家、装备套装、扫码寻物 -->
         <LinearLayout
-            android:layout_width="wrap_content"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="horizontal"
-            android:gravity="center_vertical">
+            android:layout_marginBottom="8dp">
 
             <!-- 🤖 AI 智能管家 -->
             <LinearLayout
                 android:id="@+id/btn_ai_concierge_top"
-                android:layout_width="wrap_content"
+                android:layout_width="0dp"
                 android:layout_height="38dp"
+                android:layout_weight="1"
                 android:orientation="horizontal"
                 android:gravity="center"
-                android:paddingHorizontal="12dp"
-                android:layout_marginEnd="8dp"
+                android:paddingHorizontal="6dp"
+                android:layout_marginEnd="6dp"
                 android:background="@drawable/bg_chip_inactive"
                 android:backgroundTint="@color/input_bg"
                 android:clickable="true"
@@ -134,7 +135,7 @@
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginStart="5dp"
+                    android:layout_marginStart="4dp"
                     android:text="智能管家"
                     android:textSize="12sp"
                     android:textColor="@color/text_primary"
@@ -144,12 +145,13 @@
             <!-- 🎒 场景装备套装 -->
             <LinearLayout
                 android:id="@+id/btn_kits_top"
-                android:layout_width="wrap_content"
+                android:layout_width="0dp"
                 android:layout_height="38dp"
+                android:layout_weight="1"
                 android:orientation="horizontal"
                 android:gravity="center"
-                android:paddingHorizontal="12dp"
-                android:layout_marginEnd="8dp"
+                android:paddingHorizontal="6dp"
+                android:layout_marginEnd="6dp"
                 android:background="@drawable/bg_chip_inactive"
                 android:backgroundTint="@color/input_bg"
                 android:clickable="true"
@@ -164,7 +166,7 @@
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginStart="5dp"
+                    android:layout_marginStart="4dp"
                     android:text="装备套装"
                     android:textSize="12sp"
                     android:textColor="@color/text_primary"
@@ -174,20 +176,20 @@
             <!-- 智能扫码寻物 -->
             <LinearLayout
                 android:id="@+id/btn_scan_qr_top"
-                android:layout_width="wrap_content"
+                android:layout_width="0dp"
                 android:layout_height="38dp"
+                android:layout_weight="1"
                 android:orientation="horizontal"
                 android:gravity="center"
-                android:paddingHorizontal="12dp"
-                android:layout_marginEnd="8dp"
+                android:paddingHorizontal="6dp"
                 android:background="@drawable/bg_chip_inactive"
                 android:backgroundTint="@color/input_bg"
                 android:clickable="true"
                 android:focusable="true">
 
                 <ImageView
-                    android:layout_width="16dp"
-                    android:layout_height="16dp"
+                    android:layout_width="15dp"
+                    android:layout_height="15dp"
                     android:src="@drawable/ic_scan_qr"
                     app:tint="@color/primary"
                     android:contentDescription="扫码寻物" />
@@ -195,30 +197,38 @@
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginStart="5dp"
+                    android:layout_marginStart="4dp"
                     android:text="扫码寻物"
                     android:textSize="12sp"
                     android:textColor="@color/text_primary"
                     android:fontFamily="sans-serif-medium" />
             </LinearLayout>
+        </LinearLayout>
+
+        <!-- 第二行：空间地图、实物盘点、局域网大屏 -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
 
             <!-- 空间平面图 -->
             <LinearLayout
                 android:id="@+id/btn_open_floorplan_top"
-                android:layout_width="wrap_content"
+                android:layout_width="0dp"
                 android:layout_height="38dp"
+                android:layout_weight="1"
                 android:orientation="horizontal"
                 android:gravity="center"
-                android:paddingHorizontal="12dp"
-                android:layout_marginEnd="8dp"
+                android:paddingHorizontal="6dp"
+                android:layout_marginEnd="6dp"
                 android:background="@drawable/bg_chip_inactive"
                 android:backgroundTint="@color/input_bg"
                 android:clickable="true"
                 android:focusable="true">
 
                 <ImageView
-                    android:layout_width="16dp"
-                    android:layout_height="16dp"
+                    android:layout_width="15dp"
+                    android:layout_height="15dp"
                     android:src="@drawable/ic_floorplan_map"
                     app:tint="@color/accent_blue"
                     android:contentDescription="空间地图" />
@@ -226,7 +236,7 @@
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginStart="5dp"
+                    android:layout_marginStart="4dp"
                     android:text="空间地图"
                     android:textSize="12sp"
                     android:textColor="@color/text_primary"
@@ -236,20 +246,21 @@
             <!-- 实物大盘点 -->
             <LinearLayout
                 android:id="@+id/btn_inventory_audit_top"
-                android:layout_width="wrap_content"
+                android:layout_width="0dp"
                 android:layout_height="38dp"
+                android:layout_weight="1"
                 android:orientation="horizontal"
                 android:gravity="center"
-                android:paddingHorizontal="12dp"
-                android:layout_marginEnd="8dp"
+                android:paddingHorizontal="6dp"
+                android:layout_marginEnd="6dp"
                 android:background="@drawable/bg_chip_inactive"
                 android:backgroundTint="@color/input_bg"
                 android:clickable="true"
                 android:focusable="true">
 
                 <ImageView
-                    android:layout_width="16dp"
-                    android:layout_height="16dp"
+                    android:layout_width="15dp"
+                    android:layout_height="15dp"
                     android:src="@drawable/ic_inventory_audit"
                     app:tint="@color/accent_dark"
                     android:contentDescription="实物盘点" />
@@ -257,7 +268,7 @@
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginStart="5dp"
+                    android:layout_marginStart="4dp"
                     android:text="实物盘点"
                     android:textSize="12sp"
                     android:textColor="@color/text_primary"
@@ -267,34 +278,35 @@
             <!-- 局域网大屏 -->
             <LinearLayout
                 android:id="@+id/btn_lan_sync_top"
-                android:layout_width="wrap_content"
+                android:layout_width="0dp"
                 android:layout_height="38dp"
+                android:layout_weight="1"
                 android:orientation="horizontal"
                 android:gravity="center"
-                android:paddingHorizontal="12dp"
+                android:paddingHorizontal="6dp"
                 android:background="@drawable/bg_chip_inactive"
                 android:backgroundTint="@color/input_bg"
                 android:clickable="true"
                 android:focusable="true">
 
                 <ImageView
-                    android:layout_width="16dp"
-                    android:layout_height="16dp"
+                    android:layout_width="15dp"
+                    android:layout_height="15dp"
                     android:src="@drawable/ic_lan_sync_screen"
-                    app:tint="@color/primary"
+                    app:tint="@color/accent_blue"
                     android:contentDescription="局域网大屏" />
 
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginStart="5dp"
-                    android:text="局域网大屏"
+                    android:layout_marginStart="4dp"
+                    android:text="局域网"
                     android:textSize="12sp"
                     android:textColor="@color/text_primary"
                     android:fontFamily="sans-serif-medium" />
             </LinearLayout>
         </LinearLayout>
-    </HorizontalScrollView>
+    </LinearLayout>
 
     <androidx.core.widget.NestedScrollView
         android:layout_width="match_parent"
