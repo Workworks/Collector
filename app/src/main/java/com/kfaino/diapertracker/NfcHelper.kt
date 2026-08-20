@@ -9,6 +9,9 @@ import android.net.Uri
 import android.nfc.*
 import android.nfc.tech.Ndef
 import android.nfc.tech.NdefFormatable
+import android.graphics.Color
+import android.graphics.drawable.ColorDrawable
+import android.view.View
 import android.widget.Toast
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import java.nio.charset.StandardCharsets
@@ -64,16 +67,31 @@ object NfcHelper {
         val uriString = "collector://box?house=${Uri.encode(houseName)}&room=${Uri.encode(roomName)}"
         pendingWritePayload = uriString
 
-        writeDialog = MaterialAlertDialogBuilder(activity)
-            .setTitle("🏷️ 靠近 NFC 智能标签写入")
-            .setMessage("正在等待感应...\n\n请将手机背部 NFC 感应区轻贴收纳箱上的 NFC 贴纸 (NTAG213/215 等)")
-            .setNegativeButton("取消") { _, _ ->
-                pendingWritePayload = null
-            }
-            .setOnDismissListener {
-                pendingWritePayload = null
-            }
-            .show()
+        val binding = com.kfaino.diapertracker.databinding.DialogModernBaseBinding.inflate(activity.layoutInflater)
+        binding.tvDialogEmoji.text = "🏷️"
+        binding.tvDialogTitle.text = "靠近 NFC 智能标签写入"
+        binding.tvDialogMessage.text = "正在等待感应...\n\n请将手机背部 NFC 感应区轻贴收纳箱上的 NFC 贴纸 (NTAG213/215 等)"
+        binding.btnDialogPositive.visibility = View.GONE
+        binding.btnDialogNegative.text = "取消"
+        binding.btnDialogNegative.applyPressScaleAnimation(0.92f)
+
+        val dialog = MaterialAlertDialogBuilder(activity)
+            .setView(binding.root)
+            .setCancelable(true)
+            .create()
+
+        dialog.window?.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
+        dialog.window?.attributes?.windowAnimations = R.style.CustomDialogAnimation
+
+        binding.btnDialogNegative.setOnClickListener {
+            pendingWritePayload = null
+            dialog.dismiss()
+        }
+        dialog.setOnDismissListener {
+            pendingWritePayload = null
+        }
+        writeDialog = dialog
+        dialog.show()
     }
 
     /** 处理 NFC Tag 写入事件 */

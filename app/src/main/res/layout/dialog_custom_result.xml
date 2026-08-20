@@ -48,7 +48,7 @@
         android:layout_marginTop="8dp"
         android:layout_marginBottom="20dp" />
 
-    <Button
+    <com.google.android.material.button.MaterialButton
         android:id="@+id/result_btn_confirm"
         android:layout_width="match_parent"
         android:layout_height="48dp"
@@ -56,7 +56,7 @@
         android:textSize="14sp"
         android:textStyle="bold"
         android:textColor="#FFFFFFFF"
-        android:background="@drawable/bg_btn_primary"
-        style="?android:attr/borderlessButtonStyle" />
+        android:backgroundTint="@color/primary"
+        app:cornerRadius="12dp" />
 
 </LinearLayout>

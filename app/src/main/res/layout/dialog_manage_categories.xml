@@ -5,15 +5,43 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:orientation="vertical"
-    android:paddingTop="8dp"
-    android:paddingBottom="16dp">
+    android:background="@drawable/bg_dialog_card"
+    android:padding="20dp">
+
+    <!-- 顶栏：标题与关闭 -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:layout_marginBottom="14dp">
+
+        <TextView
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="🏷️ 物品分类管理与排序"
+            android:textSize="18sp"
+            android:textStyle="bold"
+            android:textColor="@color/text_primary"
+            android:fontFamily="sans-serif-medium" />
+
+        <ImageView
+            android:id="@+id/btn_close_categories"
+            android:layout_width="32dp"
+            android:layout_height="32dp"
+            android:src="@drawable/ic_close"
+            android:padding="6dp"
+            app:tint="@color/text_secondary"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:contentDescription="关闭" />
+    </LinearLayout>
 
     <!-- 顶部操作条（添加自定义 + 恢复预设） -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
-        android:paddingHorizontal="16dp"
         android:paddingBottom="10dp"
         android:gravity="center_vertical">
 
@@ -21,47 +49,60 @@
             android:id="@+id/btn_add_category"
             style="?attr/materialButtonOutlinedStyle"
             android:layout_width="0dp"
-            android:layout_height="wrap_content"
+            android:layout_height="44dp"
             android:layout_weight="1"
             android:text="+ 新增自定义分类"
+            android:textSize="13sp"
             android:textColor="@color/primary"
             app:strokeColor="@color/primary"
-            app:cornerRadius="10dp" />
+            app:cornerRadius="12dp" />
 
         <TextView
             android:id="@+id/btn_reset_preset"
             android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="恢复预设"
+            android:layout_height="44dp"
+            android:text="🔄 恢复预设"
             android:textSize="13sp"
             android:textColor="@color/text_secondary"
+            android:gravity="center"
             android:paddingHorizontal="12dp"
-            android:paddingVertical="8dp"
             android:clickable="true"
             android:focusable="true"
-            android:background="?attr/selectableItemBackground"
+            android:background="@drawable/bg_chip_inactive"
             android:layout_marginStart="8dp" />
     </LinearLayout>
 
     <TextView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="提示：使用上下箭头可调整分组排序顺序，首页分组将按此顺序排列"
+        android:text="💡 提示：使用上下箭头可调整分类排序，首页与筛选器将按此顺序展示"
         android:textColor="@color/text_hint"
-        android:textSize="12sp"
-        android:paddingHorizontal="16dp"
-        android:paddingBottom="8dp" />
+        android:textSize="11sp"
+        android:paddingBottom="10dp" />
 
     <View
         android:layout_width="match_parent"
         android:layout_height="1dp"
-        android:background="@color/card_border" />
+        android:background="@color/card_border"
+        android:layout_marginBottom="8dp" />
 
     <!-- 分类列表 -->
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/category_recycler_view"
         android:layout_width="match_parent"
-        android:layout_height="320dp"
+        android:layout_height="280dp"
         android:overScrollMode="never" />
+
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/btn_finish_categories"
+        android:layout_width="match_parent"
+        android:layout_height="46dp"
+        android:layout_marginTop="14dp"
+        android:text="完成"
+        android:textSize="14sp"
+        android:textStyle="bold"
+        android:textColor="#FFFFFF"
+        android:backgroundTint="@color/primary"
+        app:cornerRadius="12dp" />
 
 </LinearLayout>

@@ -38,30 +38,31 @@ object InventoryAuditDialog {
             }
         }
 
-        MaterialAlertDialogBuilder(activity)
-            .setTitle("📋 选择大盘点目标区域")
-            .setItems(allRooms.toTypedArray()) { _, which ->
-                val selectedTarget = allRooms[which]
-                val allEntries = store.loadAll().filter { it.isIn && !it.isRetired }
+        ModernDialogHelper.showSingleChoiceDialog(
+            context = activity,
+            title = "选择大盘点目标区域",
+            emoji = "📋",
+            options = allRooms,
+            selectedIndex = 0
+        ) { which, selectedTarget ->
+            val allEntries = store.loadAll().filter { it.isIn && !it.isRetired }
 
-                val auditEntries = if (which == 0) {
-                    allEntries
-                } else {
-                    val parts = selectedTarget.split(" · ")
-                    val hName = parts[0]
-                    val rName = parts.getOrNull(1) ?: ""
-                    allEntries.filter { it.houseName == hName && (it.roomName == rName || it.location.contains(rName)) }
-                }
-
-                if (auditEntries.isEmpty()) {
-                    Toast.makeText(activity, "所选区域暂无在库资产记录！", Toast.LENGTH_SHORT).show()
-                    return@setItems
-                }
-
-                showAuditSessionDialog(activity, store, selectedTarget, auditEntries, onCompleted)
+            val auditEntries = if (which == 0) {
+                allEntries
+            } else {
+                val parts = selectedTarget.split(" · ")
+                val hName = parts[0]
+                val rName = parts.getOrNull(1) ?: ""
+                allEntries.filter { it.houseName == hName && (it.roomName == rName || it.location.contains(rName)) }
             }
-            .setNegativeButton("取消", null)
-            .show()
+
+            if (auditEntries.isEmpty()) {
+                Toast.makeText(activity, "所选区域暂无在库资产记录！", Toast.LENGTH_SHORT).show()
+                return@showSingleChoiceDialog
+            }
+
+            showAuditSessionDialog(activity, store, selectedTarget, auditEntries, onCompleted)
+        }
     }
 
     private fun showAuditSessionDialog(

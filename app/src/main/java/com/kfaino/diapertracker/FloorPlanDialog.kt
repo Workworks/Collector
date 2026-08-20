@@ -307,26 +307,19 @@ object FloorPlanDialog {
     }
 
     private fun showAddHouseDialog(activity: Activity, store: DataStore, onCreated: (HouseSpace) -> Unit) {
-        val input = EditText(activity).apply {
-            hint = "如：🏡 父母家、🏢 公司办公室、🚗 汽车后备箱"
-            setPadding(40, 30, 40, 30)
-            setTextColor(Color.WHITE)
-            setHintTextColor(Color.parseColor("#94A3B8"))
-        }
-
-        MaterialAlertDialogBuilder(activity)
-            .setTitle("新增空间/家庭")
-            .setView(input)
-            .setNegativeButton(R.string.cancel, null)
-            .setPositiveButton(R.string.confirm) { _, _ ->
-                val name = input.text.toString().trim()
-                if (name.isNotEmpty()) {
-                    val newH = store.addHouse(name)
-                    Toast.makeText(activity, "已成功创建新空间: $name", Toast.LENGTH_SHORT).show()
-                    onCreated(newH)
-                }
+        ModernDialogHelper.showInputDialog(
+            context = activity,
+            title = "新增空间/场所",
+            subtitle = "输入家庭或办公场所名称",
+            hint = "如：🏡 父母家、🏢 办公室、🚗 后备箱",
+            emoji = "🏡"
+        ) { name ->
+            if (name.isNotEmpty()) {
+                val newH = store.addHouse(name)
+                Toast.makeText(activity, "已成功创建新空间: $name", Toast.LENGTH_SHORT).show()
+                onCreated(newH)
             }
-            .show()
+        }
     }
 
     private fun Activity.dpToPx(dp: Int): Int {

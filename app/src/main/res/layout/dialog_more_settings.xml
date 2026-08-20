@@ -6,7 +6,6 @@
     android:layout_height="wrap_content"
     android:orientation="vertical"
     android:background="@drawable/bg_dialog_card"
-    android:backgroundTint="@color/card"
     android:padding="20dp">
 
     <!-- 顶部标题栏与关闭按钮 -->

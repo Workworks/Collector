@@ -122,8 +122,9 @@
         android:layout_height="wrap_content"
         android:orientation="horizontal">
 
-        <Button
+        <com.google.android.material.button.MaterialButton
             android:id="@+id/custom_btn_cancel"
+            style="?attr/materialButtonOutlinedStyle"
             android:layout_width="0dp"
             android:layout_height="48dp"
             android:layout_weight="1"
@@ -131,10 +132,10 @@
             android:text="稍后提醒"
             android:textSize="14sp"
             android:textColor="@color/text_secondary"
-            android:background="@drawable/bg_btn_secondary"
-            style="?android:attr/borderlessButtonStyle" />
+            app:strokeColor="@color/card_border"
+            app:cornerRadius="12dp" />
 
-        <Button
+        <com.google.android.material.button.MaterialButton
             android:id="@+id/custom_btn_update"
             android:layout_width="0dp"
             android:layout_height="48dp"
@@ -143,8 +144,8 @@
             android:textSize="14sp"
             android:textStyle="bold"
             android:textColor="#FFFFFFFF"
-            android:background="@drawable/bg_btn_primary"
-            style="?android:attr/borderlessButtonStyle" />
+            android:backgroundTint="@color/primary"
+            app:cornerRadius="12dp" />
     </LinearLayout>
 
 </LinearLayout>

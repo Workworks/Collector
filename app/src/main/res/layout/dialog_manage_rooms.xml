@@ -5,15 +5,44 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:orientation="vertical"
-    android:paddingTop="8dp"
-    android:paddingBottom="16dp">
+    android:background="@drawable/bg_dialog_card"
+    android:padding="20dp">
+
+    <!-- 顶栏：标题与关闭 -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:layout_marginBottom="14dp">
+
+        <TextView
+            android:id="@+id/tv_room_manage_title"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="🏡 房间管理与网格自定义"
+            android:textSize="18sp"
+            android:textStyle="bold"
+            android:textColor="@color/text_primary"
+            android:fontFamily="sans-serif-medium" />
+
+        <ImageView
+            android:id="@+id/btn_close_rooms"
+            android:layout_width="32dp"
+            android:layout_height="32dp"
+            android:src="@drawable/ic_close"
+            android:padding="6dp"
+            app:tint="@color/text_secondary"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:contentDescription="关闭" />
+    </LinearLayout>
 
     <!-- 顶部操作条（添加房间 + 恢复推荐） -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
-        android:paddingHorizontal="16dp"
         android:paddingBottom="10dp"
         android:gravity="center_vertical">
 
@@ -21,25 +50,26 @@
             android:id="@+id/btn_add_room"
             style="?attr/materialButtonOutlinedStyle"
             android:layout_width="0dp"
-            android:layout_height="wrap_content"
+            android:layout_height="44dp"
             android:layout_weight="1"
             android:text="+ 新增自定义房间"
+            android:textSize="13sp"
             android:textColor="@color/primary"
             app:strokeColor="@color/primary"
-            app:cornerRadius="10dp" />
+            app:cornerRadius="12dp" />
 
         <TextView
             android:id="@+id/btn_reset_rooms"
             android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="恢复推荐"
+            android:layout_height="44dp"
+            android:text="🔄 恢复推荐"
             android:textSize="13sp"
             android:textColor="@color/text_secondary"
+            android:gravity="center"
             android:paddingHorizontal="12dp"
-            android:paddingVertical="8dp"
             android:clickable="true"
             android:focusable="true"
-            android:background="?attr/selectableItemBackground"
+            android:background="@drawable/bg_chip_inactive"
             android:layout_marginStart="8dp" />
     </LinearLayout>
 
@@ -47,22 +77,34 @@
         android:id="@+id/tv_room_manage_hint"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="提示：可自由添加阳台、书房、衣帽间等房间，平面图将实时联动呈现"
+        android:text="💡 提示：可自由添加书房、阳台、衣帽间等，平面图将实时联动呈现"
         android:textColor="@color/text_hint"
-        android:textSize="12sp"
-        android:paddingHorizontal="16dp"
-        android:paddingBottom="8dp" />
+        android:textSize="11sp"
+        android:paddingBottom="10dp" />
 
     <View
         android:layout_width="match_parent"
         android:layout_height="1dp"
-        android:background="@color/card_border" />
+        android:background="@color/card_border"
+        android:layout_marginBottom="8dp" />
 
     <!-- 房间列表 -->
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/room_recycler_view"
         android:layout_width="match_parent"
-        android:layout_height="320dp"
+        android:layout_height="280dp"
         android:overScrollMode="never" />
+
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/btn_finish_rooms"
+        android:layout_width="match_parent"
+        android:layout_height="46dp"
+        android:layout_marginTop="14dp"
+        android:text="完成"
+        android:textSize="14sp"
+        android:textStyle="bold"
+        android:textColor="#FFFFFF"
+        android:backgroundTint="@color/primary"
+        app:cornerRadius="12dp" />
 
 </LinearLayout>

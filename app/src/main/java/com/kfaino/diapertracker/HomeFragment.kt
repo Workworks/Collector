@@ -271,54 +271,60 @@ class HomeFragment : Fragment() {
 
         // 状态筛选：全部 / 仅在役 / 仅已退役
         binding.btnFilterStatus.setOnClickListener {
-            val options = arrayOf("全部状态", "🟢 仅在役物品", "🔴 仅已退役 / 待办归置")
-            MaterialAlertDialogBuilder(requireContext())
-                .setTitle("筛选在役/退役状态")
-                .setSingleChoiceItems(options, selectedStatusFilter) { dialog, which ->
-                    selectedStatusFilter = which
-                    binding.btnFilterStatus.text = when (which) {
-                        1 -> "在役 ▾"
-                        2 -> "退役 ▾"
-                        else -> "全部 ▾"
-                    }
-                    dialog.dismiss()
-                    refresh()
+            val options = listOf("全部状态", "🟢 仅在役物品", "🔴 仅已退役 / 待办归置")
+            ModernDialogHelper.showSingleChoiceDialog(
+                context = requireContext(),
+                title = "筛选在役/退役状态",
+                emoji = "🏷️",
+                options = options,
+                selectedIndex = selectedStatusFilter
+            ) { which, _ ->
+                selectedStatusFilter = which
+                binding.btnFilterStatus.text = when (which) {
+                    1 -> "在役 ▾"
+                    2 -> "退役 ▾"
+                    else -> "全部 ▾"
                 }
-                .show()
+                refresh()
+            }
         }
 
         // 排序方式
         binding.btnFilterSort.setOnClickListener {
-            val options = arrayOf("⏳ 按拥有天数 (长→短)", "💰 按物品价值 (高→低)", "📉 按日均消费 (高→低)", "🕒 按添加时间 (新→旧)")
-            MaterialAlertDialogBuilder(requireContext())
-                .setTitle("排序方式")
-                .setSingleChoiceItems(options, selectedSortType) { dialog, which ->
-                    selectedSortType = which
-                    binding.btnFilterSort.text = when (which) {
-                        0 -> "天数 ▾"
-                        1 -> "价值 ▾"
-                        2 -> "日均 ▾"
-                        else -> "时间 ▾"
-                    }
-                    dialog.dismiss()
-                    refresh()
+            val options = listOf("⏳ 按拥有天数 (长→短)", "💰 按物品价值 (高→低)", "📉 按日均消费 (高→低)", "🕒 按添加时间 (新→旧)")
+            ModernDialogHelper.showSingleChoiceDialog(
+                context = requireContext(),
+                title = "排序方式",
+                emoji = "📊",
+                options = options,
+                selectedIndex = selectedSortType
+            ) { which, _ ->
+                selectedSortType = which
+                binding.btnFilterSort.text = when (which) {
+                    0 -> "天数 ▾"
+                    1 -> "价值 ▾"
+                    2 -> "日均 ▾"
+                    else -> "时间 ▾"
                 }
-                .show()
+                refresh()
+            }
         }
 
         // 分类筛选
         binding.btnFilterCategory.setOnClickListener {
             val cats = listOf("全部") + store.getCategories()
             val curIdx = if (selectedCategory == null) 0 else cats.indexOf(selectedCategory).coerceAtLeast(0)
-            MaterialAlertDialogBuilder(requireContext())
-                .setTitle("选择所属分类")
-                .setSingleChoiceItems(cats.toTypedArray(), curIdx) { dialog, which ->
-                    selectedCategory = if (which == 0) null else cats[which]
-                    binding.btnFilterCategory.text = if (selectedCategory == null) "全部分类 ▾" else "$selectedCategory ▾"
-                    dialog.dismiss()
-                    refresh()
-                }
-                .show()
+            ModernDialogHelper.showSingleChoiceDialog(
+                context = requireContext(),
+                title = "选择所属分类",
+                emoji = "📁",
+                options = cats,
+                selectedIndex = curIdx
+            ) { which, _ ->
+                selectedCategory = if (which == 0) null else cats[which]
+                binding.btnFilterCategory.text = if (selectedCategory == null) "全部分类 ▾" else "$selectedCategory ▾"
+                refresh()
+            }
         }
 
         // 筛选入口/平面图快速进入

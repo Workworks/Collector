@@ -128,11 +128,19 @@ object CategoryManagerDialog {
         }
 
         val manageDialog = MaterialAlertDialogBuilder(context)
-            .setTitle("分类管理")
             .setView(binding.root)
-            .setPositiveButton("完成", null)
+            .setCancelable(true)
             .create()
+
+        manageDialog.window?.setBackgroundDrawable(android.graphics.drawable.ColorDrawable(android.graphics.Color.TRANSPARENT))
         manageDialog.window?.attributes?.windowAnimations = R.style.CustomDialogAnimation
+
+        binding.btnCloseCategories.applyPressScaleAnimation(0.92f)
+        binding.btnCloseCategories.setOnClickListener { manageDialog.dismiss() }
+
+        binding.btnFinishCategories.applyPressScaleAnimation(0.94f)
+        binding.btnFinishCategories.setOnClickListener { manageDialog.dismiss() }
+
         manageDialog.show()
     }
 }

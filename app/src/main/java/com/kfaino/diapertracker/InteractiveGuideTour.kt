@@ -625,10 +625,12 @@ object InteractiveGuideTour {
         }
         activeTourKey = null
 
-        MaterialAlertDialogBuilder(activity)
-            .setTitle("🎉 恭喜完成全景手把手教学！")
-            .setMessage("您已经完全掌握了 Collecter 的全部核心功能（AI智能管家、装备套装核对、空间寻物、收纳扫码、折旧算法、断舍离雷达、Web大屏、桌面组件与热更新）。\n\n随时可以在「我的 ➔ 功能全景与使用教程」中点击任意功能卡片随时重温跟手演练！")
-            .setPositiveButton("🚀 开始畅享使用", null)
-            .show()
+        ModernDialogHelper.showInfoDialog(
+            context = activity,
+            title = "🎉 恭喜完成全景手把手教学！",
+            emoji = "🏆",
+            message = "您已经完全掌握了 Collecter 的全部核心功能（AI智能管家、装备套装核对、空间寻物、收纳扫码、折旧算法、断舍离雷达、Web大屏、桌面组件与热更新）。\n\n随时可以在「我的 ➔ 功能全景与使用教程」中点击任意功能卡片随时重温跟手演练！",
+            buttonText = "🚀 开始畅享使用"
+        )
     }
 }

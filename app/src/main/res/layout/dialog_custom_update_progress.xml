@@ -102,14 +102,15 @@
         android:layout_marginBottom="20dp" />
 
     <!-- 底部取消操作 -->
-    <Button
+    <com.google.android.material.button.MaterialButton
         android:id="@+id/custom_btn_cancel_download"
+        style="?attr/materialButtonOutlinedStyle"
         android:layout_width="match_parent"
         android:layout_height="48dp"
         android:text="取消下载"
         android:textSize="14sp"
         android:textColor="@color/text_secondary"
-        android:background="@drawable/bg_btn_secondary"
-        style="?android:attr/borderlessButtonStyle" />
+        app:strokeColor="@color/card_border"
+        app:cornerRadius="12dp" />
 
 </LinearLayout>

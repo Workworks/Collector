@@ -47,14 +47,16 @@ object BluetoothPrinterHelper {
 
         val names = bondedDevices.map { "${it.name ?: "未知设备"} (${it.address})" }.toTypedArray()
 
-        MaterialAlertDialogBuilder(activity)
-            .setTitle("🖨️ 选择蓝牙标签打印机")
-            .setItems(names) { _, which ->
-                val device = bondedDevices[which]
-                sendPrintJob(activity, device, houseName, roomName, items, qrBitmap)
-            }
-            .setNegativeButton("取消", null)
-            .show()
+        ModernDialogHelper.showSingleChoiceDialog(
+            context = activity,
+            title = "选择蓝牙标签打印机",
+            emoji = "🖨️",
+            options = names.toList(),
+            selectedIndex = 0
+        ) { which, _ ->
+            val device = bondedDevices[which]
+            sendPrintJob(activity, device, houseName, roomName, items, qrBitmap)
+        }
     }
 
     @SuppressLint("MissingPermission")
