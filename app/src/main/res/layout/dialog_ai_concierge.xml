@@ -1,0 +1,202 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:background="@drawable/bg_dialog_card"
+    android:padding="20dp">
+
+    <!-- 顶栏：图标 + 标题 + 关闭按钮 -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:layout_marginBottom="12dp">
+
+        <TextView
+            android:layout_width="38dp"
+            android:layout_height="38dp"
+            android:gravity="center"
+            android:textSize="20sp"
+            android:text="🤖"
+            android:background="@drawable/bg_icon_circle_soft" />
+
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:layout_marginStart="10dp"
+            android:orientation="vertical">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="AI 资产智能管家"
+                android:textSize="17sp"
+                android:textStyle="bold"
+                android:textColor="@color/text_primary"
+                android:fontFamily="sans-serif-medium" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="端侧离线语义寻物与资产财务洞察"
+                android:textSize="11sp"
+                android:textColor="@color/text_secondary" />
+        </LinearLayout>
+
+        <ImageView
+            android:id="@+id/btn_close_concierge"
+            android:layout_width="36dp"
+            android:layout_height="36dp"
+            android:src="@drawable/ic_close"
+            android:padding="8dp"
+            app:tint="@color/text_secondary"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:contentDescription="关闭" />
+    </LinearLayout>
+
+    <!-- 快捷提问推荐词滑动条 -->
+    <HorizontalScrollView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:scrollbars="none"
+        android:overScrollMode="never"
+        android:layout_marginBottom="12dp">
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
+
+            <TextView
+                android:id="@+id/chip_prompt_find"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="🔍 找物品放在哪"
+                android:textSize="12sp"
+                android:textColor="@color/primary"
+                android:paddingHorizontal="10dp"
+                android:paddingVertical="5dp"
+                android:background="@drawable/bg_chip_inactive"
+                android:layout_marginEnd="8dp"
+                android:clickable="true"
+                android:focusable="true" />
+
+            <TextView
+                android:id="@+id/chip_prompt_worth"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="💰 数码设备总值"
+                android:textSize="12sp"
+                android:textColor="@color/primary"
+                android:paddingHorizontal="10dp"
+                android:paddingVertical="5dp"
+                android:background="@drawable/bg_chip_inactive"
+                android:layout_marginEnd="8dp"
+                android:clickable="true"
+                android:focusable="true" />
+
+            <TextView
+                android:id="@+id/chip_prompt_expiring"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="⏳ 临期物品盘点"
+                android:textSize="12sp"
+                android:textColor="@color/primary"
+                android:paddingHorizontal="10dp"
+                android:paddingVertical="5dp"
+                android:background="@drawable/bg_chip_inactive"
+                android:layout_marginEnd="8dp"
+                android:clickable="true"
+                android:focusable="true" />
+
+            <TextView
+                android:id="@+id/chip_prompt_stock"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="🛒 哪些耗材快用完"
+                android:textSize="12sp"
+                android:textColor="@color/primary"
+                android:paddingHorizontal="10dp"
+                android:paddingVertical="5dp"
+                android:background="@drawable/bg_chip_inactive"
+                android:clickable="true"
+                android:focusable="true" />
+        </LinearLayout>
+    </HorizontalScrollView>
+
+    <!-- 回答展示卡片滚动区域 -->
+    <ScrollView
+        android:id="@+id/scroll_answer_container"
+        android:layout_width="match_parent"
+        android:layout_height="260dp"
+        android:overScrollMode="never"
+        android:scrollbars="none"
+        android:background="@drawable/bg_icon_circle_soft"
+        android:padding="14dp">
+
+        <LinearLayout
+            android:id="@+id/layout_answer_content"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+
+            <TextView
+                android:id="@+id/tv_concierge_greeting"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="👋 您好！我是您的 AI 资产管家。\n\n您可以试着问我：\n• “我的备用数据线放在哪？”\n• “家里共有多少数码产品，总价值多少？”\n• “哪些耗材需要补货？”\n• “推荐一套摄影或露营出行清单”"
+                android:textSize="13sp"
+                android:textColor="@color/text_secondary"
+                android:lineSpacingExtra="4dp" />
+
+            <LinearLayout
+                android:id="@+id/layout_result_cards"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:visibility="gone"
+                android:layout_marginTop="8dp" />
+        </LinearLayout>
+    </ScrollView>
+
+    <!-- 底部提问输入栏 -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:layout_marginTop="14dp">
+
+        <EditText
+            android:id="@+id/et_concierge_query"
+            android:layout_width="0dp"
+            android:layout_height="44dp"
+            android:layout_weight="1"
+            android:background="@drawable/bg_input_box"
+            android:paddingHorizontal="14dp"
+            android:textSize="13sp"
+            android:textColor="@color/text_primary"
+            android:textColorHint="@color/text_hint"
+            android:hint="输入自然语言提问或寻物..."
+            android:imeOptions="actionSearch"
+            android:inputType="text"
+            android:singleLine="true" />
+
+        <Button
+            android:id="@+id/btn_send_query"
+            android:layout_width="wrap_content"
+            android:layout_height="44dp"
+            android:backgroundTint="@color/primary"
+            android:text="✨ 提问"
+            android:textSize="13sp"
+            android:textStyle="bold"
+            android:textColor="#FFFFFF"
+            android:layout_marginStart="8dp"
+            app:cornerRadius="10dp" />
+    </LinearLayout>
+
+</LinearLayout>

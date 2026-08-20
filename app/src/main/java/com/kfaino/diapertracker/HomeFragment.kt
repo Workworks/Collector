@@ -155,6 +155,16 @@ class HomeFragment : Fragment() {
         }
 
         // 可折叠快捷工具箱按钮
+        binding.btnAiConciergeTop.applyPressScaleAnimation(0.92f)
+        binding.btnAiConciergeTop.setOnClickListener {
+            AiConciergeHelper.showConciergeDialog(requireActivity(), store)
+        }
+
+        binding.btnKitsTop.applyPressScaleAnimation(0.92f)
+        binding.btnKitsTop.setOnClickListener {
+            KitManager.showKitListDialog(requireActivity(), store)
+        }
+
         binding.btnScanQrTop.applyPressScaleAnimation(0.92f)
         binding.btnScanQrTop.setOnClickListener {
             (activity as? MainActivity)?.startQrScanner()

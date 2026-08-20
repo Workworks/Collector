@@ -159,6 +159,7 @@ class MainActivity : AppCompatActivity() {
         super.onResume()
         checkBiometricLock()
         NfcHelper.enableForegroundDispatch(this)
+        ClipboardOrderBridge.checkClipboard(this)
     }
 
     override fun onPause() {
@@ -380,7 +381,8 @@ class MainActivity : AppCompatActivity() {
         presetCategory: String? = null,
         prefilledNotes: String? = null,
         editEntry: Entry? = null,
-        editPosition: Int? = null
+        editPosition: Int? = null,
+        presetParsedItem: SmartIntakeHelper.ParsedItem? = null
     ) {
         val isEditMode = (editEntry != null && editPosition != null)
         val dialogBinding = DialogAddEntryBinding.inflate(layoutInflater)
@@ -702,6 +704,10 @@ class MainActivity : AppCompatActivity() {
                 dialogBinding.notesInput.setText(item.notes)
             }
             updatePreview()
+        }
+
+        if (presetParsedItem != null) {
+            applySmartParsedItem(presetParsedItem)
         }
 
         dialogBinding.btnSmartOcr.applyPressScaleAnimation(0.92f)
@@ -1141,6 +1147,10 @@ class MainActivity : AppCompatActivity() {
         }
 
         dialog.show()
+    }
+
+    fun applySmartParsedItem(item: SmartIntakeHelper.ParsedItem) {
+        showAddDialog(presetParsedItem = item)
     }
 
     fun refreshCurrentFragment() {

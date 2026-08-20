@@ -1,10 +1,10 @@
 #!/usr/bin/env bash
 # Collecter Linux 一键启动脚本
 DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-JAR_FILE="$DIR/../libs/Collecter-Desktop-3.4.0.jar"
+JAR_FILE="$DIR/../libs/Collecter-Desktop-3.5.0.jar"
 
 if [ ! -f "$JAR_FILE" ]; then
-    JAR_FILE="$DIR/Collecter-Desktop-3.4.0.jar"
+    JAR_FILE="$DIR/Collecter-Desktop-3.5.0.jar"
 fi
 
 if ! command -v java &> /dev/null; then

@@ -232,6 +232,37 @@ object LanSyncHelper {
                         sendHttpResponse(out, "application/json; charset=utf-8", resp)
                     }
 
+                    // 8. 电商订单/淘口令智能解析入库
+                    method == "POST" && path == "/api/ecommerce/parse" -> {
+                        val body = readBody()
+                        val json = JSONObject(body)
+                        val text = json.optString("text", "")
+                        val parsed = SmartIntakeHelper.parseNaturalLanguage(text)
+                        val newEntry = Entry(
+                            brand = parsed.brand,
+                            category = parsed.category,
+                            price = parsed.price,
+                            qty = parsed.qty,
+                            unit = parsed.unit,
+                            purchaseDate = parsed.purchaseDate,
+                            manufactureDate = parsed.mfgDate,
+                            expiryDate = parsed.expDate,
+                            assetType = parsed.assetType,
+                            notes = parsed.notes
+                        )
+                        val all = store.loadAll().toMutableList()
+                        all.add(0, newEntry)
+                        store.saveAll(all)
+                        (context as? Activity)?.runOnUiThread { onDataReceived("") }
+                        val resp = JSONObject().apply {
+                            put("status", "ok")
+                            put("brand", newEntry.brand)
+                            put("price", newEntry.price)
+                            put("category", newEntry.category)
+                        }.toString().toByteArray(StandardCharsets.UTF_8)
+                        sendHttpResponse(out, "application/json; charset=utf-8", resp)
+                    }
+
                     else -> {
                         val status = JSONObject().apply {
                             put("app", "Collecter")
@@ -457,6 +488,13 @@ object LanSyncHelper {
         <div style="color: #94A3B8; font-size: 13px;">实时与手机双向互通 · 网页端操作毫秒级同步保存</div>
     </div>
 
+    <!-- 🛒 电商订单与淘口令极速导入栏 -->
+    <div style="background: #1E293B; border: 1px solid #334155; border-radius: 12px; padding: 12px 16px; margin-bottom: 20px; display: flex; gap: 10px; align-items: center;">
+        <span style="font-size: 20px;">🛒</span>
+        <input type="text" id="ecommerceInput" class="form-control" style="flex: 1;" placeholder="粘贴淘宝/京东/拼多多商品口令、分享链接或订单详情文本...">
+        <button class="btn" onclick="parseEcommerceOrder()">✨ 智能解析入库</button>
+    </div>
+
     <div class="batch-bar" id="batchBar">
         <span id="batchCount">已选中 0 项</span>
         <div style="display: flex; gap: 10px;">
@@ -636,6 +674,27 @@ object LanSyncHelper {
             closeAddModal();
             await loadEntries();
             alert('物品添加成功，已即时同步至手机！');
+        }
+
+        async function parseEcommerceOrder() {
+            const input = document.getElementById('ecommerceInput');
+            const text = input.value.trim();
+            if (!text) { alert('请先粘贴电商商品或订单文本！'); return; }
+            try {
+                const res = await fetch('/api/ecommerce/parse', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ text: text })
+                });
+                const data = await res.json();
+                if (data.status === 'ok') {
+                    input.value = '';
+                    await loadEntries();
+                    alert('🎉 电商解析入库成功！已添加【' + data.brand + '】(¥' + data.price + ')');
+                }
+            } catch (e) {
+                alert('解析异常: ' + e);
+            }
         }
 
         function exportCsv() {
