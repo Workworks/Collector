@@ -22,6 +22,56 @@ object InteractiveGuideTour {
     private var currentStep = 1
     private var activeTourKey: String? = null
 
+    // 教程演示沙盒示例追踪与自动清理机制 (Demo Data Sandbox)
+    private val demoEntryIds = mutableSetOf<String>()
+    private val demoVoucherIds = mutableSetOf<String>()
+    private val demoIdentityDocIds = mutableSetOf<String>()
+    private val demoMedicineIds = mutableSetOf<String>()
+
+    /** 注册教程演练期间创建的演示数据 (用于在教程结束/退出时自动原封不动删除) */
+    fun registerDemoEntry(id: String) = demoEntryIds.add(id)
+    fun registerDemoVoucher(id: String) = demoVoucherIds.add(id)
+    fun registerDemoIdentityDoc(id: String) = demoIdentityDocIds.add(id)
+    fun registerDemoMedicine(id: String) = demoMedicineIds.add(id)
+
+    /** 执行沙盒演示数据彻底回滚清理，确保不影响真实资产记录 */
+    private fun cleanupDemoData(activity: Activity) {
+        val store = DataStore(activity)
+        var cleanedCount = 0
+
+        if (demoEntryIds.isNotEmpty()) {
+            val all = store.loadAll().filterNot { demoEntryIds.contains(it.id) }
+            store.saveAll(all)
+            cleanedCount += demoEntryIds.size
+            demoEntryIds.clear()
+        }
+
+        if (demoVoucherIds.isNotEmpty()) {
+            val all = store.getVouchers().filterNot { demoVoucherIds.contains(it.id) }
+            store.saveVouchers(all)
+            cleanedCount += demoVoucherIds.size
+            demoVoucherIds.clear()
+        }
+
+        if (demoIdentityDocIds.isNotEmpty()) {
+            val all = store.getIdentityDocs().filterNot { demoIdentityDocIds.contains(it.id) }
+            store.saveIdentityDocs(all)
+            cleanedCount += demoIdentityDocIds.size
+            demoIdentityDocIds.clear()
+        }
+
+        if (demoMedicineIds.isNotEmpty()) {
+            val all = store.getMedicines().filterNot { demoMedicineIds.contains(it.id) }
+            store.saveMedicines(all)
+            cleanedCount += demoMedicineIds.size
+            demoMedicineIds.clear()
+        }
+
+        if (cleanedCount > 0) {
+            Toast.makeText(activity, "🧹 教程演示数据已自动安全回滚清理，未影响真实资产", Toast.LENGTH_SHORT).show()
+        }
+    }
+
     /** 启动全景连续手把手教学 */
     fun startTour(activity: MainActivity) {
         activeTourKey = "full"
@@ -45,6 +95,7 @@ object InteractiveGuideTour {
             overlayView = null
         }
         activeTourKey = null
+        cleanupDemoData(activity)
         Toast.makeText(activity, "已退出手把手教学", Toast.LENGTH_SHORT).show()
     }
 
@@ -777,6 +828,7 @@ object InteractiveGuideTour {
             overlayView = null
         }
         activeTourKey = null
+        cleanupDemoData(activity)
 
         ModernDialogHelper.showInfoDialog(
             context = activity,
