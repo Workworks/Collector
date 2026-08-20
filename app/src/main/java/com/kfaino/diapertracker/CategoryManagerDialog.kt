@@ -16,29 +16,26 @@ object CategoryManagerDialog {
         store: DataStore,
         onAdded: (String) -> Unit
     ) {
-        val binding = DialogInputCategoryBinding.inflate(LayoutInflater.from(context))
-        val dialog = MaterialAlertDialogBuilder(context)
-            .setTitle("新增分类")
-            .setView(binding.root)
-            .setNegativeButton(R.string.cancel, null)
-            .setPositiveButton(R.string.confirm) { _, _ ->
-                val name = binding.categoryInput.text?.toString()?.trim().orEmpty()
-                if (name.isEmpty()) {
-                    Toast.makeText(context, "分类名称不能为空", Toast.LENGTH_SHORT).show()
-                    return@setPositiveButton
-                }
-                val success = store.addCategory(name)
-                if (success) {
-                    Toast.makeText(context, "已成功添加分类: $name", Toast.LENGTH_SHORT).show()
-                    onAdded(name)
-                } else {
-                    Toast.makeText(context, "该分类已存在", Toast.LENGTH_SHORT).show()
-                }
+        ModernDialogHelper.showInputDialog(
+            context = context,
+            title = "新增物品分类",
+            subtitle = "例如: 摄影器材、护肤彩妆、手办模型、露营装备",
+            hint = "请输入分类名称",
+            emoji = "🏷️",
+            positiveText = "确认添加"
+        ) { name ->
+            if (name.isEmpty()) {
+                Toast.makeText(context, "分类名称不能为空", Toast.LENGTH_SHORT).show()
+                return@showInputDialog
             }
-            .create()
-
-        dialog.window?.attributes?.windowAnimations = R.style.CustomDialogAnimation
-        dialog.show()
+            val success = store.addCategory(name)
+            if (success) {
+                Toast.makeText(context, "🎉 已成功添加分类: $name", Toast.LENGTH_SHORT).show()
+                onAdded(name)
+            } else {
+                Toast.makeText(context, "该分类已存在", Toast.LENGTH_SHORT).show()
+            }
+        }
     }
 
     /** 弹出分类管理及排序对话框 */
@@ -79,20 +76,21 @@ object CategoryManagerDialog {
                     "确定要删除分类【$cat】吗？"
                 }
 
-                val delDialog = MaterialAlertDialogBuilder(context)
-                    .setTitle("删除分类")
-                    .setMessage(msg)
-                    .setNegativeButton(R.string.cancel, null)
-                    .setPositiveButton("删除") { _, _ ->
-                        categories.removeAt(pos)
-                        store.saveCategories(categories)
-                        adapter.submit(categories.toList())
-                        Toast.makeText(context, "已删除分类: $cat", Toast.LENGTH_SHORT).show()
-                        onUpdated()
-                    }
-                    .create()
-                delDialog.window?.attributes?.windowAnimations = R.style.CustomDialogAnimation
-                delDialog.show()
+                ModernDialogHelper.showConfirmDialog(
+                    context = context,
+                    title = "删除分类",
+                    message = msg,
+                    emoji = "🗑️",
+                    positiveText = "确认删除",
+                    negativeText = "取消",
+                    isDestructive = true
+                ) {
+                    categories.removeAt(pos)
+                    store.saveCategories(categories)
+                    adapter.submit(categories.toList())
+                    Toast.makeText(context, "已删除分类: $cat", Toast.LENGTH_SHORT).show()
+                    onUpdated()
+                }
             }
         )
 
@@ -114,19 +112,19 @@ object CategoryManagerDialog {
 
         // 恢复默认
         binding.btnResetPreset.setOnClickListener {
-            val resetDialog = MaterialAlertDialogBuilder(context)
-                .setTitle("恢复默认推荐")
-                .setMessage("确定要恢复默认推荐分类列表吗？")
-                .setNegativeButton(R.string.cancel, null)
-                .setPositiveButton(R.string.confirm) { _, _ ->
-                    categories = store.resetCategories().toMutableList()
-                    adapter.submit(categories.toList())
-                    Toast.makeText(context, "已恢复推荐分类", Toast.LENGTH_SHORT).show()
-                    onUpdated()
-                }
-                .create()
-            resetDialog.window?.attributes?.windowAnimations = R.style.CustomDialogAnimation
-            resetDialog.show()
+            ModernDialogHelper.showConfirmDialog(
+                context = context,
+                title = "恢复推荐分类",
+                message = "确定要恢复默认预设分类列表吗？\n（不会删除您已添加的物品数据）",
+                emoji = "🔄",
+                positiveText = "恢复默认",
+                negativeText = "取消"
+            ) {
+                categories = store.resetCategories().toMutableList()
+                adapter.submit(categories.toList())
+                Toast.makeText(context, "已恢复推荐分类", Toast.LENGTH_SHORT).show()
+                onUpdated()
+            }
         }
 
         val manageDialog = MaterialAlertDialogBuilder(context)

@@ -318,35 +318,34 @@ class HomeFragment : Fragment() {
     }
 
     private fun showSearchDialog() {
-        val input = EditText(requireContext()).apply {
-            hint = "输入物品、品牌或位置关键字搜索"
-            setPadding(48, 36, 48, 36)
-        }
-        MaterialAlertDialogBuilder(requireContext())
-            .setTitle("🔍 搜索资产与物品")
-            .setView(input)
-            .setPositiveButton("搜索") { _, _ ->
-                val query = input.text.toString().trim().lowercase()
-                if (query.isNotEmpty()) {
-                    val all = if (selectedTab == 0) store.getNonSubscriptionEntries() else store.getSubscriptionEntries()
-                    val filtered = all.filter {
-                        it.brand.lowercase().contains(query) ||
-                        it.category.lowercase().contains(query) ||
-                        it.location.lowercase().contains(query) ||
-                        it.notes.lowercase().contains(query)
-                    }
-                    if (selectedTab == 0) {
-                        assetAdapter.submitList(filtered)
-                    } else {
-                        subscriptionAdapter.submitList(filtered)
-                    }
-                    Toast.makeText(requireContext(), "找到 ${filtered.size} 项匹配记录", Toast.LENGTH_SHORT).show()
-                } else {
-                    refresh()
+        ModernDialogHelper.showInputDialog(
+            context = requireContext(),
+            title = "搜索资产与物品",
+            subtitle = "支持按物品名称、品牌、分类或收纳位置检索：",
+            hint = "例如: 相机、索尼、主卧衣柜",
+            emoji = "🔍",
+            positiveText = "立即检索",
+            negativeText = "重置列表"
+        ) { query ->
+            val q = query.trim().lowercase()
+            if (q.isNotEmpty()) {
+                val all = if (selectedTab == 0) store.getNonSubscriptionEntries() else store.getSubscriptionEntries()
+                val filtered = all.filter {
+                    it.brand.lowercase().contains(q) ||
+                    it.category.lowercase().contains(q) ||
+                    it.location.lowercase().contains(q) ||
+                    it.notes.lowercase().contains(q)
                 }
+                if (selectedTab == 0) {
+                    assetAdapter.submitList(filtered)
+                } else {
+                    subscriptionAdapter.submitList(filtered)
+                }
+                Toast.makeText(requireContext(), "🎉 找到 ${filtered.size} 项匹配记录", Toast.LENGTH_SHORT).show()
+            } else {
+                refresh()
             }
-            .setNegativeButton("重置", { _, _ -> refresh() })
-            .show()
+        }
     }
 
     private fun showAssetMoreMenu(entry: Entry, anchor: View) {

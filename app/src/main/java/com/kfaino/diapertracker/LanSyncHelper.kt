@@ -329,47 +329,45 @@ object LanSyncHelper {
         dialogView.addView(btnCopy)
         dialogView.addView(btnPullFromOther)
 
-        MaterialAlertDialogBuilder(activity)
+        val mainDialog = MaterialAlertDialogBuilder(activity)
             .setView(dialogView)
             .setPositiveButton("保持后台运行", null)
-            .show()
+            .create()
+
+        mainDialog.window?.attributes?.windowAnimations = R.style.CustomDialogAnimation
+        mainDialog.show()
     }
 
     private fun showPullFromOtherDialog(activity: Activity, store: DataStore, onSyncCompleted: () -> Unit) {
-        val input = EditText(activity).apply {
-            hint = "例如: 192.168.1.120:8848"
-            setPadding(36, 28, 36, 28)
-        }
-
-        MaterialAlertDialogBuilder(activity)
-            .setTitle("📥 从目标设备拉取数据")
-            .setMessage("输入另一台开启互传的手机或电脑 IP 地址：")
-            .setView(input)
-            .setPositiveButton("开始拉取") { _, _ ->
-                val target = input.text.toString().trim()
-                if (target.isNotEmpty()) {
-                    val fullUrl = if (!target.startsWith("http")) "http://$target/api/pull" else target
-                    executor.execute {
-                        try {
-                            val conn = URI.create(fullUrl).toURL().openConnection() as HttpURLConnection
-                            conn.connectTimeout = 6000
-                            conn.readTimeout = 6000
-                            val json = conn.inputStream.bufferedReader(StandardCharsets.UTF_8).use { it.readText() }
-                            activity.runOnUiThread {
-                                val count = store.importBackupJson(json)
-                                Toast.makeText(activity, "拉取成功！已同步 $count 条记录", Toast.LENGTH_SHORT).show()
-                                onSyncCompleted()
-                            }
-                        } catch (e: Exception) {
-                            activity.runOnUiThread {
-                                Toast.makeText(activity, "拉取失败: ${e.localizedMessage}", Toast.LENGTH_LONG).show()
-                            }
+        ModernDialogHelper.showInputDialog(
+            context = activity,
+            title = "从目标设备拉取数据",
+            subtitle = "输入另一台开启互传的手机或电脑局域网 IP 与端口：",
+            hint = "例如: 192.168.1.120:8848",
+            emoji = "📥",
+            positiveText = "开始极速拉取"
+        ) { target ->
+            if (target.isNotEmpty()) {
+                val fullUrl = if (!target.startsWith("http")) "http://$target/api/pull" else target
+                executor.execute {
+                    try {
+                        val conn = URI.create(fullUrl).toURL().openConnection() as HttpURLConnection
+                        conn.connectTimeout = 6000
+                        conn.readTimeout = 6000
+                        val json = conn.inputStream.bufferedReader(StandardCharsets.UTF_8).use { it.readText() }
+                        activity.runOnUiThread {
+                            val count = store.importBackupJson(json)
+                            Toast.makeText(activity, "🎉 拉取成功！已同步 $count 条记录", Toast.LENGTH_SHORT).show()
+                            onSyncCompleted()
+                        }
+                    } catch (e: Exception) {
+                        activity.runOnUiThread {
+                            Toast.makeText(activity, "⚠️ 拉取失败: ${e.localizedMessage}", Toast.LENGTH_LONG).show()
                         }
                     }
                 }
             }
-            .setNegativeButton("取消", null)
-            .show()
+        }
     }
 
     private fun generateQrCode(text: String, size: Int): Bitmap {

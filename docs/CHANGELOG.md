@@ -2,6 +2,24 @@
 
 ---
 
+## 📦 [v3.3.0] - 2026-08-20 (VersionCode: 25)
+
+### 💎 全局前端 UI 弹框体系高定重构与 ModernDialogHelper 升级
+- **✨ 全局统一现代化弹窗工厂 (`ModernDialogHelper.kt`)**：
+  - 彻底淘汰粗陋的原生系统 Alert 对话框，全量升级为 26dp 双层质感圆角微光卡片；
+  - 统一步骤入场/出场丝滑缩放动效 (`CustomDialogAnimation`) 与 Emoji 视觉徽章；
+- **🔍 资产极速检索与筛选高定弹窗 (`HomeFragment.kt`)**：
+  - 升级搜索弹窗为 ModernDialogHelper，支持即时动态多维匹配与平滑重置；
+- **💬 自然语言一句话记账高定输入弹窗 (`MainActivity.kt`)**：
+  - 升级为多行高定输入卡片，支持长文本粘贴与 AI 秒级拆解填充；
+- **🏷️ 分类与多账本空间管理弹窗重构 (`CategoryManagerDialog.kt` & `LedgerManager.kt`)**：
+  - 新增分类、删除分类、重置推荐与新建账本均升级为高定卡片；
+- **📊 空间实物盘点报告与数量修正重构 (`InventoryAuditDialog.kt`)**：
+  - 实物数量修正与盘点差异报告全面适配 ModernDialogHelper 高定设计；
+- **☁️ WebDAV、局域网互传与关于页面高定升级 (`ProfileFragment.kt` & `LanSyncHelper.kt`)**。
+
+---
+
 ## 📦 [v3.2.0] - 2026-08-20 (VersionCode: 24)
 
 ### 🎨 资产首页顶栏排版与专属图标系统重构升级

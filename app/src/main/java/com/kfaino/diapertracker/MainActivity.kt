@@ -729,24 +729,21 @@ class MainActivity : AppCompatActivity() {
 
         dialogBinding.btnSmartNlp.applyPressScaleAnimation(0.92f)
         dialogBinding.btnSmartNlp.setOnClickListener {
-            val input = EditText(this).apply {
-                hint = "例如: 昨天在山姆买了2箱脱脂牛奶单价65保质期到2026-10-15"
-                setPadding(36, 28, 36, 28)
-            }
-            MaterialAlertDialogBuilder(this)
-                .setTitle("💬 自然语言一句话记账")
-                .setMessage("粘贴或输入一段记账文本，AI 自动拆解并填充：")
-                .setView(input)
-                .setPositiveButton("智能解析") { _, _ ->
-                    val text = input.text.toString().trim()
-                    if (text.isNotBlank()) {
-                        val item = SmartIntakeHelper.parseNaturalLanguage(text)
-                        applySmartParsedItem(item)
-                        Toast.makeText(this, "🎉 解析完成！已自动填充", Toast.LENGTH_SHORT).show()
-                    }
+            ModernDialogHelper.showInputDialog(
+                context = this,
+                title = "自然语言一句话记账",
+                subtitle = "粘贴或语音输入记账文本，AI 自动拆解并填充：",
+                hint = "例如: 昨天在山姆买了2箱脱脂牛奶单价65保质期到2026-10-15",
+                emoji = "💬",
+                positiveText = "✨ 智能解析填充",
+                isMultiLine = true
+            ) { text ->
+                if (text.isNotBlank()) {
+                    val item = SmartIntakeHelper.parseNaturalLanguage(text)
+                    applySmartParsedItem(item)
+                    Toast.makeText(this, "🎉 解析完成！已自动填充", Toast.LENGTH_SHORT).show()
                 }
-                .setNegativeButton("取消", null)
-                .show()
+            }
         }
 
         // 6. 空间与位置体系绑定

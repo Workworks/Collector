@@ -85,7 +85,7 @@ object LedgerManager {
         val items = all.map { "${it.icon} ${it.name} (${it.desc})" }.toMutableList()
         items.add("➕ 新建自定义账本...")
 
-        MaterialAlertDialogBuilder(activity)
+        val dialog = MaterialAlertDialogBuilder(activity)
             .setTitle("📚 切换账本空间")
             .setSingleChoiceItems(items.toTypedArray(), curIdx) { dialog, which ->
                 if (which == items.size - 1) {
@@ -104,36 +104,34 @@ object LedgerManager {
                 }
             }
             .setNegativeButton("关闭", null)
-            .show()
+            .create()
+
+        dialog.window?.attributes?.windowAnimations = R.style.CustomDialogAnimation
+        dialog.show()
     }
 
     private fun showCreateLedgerDialog(activity: Activity, onCreated: () -> Unit) {
-        val input = EditText(activity).apply {
-            hint = "例如: 仓库周转、摄影器材库"
-            setPadding(40, 30, 40, 30)
-        }
-
-        MaterialAlertDialogBuilder(activity)
-            .setTitle("➕ 新建独立账本")
-            .setMessage("输入新账本名称：")
-            .setView(input)
-            .setPositiveButton("创建并切换") { _, _ ->
-                val name = input.text.toString().trim()
-                if (name.isNotEmpty()) {
-                    val newLedger = Ledger(
-                        name = name,
-                        icon = "📦",
-                        desc = "自定义管理账本"
-                    )
-                    val all = getAllLedgers(activity).toMutableList()
-                    all.add(newLedger)
-                    saveLedgers(activity, all)
-                    setCurrentLedger(activity, newLedger.id)
-                    Toast.makeText(activity, "已创建并切换至【${newLedger.name}】", Toast.LENGTH_SHORT).show()
-                    onCreated()
-                }
+        ModernDialogHelper.showInputDialog(
+            context = activity,
+            title = "新建独立账本",
+            subtitle = "为不同资产场景建立完全隔离的独立工作空间：",
+            hint = "例如: 仓库周转、摄影器材库、露营装备",
+            emoji = "📚",
+            positiveText = "创建并切换"
+        ) { name ->
+            if (name.isNotEmpty()) {
+                val newLedger = Ledger(
+                    name = name,
+                    icon = "📦",
+                    desc = "自定义管理账本"
+                )
+                val all = getAllLedgers(activity).toMutableList()
+                all.add(newLedger)
+                saveLedgers(activity, all)
+                setCurrentLedger(activity, newLedger.id)
+                Toast.makeText(activity, "🎉 已创建并切换至【${newLedger.name}】", Toast.LENGTH_SHORT).show()
+                onCreated()
             }
-            .setNegativeButton("取消", null)
-            .show()
+        }
     }
 }

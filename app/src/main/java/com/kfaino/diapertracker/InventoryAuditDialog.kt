@@ -180,22 +180,20 @@ object InventoryAuditDialog {
                     textSize = 11f
                     layoutParams = LinearLayout.LayoutParams(0, 76, 1f).apply { marginEnd = 6 }
                     setOnClickListener {
-                        val numInput = EditText(activity).apply {
-                            setText(state.actualQty.toString())
-                            inputType = android.text.InputType.TYPE_CLASS_NUMBER
+                        ModernDialogHelper.showInputDialog(
+                            context = activity,
+                            title = "修正实物数量",
+                            subtitle = "输入【${state.entry.brand}】的实际在库数量：",
+                            defaultValue = state.actualQty.toString(),
+                            emoji = "🔢",
+                            positiveText = "确认修正"
+                        ) { inputVal ->
+                            val v = inputVal.toIntOrNull() ?: state.entry.qty
+                            state.actualQty = v
+                            state.status = "adjusted"
+                            renderAuditList()
+                            updateProgress()
                         }
-                        MaterialAlertDialogBuilder(activity)
-                            .setTitle("修正实物数量")
-                            .setMessage("输入【${state.entry.brand}】的实际在库数量：")
-                            .setView(numInput)
-                            .setPositiveButton("确认") { _, _ ->
-                                val v = numInput.text.toString().toIntOrNull() ?: state.entry.qty
-                                state.actualQty = v
-                                state.status = "adjusted"
-                                renderAuditList()
-                                updateProgress()
-                            }
-                            .show()
                     }
                 }
 
@@ -222,13 +220,16 @@ object InventoryAuditDialog {
 
         renderAuditList()
 
-        MaterialAlertDialogBuilder(activity)
+        val mainDialog = MaterialAlertDialogBuilder(activity)
             .setView(dialogView)
             .setPositiveButton("完成盘点并生成差异报告") { _, _ ->
                 finishAuditAndShowReport(activity, store, targetName, auditStates, onCompleted)
             }
             .setNegativeButton("中断退出", null)
-            .show()
+            .create()
+
+        mainDialog.window?.attributes?.windowAnimations = R.style.CustomDialogAnimation
+        mainDialog.show()
     }
 
     private fun finishAuditAndShowReport(
@@ -293,18 +294,18 @@ object InventoryAuditDialog {
             }
         }
 
-        MaterialAlertDialogBuilder(activity)
-            .setTitle("🎉 盘点完成 · 差异报告")
-            .setMessage(reportText)
-            .setPositiveButton("复制报告") { _, _ ->
-                val cm = activity.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
-                cm.setPrimaryClip(ClipData.newPlainText("Collecter 盘点报告", reportText))
-                Toast.makeText(activity, "已复制盘点报告到剪贴板！", Toast.LENGTH_SHORT).show()
-                onCompleted()
-            }
-            .setNegativeButton("关闭") { _, _ ->
-                onCompleted()
-            }
-            .show()
+        ModernDialogHelper.showConfirmDialog(
+            context = activity,
+            title = "实物盘点差异报告",
+            message = reportText,
+            emoji = "📊",
+            positiveText = "复制报告并打卡",
+            negativeText = "完成并关闭"
+        ) {
+            val cm = activity.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+            cm.setPrimaryClip(ClipData.newPlainText("Collecter 盘点报告", reportText))
+            Toast.makeText(activity, "🎉 已复制盘点报告到剪贴板并完成打卡！", Toast.LENGTH_SHORT).show()
+            onCompleted()
+        }
     }
 }

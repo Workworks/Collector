@@ -480,40 +480,47 @@ class ProfileFragment : Fragment() {
     }
 
     private fun showClearDataDialog() {
-        MaterialAlertDialogBuilder(requireContext())
-            .setTitle("⚠️ 警告：清空全部数据")
-            .setMessage("确定要彻底清空本地所有物品记录、分类与空间位置历史吗？此操作不可逆！")
-            .setPositiveButton("确定清空") { _, _ ->
-                store.clearAllData()
-                Toast.makeText(requireContext(), "所有记录已彻底清空", Toast.LENGTH_SHORT).show()
-                (activity as? MainActivity)?.refreshCurrentFragment()
-            }
-            .setNegativeButton(R.string.cancel, null)
-            .show()
+        ModernDialogHelper.showConfirmDialog(
+            context = requireContext(),
+            title = "清空全部本地数据",
+            message = "⚠️ 警告：确定要彻底清空本地所有物品记录、分类与空间位置历史吗？\n\n此操作不可逆，所有本地私有沙盒数据将被完全抹除！",
+            emoji = "⚠️",
+            positiveText = "彻底清空",
+            negativeText = "取消",
+            isDestructive = true
+        ) {
+            store.clearAllData()
+            Toast.makeText(requireContext(), "所有记录已彻底清空", Toast.LENGTH_SHORT).show()
+            (activity as? MainActivity)?.refreshCurrentFragment()
+        }
     }
 
     private fun showFeedbackDialog() {
-        MaterialAlertDialogBuilder(requireContext())
-            .setTitle("意见反馈")
-            .setMessage("如在使用过程中遇到任何问题或有新功能建议，欢迎前往 GitHub 提交 Issue：\n\nhttps://github.com/${store.getGithubRepo()}/issues")
-            .setPositiveButton("访问 GitHub") { _, _ ->
-                try {
-                    val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://github.com/${store.getGithubRepo()}/issues"))
-                    startActivity(intent)
-                } catch (_: Exception) {
-                    Toast.makeText(requireContext(), "无法打开浏览器", Toast.LENGTH_SHORT).show()
-                }
+        ModernDialogHelper.showConfirmDialog(
+            context = requireContext(),
+            title = "意见反馈与功能建议",
+            message = "欢迎提交您的宝贵建议或 Bug 反馈！\n\n我们将定期跟进 GitHub Issues 并持续演化系统：\nhttps://github.com/${store.getGithubRepo()}/issues",
+            emoji = "💬",
+            positiveText = "前往 GitHub Issues",
+            negativeText = "关闭"
+        ) {
+            try {
+                val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://github.com/${store.getGithubRepo()}/issues"))
+                startActivity(intent)
+            } catch (_: Exception) {
+                Toast.makeText(requireContext(), "无法打开系统浏览器", Toast.LENGTH_SHORT).show()
             }
-            .setNegativeButton("关闭", null)
-            .show()
+        }
     }
 
     private fun showDocDialog(title: String, content: String) {
-        MaterialAlertDialogBuilder(requireContext())
-            .setTitle(title)
-            .setMessage(content)
-            .setPositiveButton("知道了", null)
-            .show()
+        ModernDialogHelper.showInfoDialog(
+            context = requireContext(),
+            title = title,
+            message = content,
+            emoji = "📜",
+            buttonText = "我知道了"
+        )
     }
 
     // =========================================================================
@@ -609,31 +616,33 @@ class ProfileFragment : Fragment() {
                 return@setOnClickListener
             }
 
-            MaterialAlertDialogBuilder(requireContext())
-                .setTitle("📥 从云端恢复数据")
-                .setMessage("恢复云端备份将合并/覆盖现有数据，确定继续？")
-                .setPositiveButton("立即恢复") { _, _ ->
-                    Toast.makeText(requireContext(), "正在从 WebDAV 下载备份...", Toast.LENGTH_SHORT).show()
-                    Thread {
-                        val (ok, result) = WebDavSyncHelper.downloadBackup(url, user, pass)
-                        activity?.runOnUiThread {
-                            if (ok) {
-                                val importOk = store.importBackupJson(result)
-                                if (importOk) {
-                                    Toast.makeText(requireContext(), "🎉 云端数据恢复成功！", Toast.LENGTH_SHORT).show()
-                                    (activity as? MainActivity)?.refreshCurrentFragment()
-                                    dialog.dismiss()
-                                } else {
-                                    Toast.makeText(requireContext(), "解析云端备份失败，数据可能已损坏", Toast.LENGTH_SHORT).show()
-                                }
+            ModernDialogHelper.showConfirmDialog(
+                context = requireContext(),
+                title = "从云端恢复数据",
+                message = "恢复云端备份将合并/更新现有数据，确定继续下载并覆盖？",
+                emoji = "☁️",
+                positiveText = "立即下载恢复",
+                negativeText = "取消"
+            ) {
+                Toast.makeText(requireContext(), "正在从 WebDAV 下载备份...", Toast.LENGTH_SHORT).show()
+                Thread {
+                    val (ok, result) = WebDavSyncHelper.downloadBackup(url, user, pass)
+                    activity?.runOnUiThread {
+                        if (ok) {
+                            val importOk = store.importBackupJson(result)
+                            if (importOk) {
+                                Toast.makeText(requireContext(), "🎉 云端数据恢复成功！", Toast.LENGTH_SHORT).show()
+                                (activity as? MainActivity)?.refreshCurrentFragment()
+                                dialog.dismiss()
                             } else {
-                                Toast.makeText(requireContext(), "⚠️ $result", Toast.LENGTH_LONG).show()
+                                Toast.makeText(requireContext(), "解析云端备份失败，数据可能已损坏", Toast.LENGTH_SHORT).show()
                             }
+                        } else {
+                            Toast.makeText(requireContext(), "⚠️ $result", Toast.LENGTH_LONG).show()
                         }
-                    }.start()
-                }
-                .setNegativeButton(R.string.cancel, null)
-                .show()
+                    }
+                }.start()
+            }
         }
 
         dialog.show()
@@ -641,11 +650,23 @@ class ProfileFragment : Fragment() {
 
     private fun showAboutDialog() {
         val ver = UpdateManager.getAppVersionName(requireContext())
-        MaterialAlertDialogBuilder(requireContext())
-            .setTitle("关于 Collecter")
-            .setMessage("Collecter 智能物品收纳与资产追踪助手\n\n版本：v$ver\n构建版本号：$ver:260819\n开源仓库：https://github.com/${store.getGithubRepo()}\n\n感谢您的使用与支持！")
-            .setPositiveButton("确定", null)
-            .show()
+        val msg = """
+            Collecter 个人资产与全屋收纳数字孪生系统
+            
+            • 运行版本：v$ver
+            • 隐私规范：100% 本地沙盒，无后台数据上报
+            • 开源仓库：https://github.com/${store.getGithubRepo()}
+            
+            让每一件精心挑选的物品，都找到专属归宿。
+        """.trimIndent()
+
+        ModernDialogHelper.showInfoDialog(
+            context = requireContext(),
+            title = "关于 Collecter",
+            message = msg,
+            emoji = "💎",
+            buttonText = "确认"
+        )
     }
 
     override fun onDestroyView() {
