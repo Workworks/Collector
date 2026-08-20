@@ -9,6 +9,7 @@ import android.text.TextWatcher
 import android.view.View
 import android.widget.AdapterView
 import android.widget.ArrayAdapter
+import android.widget.EditText
 import android.widget.ImageView
 import android.widget.TextView
 import android.widget.Toast
@@ -59,6 +60,13 @@ class MainActivity : AppCompatActivity() {
             } else {
                 Toast.makeText(this, "凭证处理失败，请重试", Toast.LENGTH_SHORT).show()
             }
+        }
+    }
+
+    private var onOcrPickedCallback: ((Uri) -> Unit)? = null
+    private val ocrPhotoLauncher = registerForActivityResult(ActivityResultContracts.GetContent()) { uri: Uri? ->
+        if (uri != null) {
+            onOcrPickedCallback?.invoke(uri)
         }
     }
 
@@ -652,6 +660,91 @@ class MainActivity : AppCompatActivity() {
             dialogBinding.inputCurrentValuation.setText(String.format(Locale.getDefault(), "%.2f", editEntry.currentValuation))
         }
 
+        // 5.1 ⚡ AI 智能免录助手绑定 (拍照发票/外包装识物 + 一句话记账)
+        fun applySmartParsedItem(item: SmartIntakeHelper.ParsedItem) {
+            if (item.brand.isNotBlank()) {
+                dialogBinding.brandInput.setText(item.brand)
+            }
+            val catIdx = categories.indexOf(item.category)
+            if (catIdx != -1) {
+                dialogBinding.categorySpinner.setSelection(catIdx)
+                selectedCategory = item.category
+            }
+            if (item.qty > 0) {
+                dialogBinding.qtyInput.setText(item.qty.toString())
+            }
+            if (item.unit.isNotBlank()) {
+                dialogBinding.unitInput.setText(item.unit)
+            }
+            if (item.price > 0.0) {
+                dialogBinding.priceInput.setText(String.format(Locale.getDefault(), "%.2f", item.price))
+            }
+            selectedAssetType = item.assetType
+            updateTypeUI()
+            if (item.purchaseDate > 0) {
+                selectedPurchaseDate = item.purchaseDate
+                updatePurchaseDateButton()
+                updateDurableDateButton()
+            }
+            if (item.mfgDate > 0) {
+                selectedMfgDate = item.mfgDate
+                updateMfgDateButton()
+            }
+            if (item.expDate > 0) {
+                selectedExpDate = item.expDate
+                updateExpDateButton()
+            }
+            if (item.notes.isNotBlank()) {
+                dialogBinding.notesInput.setText(item.notes)
+            }
+            updatePreview()
+        }
+
+        dialogBinding.btnSmartOcr.applyPressScaleAnimation(0.92f)
+        dialogBinding.btnSmartOcr.setOnClickListener {
+            onOcrPickedCallback = { uri ->
+                try {
+                    val inputStream = contentResolver.openInputStream(uri)
+                    val bmp = android.graphics.BitmapFactory.decodeStream(inputStream)
+                    inputStream?.close()
+                    if (bmp != null) {
+                        Toast.makeText(this, "🧠 AI 正在分析发票/包装图...", Toast.LENGTH_SHORT).show()
+                        SmartIntakeHelper.parseImageOcr(this, bmp, onSuccess = { item ->
+                            applySmartParsedItem(item)
+                            Toast.makeText(this, "🎉 识别成功！已自动填充表单", Toast.LENGTH_SHORT).show()
+                        }, onError = { err ->
+                            Toast.makeText(this, "识别提示: $err", Toast.LENGTH_SHORT).show()
+                        })
+                    }
+                } catch (e: Exception) {
+                    Toast.makeText(this, "图片加载异常: ${e.localizedMessage}", Toast.LENGTH_SHORT).show()
+                }
+            }
+            ocrPhotoLauncher.launch("image/*")
+        }
+
+        dialogBinding.btnSmartNlp.applyPressScaleAnimation(0.92f)
+        dialogBinding.btnSmartNlp.setOnClickListener {
+            val input = EditText(this).apply {
+                hint = "例如: 昨天在山姆买了2箱脱脂牛奶单价65保质期到2026-10-15"
+                setPadding(36, 28, 36, 28)
+            }
+            MaterialAlertDialogBuilder(this)
+                .setTitle("💬 自然语言一句话记账")
+                .setMessage("粘贴或输入一段记账文本，AI 自动拆解并填充：")
+                .setView(input)
+                .setPositiveButton("智能解析") { _, _ ->
+                    val text = input.text.toString().trim()
+                    if (text.isNotBlank()) {
+                        val item = SmartIntakeHelper.parseNaturalLanguage(text)
+                        applySmartParsedItem(item)
+                        Toast.makeText(this, "🎉 解析完成！已自动填充", Toast.LENGTH_SHORT).show()
+                    }
+                }
+                .setNegativeButton("取消", null)
+                .show()
+        }
+
         // 6. 空间与位置体系绑定
         val houses = store.getHouses()
         val houseNames = houses.map { it.name }
@@ -723,6 +816,22 @@ class MainActivity : AppCompatActivity() {
         }
         if (editEntry != null && editEntry.retiredSoldPrice > 0) {
             dialogBinding.inputRetireSoldPriceEdit.setText(String.format(Locale.getDefault(), "%.2f", editEntry.retiredSoldPrice))
+        }
+
+        dialogBinding.btnAiXianyuCopilot.applyPressScaleAnimation(0.92f)
+        dialogBinding.btnAiXianyuCopilot.setOnClickListener {
+            val q = dialogBinding.qtyInput.text.toString().toIntOrNull() ?: 1
+            val p = dialogBinding.priceInput.text.toString().toDoubleOrNull() ?: 0.0
+            val targetEntry = editEntry ?: Entry(
+                brand = dialogBinding.brandInput.text.toString().ifBlank { "闲置物品" },
+                category = selectedCategory,
+                price = p,
+                qty = q,
+                purchaseDate = selectedPurchaseDate
+            )
+            ResaleCopilotHelper.showListingCopilotDialog(this, targetEntry) { fastSellPrice ->
+                dialogBinding.inputRetireSoldPriceEdit.setText(String.format(Locale.getDefault(), "%.2f", fastSellPrice))
+            }
         }
 
         // 8. 周期订阅资产设置

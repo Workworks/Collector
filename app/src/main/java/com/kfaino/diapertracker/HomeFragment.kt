@@ -141,6 +141,13 @@ class HomeFragment : Fragment() {
             FloorPlanDialog.show(requireActivity(), store, isSelectMode = false)
         }
 
+        binding.btnInventoryAuditTop.applyPressScaleAnimation(0.90f)
+        binding.btnInventoryAuditTop.setOnClickListener {
+            InventoryAuditDialog.startAudit(requireActivity(), store) {
+                refresh()
+            }
+        }
+
         binding.btnSearchItems.applyPressScaleAnimation(0.90f)
         binding.btnSearchItems.setOnClickListener {
             showSearchDialog()

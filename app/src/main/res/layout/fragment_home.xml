@@ -88,6 +88,20 @@
             android:focusable="true"
             android:background="?attr/selectableItemBackgroundBorderless" />
 
+        <!-- 实物大盘点快捷键 -->
+        <ImageView
+            android:id="@+id/btn_inventory_audit_top"
+            android:layout_width="38dp"
+            android:layout_height="38dp"
+            android:layout_marginStart="2dp"
+            android:padding="8dp"
+            android:src="@drawable/ic_nav_report"
+            app:tint="@color/accent_dark"
+            android:contentDescription="实物大盘点"
+            android:clickable="true"
+            android:focusable="true"
+            android:background="?attr/selectableItemBackgroundBorderless" />
+
         <!-- 搜索按钮 -->
         <ImageView
             android:id="@+id/btn_search_items"

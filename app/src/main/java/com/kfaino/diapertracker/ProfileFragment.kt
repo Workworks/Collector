@@ -96,6 +96,14 @@ class ProfileFragment : Fragment() {
             }
         }
 
+        // 2.3 空间实物大盘点模式
+        binding.btnInventoryAudit.applyPressScaleAnimation(0.94f)
+        binding.btnInventoryAudit.setOnClickListener {
+            InventoryAuditDialog.startAudit(requireActivity(), store) {
+                Toast.makeText(requireContext(), "盘点数据已更新", Toast.LENGTH_SHORT).show()
+            }
+        }
+
         // 3. 更多设置（主题设置、触感震动、通知提醒、GitHub 仓库配置）
         binding.btnMoreSettings.setOnClickListener {
             showMoreSettingsDialog()

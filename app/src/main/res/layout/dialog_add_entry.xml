@@ -114,6 +114,46 @@
                     app:cornerRadius="12dp" />
             </com.google.android.material.button.MaterialButtonToggleGroup>
 
+            <!-- ⚡ AI 智能免录助手 (拍照小票/发票识别 + 一句话文本记账) -->
+            <LinearLayout
+                android:id="@+id/layout_ai_intake_bar"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:layout_marginTop="10dp"
+                android:gravity="center_vertical">
+
+                <TextView
+                    android:id="@+id/btn_smart_ocr"
+                    android:layout_width="0dp"
+                    android:layout_height="36dp"
+                    android:layout_weight="1"
+                    android:background="@drawable/bg_chip_inactive"
+                    android:gravity="center"
+                    android:text="📷 拍照发票/小票秒录"
+                    android:textColor="@color/primary"
+                    android:textSize="12sp"
+                    android:textStyle="bold"
+                    android:layout_marginEnd="6dp"
+                    android:clickable="true"
+                    android:focusable="true" />
+
+                <TextView
+                    android:id="@+id/btn_smart_nlp"
+                    android:layout_width="0dp"
+                    android:layout_height="36dp"
+                    android:layout_weight="1"
+                    android:background="@drawable/bg_chip_inactive"
+                    android:gravity="center"
+                    android:text="💬 一句话智能记账"
+                    android:textColor="@color/accent_dark"
+                    android:textSize="12sp"
+                    android:textStyle="bold"
+                    android:layout_marginStart="6dp"
+                    android:clickable="true"
+                    android:focusable="true" />
+            </LinearLayout>
+
             <!-- 分类选择 -->
             <TextView
                 android:layout_width="wrap_content"
@@ -747,6 +787,20 @@
                         android:textSize="12sp"
                         android:textColor="@color/text_primary"
                         android:textColorHint="@color/text_hint" />
+
+                    <TextView
+                        android:id="@+id/btn_ai_xianyu_copilot"
+                        android:layout_width="match_parent"
+                        android:layout_height="36dp"
+                        android:layout_marginTop="8dp"
+                        android:background="@drawable/bg_chip_inactive"
+                        android:gravity="center"
+                        android:text="🤖 AI 生成闲鱼转卖文案与秒出估价"
+                        android:textColor="@color/accent_dark"
+                        android:textSize="12sp"
+                        android:textStyle="bold"
+                        android:clickable="true"
+                        android:focusable="true" />
                 </LinearLayout>
             </LinearLayout>
 

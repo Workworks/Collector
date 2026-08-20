@@ -294,6 +294,49 @@
                         android:layout_marginStart="56dp"
                         android:background="@color/card_border" />
 
+                    <!-- 空间实物大盘点模式 -->
+                    <LinearLayout
+                        android:id="@+id/btn_inventory_audit"
+                        android:layout_width="match_parent"
+                        android:layout_height="58dp"
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical"
+                        android:paddingHorizontal="18dp"
+                        android:clickable="true"
+                        android:focusable="true"
+                        android:background="?attr/selectableItemBackground">
+
+                        <ImageView
+                            android:layout_width="22dp"
+                            android:layout_height="22dp"
+                            android:src="@drawable/ic_nav_report"
+                            app:tint="@color/accent_dark"
+                            android:contentDescription="实物大盘点" />
+
+                        <TextView
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:layout_marginStart="16dp"
+                            android:text="📋 空间实物巡检与大盘点"
+                            android:textSize="16sp"
+                            android:textColor="@color/text_primary"
+                            android:fontFamily="sans-serif-medium" />
+
+                        <ImageView
+                            android:layout_width="16dp"
+                            android:layout_height="16dp"
+                            android:src="@drawable/ic_arrow_right"
+                            app:tint="@color/text_hint"
+                            android:contentDescription="进入" />
+                    </LinearLayout>
+
+                    <View
+                        android:layout_width="match_parent"
+                        android:layout_height="1dp"
+                        android:layout_marginStart="56dp"
+                        android:background="@color/card_border" />
+
                     <!-- 更多设置 (主题、仓库等) -->
                     <LinearLayout
                         android:id="@+id/btn_more_settings"
