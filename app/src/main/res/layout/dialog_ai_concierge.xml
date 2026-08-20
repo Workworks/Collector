@@ -123,6 +123,48 @@
                 android:paddingHorizontal="10dp"
                 android:paddingVertical="5dp"
                 android:background="@drawable/bg_chip_inactive"
+                android:layout_marginEnd="8dp"
+                android:clickable="true"
+                android:focusable="true" />
+
+            <TextView
+                android:id="@+id/chip_prompt_space_audit"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="🏥 全屋空间收纳体检"
+                android:textSize="12sp"
+                android:textColor="@color/primary"
+                android:paddingHorizontal="10dp"
+                android:paddingVertical="5dp"
+                android:background="@drawable/bg_chip_inactive"
+                android:layout_marginEnd="8dp"
+                android:clickable="true"
+                android:focusable="true" />
+
+            <TextView
+                android:id="@+id/chip_prompt_maint"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="🛠️ 设备维保日历排期"
+                android:textSize="12sp"
+                android:textColor="@color/primary"
+                android:paddingHorizontal="10dp"
+                android:paddingVertical="5dp"
+                android:background="@drawable/bg_chip_inactive"
+                android:layout_marginEnd="8dp"
+                android:clickable="true"
+                android:focusable="true" />
+
+            <TextView
+                android:id="@+id/chip_prompt_declutter"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="♻️ 沉睡闲置回血建议"
+                android:textSize="12sp"
+                android:textColor="@color/primary"
+                android:paddingHorizontal="10dp"
+                android:paddingVertical="5dp"
+                android:background="@drawable/bg_chip_inactive"
                 android:clickable="true"
                 android:focusable="true" />
         </LinearLayout>
@@ -194,7 +236,7 @@
             android:text="✨ 提问"
             android:textSize="13sp"
             android:textStyle="bold"
-            android:textColor="#FFFFFF"
+            android:textColor="@color/white"
             android:layout_marginStart="8dp"
             app:cornerRadius="10dp" />
     </LinearLayout>

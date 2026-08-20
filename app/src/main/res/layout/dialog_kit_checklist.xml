@@ -150,7 +150,7 @@
             android:text="完成装箱打卡"
             android:textSize="14sp"
             android:textStyle="bold"
-            android:textColor="#FFFFFF"
+            android:textColor="@color/white"
             android:background="@drawable/bg_btn_primary"
             android:backgroundTint="@color/primary" />
     </LinearLayout>

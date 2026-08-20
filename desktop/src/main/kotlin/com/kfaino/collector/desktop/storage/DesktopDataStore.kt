@@ -9,7 +9,7 @@ import java.nio.charset.StandardCharsets
 /**
  * 跨平台桌面端高可靠本地持久化存储
  * 存储路径: ~/.collector/collector_data.json (Linux & macOS 统一规范)
- * 数据模型与 Android 移动端 100% 格式对齐兼容
+ * 桌面端为独立轻量端（功能子集，支持基础物品管理与轻量配置）
  */
 class DesktopDataStore {
 

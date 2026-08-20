@@ -6,11 +6,8 @@ import android.bluetooth.BluetoothAdapter
 import android.bluetooth.BluetoothDevice
 import android.bluetooth.BluetoothSocket
 import android.graphics.Bitmap
-import android.graphics.Color
 import android.widget.Toast
-import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import java.io.ByteArrayOutputStream
-import java.io.OutputStream
 import java.nio.charset.Charset
 import java.text.SimpleDateFormat
 import java.util.*
@@ -19,19 +16,29 @@ import java.util.concurrent.Executors
 /**
  * 蓝牙便携热敏标签打印机直连引擎 (ESC/POS & TSPL 协议标准)
  * 支持市面主流 58mm / 80mm 便携蓝牙热敏打印机（汉印、精臣、得力、佳博等）
+ * 支持 5 大多模态收纳便签模版：箱盒清单、食材保鲜、常备药用法、线缆规格、防丢联系卡
  */
 object BluetoothPrinterHelper {
 
+    private const val TAG = "BluetoothPrinterHelper"
     private val SPP_UUID = UUID.fromString("00001101-0000-1000-8000-00805F9B34FB")
     private val executor = Executors.newSingleThreadExecutor()
 
+    const val TPL_BOX = 0
+    const val TPL_FOOD = 1
+    const val TPL_MEDICINE = 2
+    const val TPL_CABLE = 3
+    const val TPL_ANTI_LOST = 4
+
     @SuppressLint("MissingPermission")
-    fun printBoxLabel(
+    fun printLabel(
         activity: Activity,
-        houseName: String,
-        roomName: String,
-        items: List<Entry>,
-        qrBitmap: Bitmap?
+        templateType: Int,
+        title: String,
+        subtitle: String,
+        attrLines: List<String>,
+        items: List<Entry> = emptyList(),
+        qrBitmap: Bitmap? = null
     ) {
         val adapter = BluetoothAdapter.getDefaultAdapter()
         if (adapter == null || !adapter.isEnabled) {
@@ -55,20 +62,46 @@ object BluetoothPrinterHelper {
             selectedIndex = 0
         ) { which, _ ->
             val device = bondedDevices[which]
-            sendPrintJob(activity, device, houseName, roomName, items, qrBitmap)
+            sendPrintJob(activity, device, templateType, title, subtitle, attrLines, items, qrBitmap)
         }
+    }
+
+    /** 兼容旧版调用 */
+    fun printBoxLabel(
+        activity: Activity,
+        houseName: String,
+        roomName: String,
+        items: List<Entry>,
+        qrBitmap: Bitmap?
+    ) {
+        val attrLines = listOf(
+            "• 在库明细：${items.size} 种物品 (共 ${items.sumOf { it.qty }} 件)",
+            "• 核心物品：${items.take(3).joinToString("、") { "${it.brand}×${it.qty}" }}",
+            "• 收纳位置：$houseName / $roomName"
+        )
+        printLabel(
+            activity = activity,
+            templateType = TPL_BOX,
+            title = "📦 $roomName",
+            subtitle = "🏠 $houseName · 共 ${items.size} 种在库物品",
+            attrLines = attrLines,
+            items = items,
+            qrBitmap = qrBitmap
+        )
     }
 
     @SuppressLint("MissingPermission")
     private fun sendPrintJob(
         activity: Activity,
         device: BluetoothDevice,
-        houseName: String,
-        roomName: String,
+        templateType: Int,
+        title: String,
+        subtitle: String,
+        attrLines: List<String>,
         items: List<Entry>,
         qrBitmap: Bitmap?
     ) {
-        Toast.makeText(activity, "正在连接打印机【${device.name}】...", Toast.LENGTH_SHORT).show()
+        Toast.makeText(activity, "正在连接打印机【${device.name ?: "热敏机"}】...", Toast.LENGTH_SHORT).show()
 
         executor.execute {
             var socket: BluetoothSocket? = null
@@ -77,15 +110,15 @@ object BluetoothPrinterHelper {
                 socket.connect()
                 val os = socket.outputStream
 
-                val data = buildEscPosPayload(houseName, roomName, items, qrBitmap)
+                val data = buildEscPosPayload(templateType, title, subtitle, attrLines, items, qrBitmap)
                 os.write(data)
                 os.flush()
 
                 activity.runOnUiThread {
-                    Toast.makeText(activity, "🎉 标签打印任务已成功发送！", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(activity, "🎉 便签打印任务已成功发送！", Toast.LENGTH_SHORT).show()
                 }
             } catch (e: Exception) {
-                e.printStackTrace()
+                android.util.Log.w(TAG, "打印机连接或发送失败", e)
                 activity.runOnUiThread {
                     Toast.makeText(activity, "打印机连接或发送失败: ${e.localizedMessage}", Toast.LENGTH_LONG).show()
                 }
@@ -93,15 +126,17 @@ object BluetoothPrinterHelper {
                 try {
                     socket?.close()
                 } catch (e: Exception) {
-                    // Ignore
+                    android.util.Log.w(TAG, "关闭打印机 socket 失败", e)
                 }
             }
         }
     }
 
     private fun buildEscPosPayload(
-        houseName: String,
-        roomName: String,
+        templateType: Int,
+        title: String,
+        subtitle: String,
+        attrLines: List<String>,
         items: List<Entry>,
         qrBitmap: Bitmap?
     ): ByteArray {
@@ -115,26 +150,43 @@ object BluetoothPrinterHelper {
         baos.write(byteArrayOf(0x1B, 0x61, 0x01)) // 居中
         baos.write(byteArrayOf(0x1B, 0x45, 0x01)) // 加粗
         baos.write(byteArrayOf(0x1D, 0x21, 0x11)) // 双倍宽高
-        baos.write("📦 收纳箱标签\n".toByteArray(gbk))
 
-        // 3. 恢复标准字号，打印空间与房间
+        val headerText = when (templateType) {
+            TPL_FOOD -> "🥫 食材保鲜便签\n"
+            TPL_MEDICINE -> "💊 药箱对症便签\n"
+            TPL_CABLE -> "🔌 线缆规格便签\n"
+            TPL_ANTI_LOST -> "🪪 资产防丢联系卡\n"
+            else -> "📦 收纳箱全景便签\n"
+        }
+        baos.write(headerText.toByteArray(gbk))
+
+        // 3. 恢复标准字号，打印副标题与属性
         baos.write(byteArrayOf(0x1D, 0x21, 0x00)) // 正常
         baos.write(byteArrayOf(0x1B, 0x45, 0x00)) // 取消加粗
         baos.write("--------------------------------\n".toByteArray(gbk))
-        baos.write("🏠 空间: $houseName\n".toByteArray(gbk))
-        baos.write("📍 区域/箱号: $roomName\n".toByteArray(gbk))
-        baos.write("📊 箱内物品总数: ${items.size} 种 / ${items.sumOf { it.qty }} 件\n".toByteArray(gbk))
+        baos.write("📌 名称: $title\n".toByteArray(gbk))
+        if (subtitle.isNotBlank()) {
+            baos.write("ℹ️ 备注: $subtitle\n".toByteArray(gbk))
+        }
         baos.write("--------------------------------\n".toByteArray(gbk))
 
-        // 4. 左对齐打印在库清单摘要 (最多打印 8 项)
+        // 4. 打印动态属性明细
         baos.write(byteArrayOf(0x1B, 0x61, 0x00)) // 左对齐
-        val displayItems = items.take(8)
-        for ((idx, item) in displayItems.withIndex()) {
-            val line = "${idx + 1}. ${item.brand} × ${item.qty} ${item.unit}\n"
-            baos.write(line.toByteArray(gbk))
+        for (line in attrLines) {
+            baos.write("$line\n".toByteArray(gbk))
         }
-        if (items.size > 8) {
-            baos.write("... 及其余 ${items.size - 8} 项 (扫码查看)\n".toByteArray(gbk))
+
+        // 如果是箱盒模版且有物品列表，打印前 6 项清单
+        if (templateType == TPL_BOX && items.isNotEmpty()) {
+            baos.write("--------------------------------\n".toByteArray(gbk))
+            baos.write("【箱内物品明细】\n".toByteArray(gbk))
+            val displayItems = items.take(6)
+            for ((idx, item) in displayItems.withIndex()) {
+                baos.write("${idx + 1}. ${item.brand} × ${item.qty} ${item.unit}\n".toByteArray(gbk))
+            }
+            if (items.size > 6) {
+                baos.write("... 及其余 ${items.size - 6} 项 (扫码查看)\n".toByteArray(gbk))
+            }
         }
         baos.write("--------------------------------\n".toByteArray(gbk))
 
@@ -142,7 +194,7 @@ object BluetoothPrinterHelper {
         val sdf = SimpleDateFormat("yyyy-MM-dd HH:mm", Locale.getDefault())
         baos.write(byteArrayOf(0x1B, 0x61, 0x01)) // 居中
         baos.write("打印时间: ${sdf.format(Date())}\n".toByteArray(gbk))
-        baos.write("由 Collecter 智能资产生成\n\n\n".toByteArray(gbk))
+        baos.write("由 Collecter 智能便签工坊生成\n\n\n".toByteArray(gbk))
 
         // 6. 进纸切纸
         baos.write(byteArrayOf(0x1B, 0x64, 0x04)) // 进纸 4 行

@@ -60,7 +60,7 @@
             android:text="➕ 放入食材"
             android:textSize="12sp"
             android:textStyle="bold"
-            android:textColor="#FFFFFFFF"
+            android:textColor="@color/white"
             android:backgroundTint="@color/primary"
             app:cornerRadius="10dp" />
     </LinearLayout>

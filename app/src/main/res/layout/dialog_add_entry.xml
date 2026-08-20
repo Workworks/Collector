@@ -27,7 +27,7 @@
                 android:layout_height="20dp"
                 android:layout_gravity="center"
                 android:src="@drawable/ic_edit"
-                app:tint="#FFFFFFFF"
+                app:tint="@color/white"
                 android:contentDescription="图标" />
         </FrameLayout>
 
@@ -330,7 +330,7 @@
                     android:text="📉 折旧资产"
                     android:textSize="11sp"
                     android:textStyle="bold"
-                    android:textColor="#FFFFFF"
+                    android:textColor="@color/white"
                     android:background="@drawable/bg_chip_active"
                     android:layout_marginEnd="4dp"
                     android:clickable="true"
@@ -758,7 +758,7 @@
                     android:textSize="12sp"
                     android:textStyle="bold"
                     android:textColor="@color/text_primary"
-                    android:buttonTint="#EF4444" />
+                    android:buttonTint="@color/danger" />
 
                 <LinearLayout
                     android:id="@+id/layout_retire_details"
@@ -821,7 +821,7 @@
                     android:textSize="12sp"
                     android:textStyle="bold"
                     android:textColor="@color/text_primary"
-                    android:buttonTint="#3B82F6" />
+                    android:buttonTint="@color/primary" />
 
                 <LinearLayout
                     android:id="@+id/layout_sub_asset_details"
@@ -909,7 +909,7 @@
                             android:layout_weight="1"
                             android:layout_marginEnd="4dp"
                             android:background="@drawable/bg_chip_active"
-                            android:textColor="#FFFFFFFF"
+                            android:textColor="@color/white"
                             android:textSize="11sp"
                             android:gravity="center"
                             android:text="每天"
@@ -1108,8 +1108,8 @@
                             android:layout_gravity="top|end"
                             android:padding="4dp"
                             android:src="@drawable/ic_close"
-                            android:background="#99000000"
-                            app:tint="#FFFFFF"
+                            android:background="@color/overlay_dark"
+                            app:tint="@color/white"
                             android:visibility="gone" />
                     </FrameLayout>
                 </com.google.android.material.card.MaterialCardView>
@@ -1172,8 +1172,8 @@
                             android:layout_gravity="top|end"
                             android:padding="4dp"
                             android:src="@drawable/ic_close"
-                            android:background="#99000000"
-                            app:tint="#FFFFFF"
+                            android:background="@color/overlay_dark"
+                            app:tint="@color/white"
                             android:visibility="gone" />
                     </FrameLayout>
                 </com.google.android.material.card.MaterialCardView>
@@ -1230,7 +1230,7 @@
             android:text="确认保存"
             android:textSize="14sp"
             android:textStyle="bold"
-            android:textColor="#FFFFFFFF"
+            android:textColor="@color/white"
             android:background="@drawable/bg_btn_primary"
             style="?android:attr/borderlessButtonStyle" />
     </LinearLayout>

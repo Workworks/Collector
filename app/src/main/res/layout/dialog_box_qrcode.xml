@@ -6,7 +6,7 @@
     android:layout_height="wrap_content"
     android:orientation="vertical"
     android:background="@drawable/bg_dialog_card"
-    android:padding="18dp">
+    android:padding="16dp">
 
     <!-- 顶栏标题与关闭 -->
     <LinearLayout
@@ -14,14 +14,14 @@
         android:layout_height="wrap_content"
         android:orientation="horizontal"
         android:gravity="center_vertical"
-        android:layout_marginBottom="12dp">
+        android:layout_marginBottom="10dp">
 
         <TextView
-            android:id="@+id/tv_qr_title"
+            android:id="@+id/tv_studio_title"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:text="🏷️ 收纳箱专属二维码标签"
+            android:text="🏷️ 智能收纳便签工坊"
             android:textSize="17sp"
             android:textStyle="bold"
             android:textColor="@color/text_primary"
@@ -38,6 +38,68 @@
             android:contentDescription="关闭" />
     </LinearLayout>
 
+    <!-- 模态模板切换栏 -->
+    <HorizontalScrollView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:scrollbars="none"
+        android:layout_marginBottom="12dp">
+
+        <com.google.android.material.chip.ChipGroup
+            android:id="@+id/chip_group_templates"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            app:singleSelection="true"
+            app:selectionRequired="true">
+
+            <com.google.android.material.chip.Chip
+                android:id="@+id/chip_tpl_box"
+                style="@style/Widget.MaterialComponents.Chip.Choice"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:checked="true"
+                android:text="📦 箱盒清单"
+                android:textColor="@color/text_primary"
+                app:chipBackgroundColor="@color/bg_chip_selector" />
+
+            <com.google.android.material.chip.Chip
+                android:id="@+id/chip_tpl_food"
+                style="@style/Widget.MaterialComponents.Chip.Choice"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="🥫 生鲜保鲜"
+                android:textColor="@color/text_primary"
+                app:chipBackgroundColor="@color/bg_chip_selector" />
+
+            <com.google.android.material.chip.Chip
+                android:id="@+id/chip_tpl_medicine"
+                style="@style/Widget.MaterialComponents.Chip.Choice"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="💊 药箱对症"
+                android:textColor="@color/text_primary"
+                app:chipBackgroundColor="@color/bg_chip_selector" />
+
+            <com.google.android.material.chip.Chip
+                android:id="@+id/chip_tpl_cable"
+                style="@style/Widget.MaterialComponents.Chip.Choice"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="🔌 线缆规格"
+                android:textColor="@color/text_primary"
+                app:chipBackgroundColor="@color/bg_chip_selector" />
+
+            <com.google.android.material.chip.Chip
+                android:id="@+id/chip_tpl_lost"
+                style="@style/Widget.MaterialComponents.Chip.Choice"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="🪪 防丢联系"
+                android:textColor="@color/text_primary"
+                app:chipBackgroundColor="@color/bg_chip_selector" />
+        </com.google.android.material.chip.ChipGroup>
+    </HorizontalScrollView>
+
     <!-- 标签打印预览卡片 (可作为整张图片导出或打印) -->
     <com.google.android.material.card.MaterialCardView
         android:id="@+id/card_qr_label_preview"
@@ -48,23 +110,24 @@
         app:cardBackgroundColor="@color/card"
         app:strokeColor="@color/card_border"
         app:strokeWidth="1dp"
-        android:layout_marginBottom="14dp">
+        android:layout_marginBottom="12dp">
 
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
             android:gravity="center_horizontal"
-            android:padding="18dp">
+            android:padding="16dp">
 
-            <!-- 空间与收纳箱/房间名称 -->
+            <!-- 空间与收纳箱/房间/物品名称 -->
             <TextView
                 android:id="@+id/tv_qr_box_name"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="📦 主卧衣柜 · 2号收纳箱"
-                android:textSize="17sp"
+                android:textSize="16sp"
                 android:textStyle="bold"
+                android:gravity="center"
                 android:textColor="@color/text_primary" />
 
             <TextView
@@ -74,34 +137,73 @@
                 android:layout_marginTop="2dp"
                 android:text="🏠 自己的家 · 共 5 件在库物品"
                 android:textSize="12sp"
+                android:gravity="center"
                 android:textColor="@color/text_secondary" />
 
-            <!-- 二维码图片展示 (220dp x 220dp) -->
+            <!-- 动态明细参数区域 (如开封日期、温区、每日用量、规格功率等) -->
+            <LinearLayout
+                android:id="@+id/ll_label_attributes"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:layout_marginTop="10dp"
+                android:background="@drawable/bg_input_box"
+                android:padding="10dp">
+
+                <TextView
+                    android:id="@+id/tv_attr_line1"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="• 在库明细：5种物品 (总价值 ¥1,280)"
+                    android:textSize="12sp"
+                    android:textColor="@color/text_primary" />
+
+                <TextView
+                    android:id="@+id/tv_attr_line2"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="3dp"
+                    android:text="• 主要物品：冬季羽绒服 ×2、羊毛衫 ×3"
+                    android:textSize="12sp"
+                    android:textColor="@color/text_secondary" />
+
+                <TextView
+                    android:id="@+id/tv_attr_line3"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="3dp"
+                    android:text="• 更新时间：2026-08-20 · 状态在役"
+                    android:textSize="11sp"
+                    android:textColor="@color/text_secondary" />
+            </LinearLayout>
+
+            <!-- 二维码图片展示 (180dp x 180dp) -->
             <com.google.android.material.card.MaterialCardView
-                android:layout_width="220dp"
-                android:layout_height="220dp"
-                android:layout_marginTop="14dp"
-                android:layout_marginBottom="12dp"
+                android:layout_width="180dp"
+                android:layout_height="180dp"
+                android:layout_marginTop="12dp"
+                android:layout_marginBottom="10dp"
                 app:cardCornerRadius="12dp"
                 app:cardElevation="0dp"
-                app:cardBackgroundColor="#FFFFFF"
-                app:strokeColor="#E2E8F0"
+                app:cardBackgroundColor="@color/card"
+                app:strokeColor="@color/card_border"
                 app:strokeWidth="1dp">
 
                 <ImageView
                     android:id="@+id/iv_qr_code"
                     android:layout_width="match_parent"
                     android:layout_height="match_parent"
-                    android:padding="12dp"
+                    android:padding="8dp"
                     android:scaleType="fitCenter"
-                    android:contentDescription="收纳箱二维码" />
+                    android:contentDescription="收纳二维码" />
             </com.google.android.material.card.MaterialCardView>
 
-            <!-- 底部说明与 App Logo 标识 -->
+            <!-- 底部说明与 App 标识 -->
             <TextView
+                android:id="@+id/tv_label_footer"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="📱 使用 Collecter 扫一扫 · 秒查箱内清单"
+                android:text="📱 Collecter 扫一扫 · 极速寻物与流转核对"
                 android:textSize="11sp"
                 android:textColor="@color/primary"
                 android:textStyle="bold" />
@@ -121,7 +223,7 @@
             android:layout_height="44dp"
             android:layout_weight="1"
             android:layout_marginEnd="6dp"
-            android:text="🖨️ 蓝牙标签机打印"
+            android:text="🖨️ 蓝牙标签机直印"
             android:textSize="12sp"
             android:textStyle="bold"
             android:textColor="@color/primary"
@@ -154,7 +256,7 @@
             android:layout_height="46dp"
             android:layout_weight="1"
             android:layout_marginEnd="6dp"
-            android:text="💾 保存到相册"
+            android:text="💾 保存高清便签"
             android:textSize="13sp"
             android:textStyle="bold"
             android:textColor="@color/text_primary"
@@ -167,10 +269,10 @@
             android:layout_height="46dp"
             android:layout_weight="1"
             android:layout_marginStart="6dp"
-            android:text="📤 分享/打印标签"
+            android:text="📤 分享/相纸打印"
             android:textSize="13sp"
             android:textStyle="bold"
-            android:textColor="#FFFFFFFF"
+            android:textColor="@android:color/white"
             android:background="@drawable/bg_btn_primary"
             style="?android:attr/borderlessButtonStyle" />
     </LinearLayout>

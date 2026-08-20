@@ -26,7 +26,7 @@
                 android:layout_height="24dp"
                 android:layout_gravity="center"
                 android:src="@drawable/ic_download"
-                app:tint="#FFFFFFFF"
+                app:tint="@color/white"
                 android:contentDescription="新版本" />
         </FrameLayout>
 
@@ -60,7 +60,7 @@
                     android:text="v2.2.5"
                     android:textSize="12sp"
                     android:textStyle="bold"
-                    android:textColor="#FFFFFFFF"
+                    android:textColor="@color/white"
                     android:background="@drawable/bg_chip_active"
                     android:paddingHorizontal="8dp"
                     android:paddingVertical="2dp" />
@@ -124,7 +124,7 @@
         android:orientation="horizontal"
         android:gravity="center_vertical"
         android:background="@drawable/bg_chip_inactive"
-        android:backgroundTint="#1010B981"
+        android:backgroundTint="@color/tint_subtle_emerald"
         android:padding="10dp"
         android:visibility="gone"
         android:layout_marginBottom="14dp">
@@ -161,7 +161,7 @@
             android:text="⚡ 极速免重装热更新 (推荐)"
             android:textSize="14sp"
             android:textStyle="bold"
-            android:textColor="#FFFFFFFF"
+            android:textColor="@color/white"
             android:backgroundTint="@color/primary"
             app:cornerRadius="12dp"
             android:visibility="gone"
@@ -193,7 +193,7 @@
                 android:text="🚀 全量 APK 更新"
                 android:textSize="13sp"
                 android:textStyle="bold"
-                android:textColor="#FFFFFFFF"
+                android:textColor="@color/white"
                 android:backgroundTint="@color/accent_dark"
                 app:cornerRadius="12dp" />
         </LinearLayout>

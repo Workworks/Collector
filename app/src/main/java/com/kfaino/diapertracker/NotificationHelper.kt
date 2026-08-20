@@ -18,6 +18,7 @@ import java.util.Locale
  */
 object NotificationHelper {
 
+    private const val TAG = "NotificationHelper"
     const val CHANNEL_ID = "collector_asset_reminders"
     const val ACTION_CHECK_REMINDERS = "com.kfaino.diapertracker.ACTION_CHECK_REMINDERS"
 
@@ -83,7 +84,9 @@ object NotificationHelper {
                 AlarmManager.INTERVAL_DAY,
                 pendingIntent
             )
-        } catch (_: Exception) {}
+        } catch (e: Exception) {
+            android.util.Log.w(TAG, "设置定时提醒闹钟失败", e)
+        }
     }
 
     /** 执行提醒检查并推送通知 */

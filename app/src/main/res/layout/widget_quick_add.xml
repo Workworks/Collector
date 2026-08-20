@@ -7,7 +7,7 @@
     android:orientation="horizontal"
     android:gravity="center_vertical"
     android:background="@drawable/bg_dialog_card"
-    android:backgroundTint="#0F172A"
+    android:backgroundTint="@color/card"
     android:paddingHorizontal="14dp"
     android:paddingVertical="10dp">
 
@@ -23,7 +23,7 @@
             android:layout_height="wrap_content"
             android:text="在役资产 · 日均消费"
             android:textSize="11sp"
-            android:textColor="#94A3B8" />
+            android:textColor="@color/text_secondary" />
 
         <LinearLayout
             android:layout_width="wrap_content"
@@ -39,7 +39,7 @@
                 android:text="¥0"
                 android:textSize="16sp"
                 android:textStyle="bold"
-                android:textColor="#FFFFFF" />
+                android:textColor="@color/text_primary" />
 
             <TextView
                 android:id="@+id/widget_daily_cost"
@@ -48,7 +48,7 @@
                 android:layout_marginStart="8dp"
                 android:text="¥0.00/天"
                 android:textSize="12sp"
-                android:textColor="#38BDF8" />
+                android:textColor="@color/tag_custom_text" />
         </LinearLayout>
     </LinearLayout>
 
@@ -61,7 +61,7 @@
         android:text="+"
         android:textSize="22sp"
         android:textStyle="bold"
-        android:textColor="#FFFFFF"
+        android:textColor="@color/white"
         android:background="@drawable/bg_btn_primary" />
 
 </LinearLayout>

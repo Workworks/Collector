@@ -20,6 +20,7 @@ import java.util.UUID
  */
 object ImageVaultHelper {
 
+    private const val TAG = "ImageVaultHelper"
     private const val VAULT_DIR_NAME = "item_vault"
     private const val MAX_IMAGE_DIMENSION = 1600
     private const val JPEG_QUALITY = 85
@@ -61,7 +62,9 @@ object ImageVaultHelper {
                 try {
                     val exif = ExifInterface(input)
                     orientation = exif.getAttributeInt(ExifInterface.TAG_ORIENTATION, ExifInterface.ORIENTATION_NORMAL)
-                } catch (_: Exception) {}
+                } catch (e: Exception) {
+                    android.util.Log.w(TAG, "读取图片 EXIF 旋转属性失败", e)
+                }
             }
 
             // 2. 解码原始位图尺寸
@@ -103,7 +106,7 @@ object ImageVaultHelper {
 
             targetFilename
         } catch (e: Exception) {
-            e.printStackTrace()
+            android.util.Log.w(TAG, "保存图片至沙盒私有目录失败: $sourceUri", e)
             null
         }
     }
@@ -126,7 +129,8 @@ object ImageVaultHelper {
                 bitmap.recycle()
             }
             rotated
-        } catch (_: Exception) {
+        } catch (e: Exception) {
+            android.util.Log.w(TAG, "根据 EXIF 旋转位图失败", e)
             bitmap
         }
     }
@@ -165,7 +169,8 @@ object ImageVaultHelper {
                 memoryCache.put(cacheKey, resultBitmap)
             }
             resultBitmap
-        } catch (_: Exception) {
+        } catch (e: Exception) {
+            android.util.Log.w(TAG, "加载采样缩略图失败: $filename", e)
             null
         }
     }
@@ -185,6 +190,8 @@ object ImageVaultHelper {
                     memoryCache.remove(k)
                 }
             }
-        } catch (_: Exception) {}
+        } catch (e: Exception) {
+            android.util.Log.w(TAG, "删除沙盒图片失败: $filename", e)
+        }
     }
 }

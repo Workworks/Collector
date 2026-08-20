@@ -37,6 +37,7 @@ import java.util.concurrent.Executors
  */
 object UpdateManager {
 
+    private const val TAG = "UpdateManager"
     private val executor = Executors.newSingleThreadExecutor()
     private val mainHandler = Handler(Looper.getMainLooper())
 
@@ -82,7 +83,8 @@ object UpdateManager {
                 if (rNum < cNum) return false
             }
             return false
-        } catch (_: Exception) {
+        } catch (e: Exception) {
+            android.util.Log.w("UpdateManager", "版本比较失败: remote=$remoteVersion, local=$currentVersion", e)
             return remoteVersion != currentVersion
         }
     }
@@ -118,12 +120,8 @@ object UpdateManager {
                 }
 
                 val tempFile = File(saveDir, "Collecter_${release.versionName}.apk.tmp")
-                val urlsToTry = listOf(
-                    "https://ghfast.top/${release.apkDownloadUrl}",
-                    "https://mirror.ghproxy.com/${release.apkDownloadUrl}",
-                    "https://ghproxy.net/${release.apkDownloadUrl}",
-                    release.apkDownloadUrl
-                )
+                // 安全不变量：官方源优先，代理仅作 fallback（见 UpdateSource / GEMINI.md 铁律 3）
+                val urlsToTry = UpdateSource.candidates(release.apkDownloadUrl)
 
                 for (currentUrl in urlsToTry) {
                     try {
@@ -146,9 +144,13 @@ object UpdateManager {
                                 break
                             }
                         }
-                    } catch (_: Exception) {}
+                    } catch (e: Exception) {
+                        android.util.Log.w(TAG, "静默候选下载源失败: $currentUrl", e)
+                    }
                 }
-            } catch (_: Exception) {}
+            } catch (e: Exception) {
+                android.util.Log.w(TAG, "静默预下载安装包异常", e)
+            }
         }
     }
 
@@ -211,12 +213,8 @@ object UpdateManager {
         System.setProperty("java.net.preferIPv4Stack", "true")
         System.setProperty("java.net.preferIPv6Addresses", "false")
 
-        val apiUrls = listOf(
-            "https://ghfast.top/https://api.github.com/repos/$repo/releases/latest",
-            "https://mirror.ghproxy.com/https://api.github.com/repos/$repo/releases/latest",
-            "https://ghproxy.net/https://api.github.com/repos/$repo/releases/latest",
-            "https://api.github.com/repos/$repo/releases/latest"
-        )
+        // 安全不变量：官方 API 优先，代理仅作 fallback（见 UpdateSource / GEMINI.md 铁律 3）
+        val apiUrls = UpdateSource.candidates(UpdateSource.latestReleaseApi(repo))
 
         var lastException: Exception? = null
         var jsonText = ""
@@ -398,12 +396,8 @@ object UpdateManager {
         val saveDir = activity.getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS) ?: activity.cacheDir
         val apkFile = File(saveDir, "Collecter_${release.versionName}.apk")
 
-        val urlsToTry = listOf(
-            "https://ghfast.top/${release.apkDownloadUrl}",
-            "https://mirror.ghproxy.com/${release.apkDownloadUrl}",
-            "https://ghproxy.net/${release.apkDownloadUrl}",
-            release.apkDownloadUrl
-        )
+        // 安全不变量：官方源优先，代理仅作 fallback（见 UpdateSource / GEMINI.md 铁律 3）
+        val urlsToTry = UpdateSource.candidates(release.apkDownloadUrl)
 
         downloadThread = Thread {
             var lastError: Exception? = null
@@ -580,7 +574,8 @@ object UpdateManager {
             val date = parser.parse(iso) ?: return iso
             val formatter = SimpleDateFormat("yyyy-MM-dd HH:mm", Locale.getDefault())
             formatter.format(date)
-        } catch (_: Exception) {
+        } catch (e: Exception) {
+            android.util.Log.w("UpdateManager", "formatIsoDate 解析失败: $iso", e)
             iso
         }
     }

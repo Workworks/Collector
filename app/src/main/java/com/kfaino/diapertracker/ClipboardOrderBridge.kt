@@ -12,6 +12,7 @@ import android.widget.Toast
  */
 object ClipboardOrderBridge {
 
+    private const val TAG = "ClipboardOrderBridge"
     private var lastProcessedHash: Int = 0
 
     fun checkClipboard(activity: Activity) {
@@ -46,6 +47,8 @@ object ClipboardOrderBridge {
                     Toast.makeText(activity, "🎉 已自动提取并填充电商商品信息！", Toast.LENGTH_SHORT).show()
                 }
             }
-        } catch (_: Exception) {}
+        } catch (e: Exception) {
+            android.util.Log.w(TAG, "剪贴板电商内容侦测异常", e)
+        }
     }
 }

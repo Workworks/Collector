@@ -423,7 +423,7 @@
                 android:text="💾 保存订阅服务"
                 android:textSize="14sp"
                 android:textStyle="bold"
-                android:textColor="#FFFFFFFF"
+                android:textColor="@color/white"
                 android:backgroundTint="@color/primary"
                 app:cornerRadius="12dp" />
         </LinearLayout>

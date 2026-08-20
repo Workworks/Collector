@@ -285,12 +285,17 @@ class ReportFragment : Fragment() {
             binding.tvHealthScoreBadge.setBackgroundResource(R.drawable.bg_chip_inactive)
         }
 
+        binding.tvHealthScoreBadge.applyPressScaleAnimation(0.92f)
+        binding.tvHealthScoreBadge.setOnClickListener {
+            ResaleCopilotHelper.showDeclutterCabinDialog(requireActivity(), store) { refresh() }
+        }
+
         if (idleItems.isEmpty()) {
             binding.tvHealthDesc.text = "🎉 资产流转极其健康！暂无超过 180 天未打卡或临期闲置物品。"
             binding.idleItemsContainer.removeAllViews()
             binding.idleItemsContainer.visibility = View.GONE
         } else {
-            binding.tvHealthDesc.text = "发现 ${idleItems.size} 件超 180 天未打卡确认或临期闲置物品，建议及时归置出二手回血："
+            binding.tvHealthDesc.text = "发现 ${idleItems.size} 件超 180 天未打卡确认或临期闲置物品，点击进入决策舱集中回血出清："
             binding.idleItemsContainer.visibility = View.VISIBLE
             binding.idleItemsContainer.removeAllViews()
 
@@ -334,7 +339,7 @@ class ReportFragment : Fragment() {
                 }
 
                 val btnRetire = TextView(requireContext()).apply {
-                    text = "📦 挂闲鱼/归置"
+                    text = "♻️ 出清回血"
                     textSize = 11f
                     setTextColor(Color.WHITE)
                     setBackgroundResource(R.drawable.bg_btn_primary)
@@ -344,7 +349,7 @@ class ReportFragment : Fragment() {
                     layoutParams = lp
                     applyPressScaleAnimation(0.92f)
                     setOnClickListener {
-                        (activity as? MainActivity)?.showEditDialog(item)
+                        ResaleCopilotHelper.showDeclutterCabinDialog(requireActivity(), store) { refresh() }
                     }
                 }
 

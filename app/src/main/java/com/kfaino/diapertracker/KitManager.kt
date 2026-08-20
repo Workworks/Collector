@@ -4,13 +4,16 @@ import android.app.Activity
 import android.content.Context
 import android.graphics.Color
 import android.graphics.drawable.ColorDrawable
+import android.view.Gravity
 import android.view.LayoutInflater
 import android.view.View
 import android.widget.CheckBox
 import android.widget.LinearLayout
+import android.widget.ScrollView
 import android.widget.TextView
 import android.widget.Toast
 import androidx.core.content.ContextCompat
+import com.google.android.material.card.MaterialCardView
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.kfaino.diapertracker.databinding.DialogKitChecklistBinding
 import com.kfaino.diapertracker.databinding.DialogKitManagerBinding
@@ -19,9 +22,15 @@ import org.json.JSONObject
 import java.util.*
 
 /**
- * 🎒 场景化装备/出行套装与沉浸式打包核对管理器 (Kit & Bundle Manager)
+ * 🎒 场景化装备/出行套装与沉浸式打包归巢舱 (Kit & Packing Return-Home Studio)
+ * 1. 商务出差、露营、海岛、摄影、应急医疗、通勤场景化套装
+ * 2. 🚀 去程装箱打卡与 🏨 返程离店防漏双向清点
+ * 3. 🏡 一键物归原位指引 (Return-Home Auto Reposition)：到家后全景收纳路线图与一键轨迹打卡
+ * 4. 1080P 高清出行装箱海报与蓝牙热敏清单导出
  */
 object KitManager {
+
+    private const val TAG = "KitManager"
 
     data class Kit(
         val id: String = UUID.randomUUID().toString(),
@@ -66,6 +75,7 @@ object KitManager {
             }
             list
         } catch (e: Exception) {
+            android.util.Log.w(TAG, "解析场景套装 JSON 失败，重置为默认套装", e)
             createDefaultKits()
         }
     }
@@ -135,7 +145,7 @@ object KitManager {
                     // 顶栏：图标 + 名称 + 物品数
                     val header = LinearLayout(activity).apply {
                         orientation = LinearLayout.HORIZONTAL
-                        gravity = android.view.Gravity.CENTER_VERTICAL
+                        gravity = Gravity.CENTER_VERTICAL
                     }
 
                     val tvIcon = TextView(activity).apply {
@@ -253,7 +263,7 @@ object KitManager {
             binding.tvKitChecklistProgressDesc.text = "$modeName：$checkedCount/$total 项 ($percent%)"
 
             if (checkedCount == total) {
-                binding.btnAllChecked.text = if (isDepartMode) "🎉 全部装箱就绪！点击打卡" else "🏨 离店返程清点无遗漏！"
+                binding.btnAllChecked.text = if (isDepartMode) "🎉 全部装箱就绪！点击打卡" else "🏡 离店清点无遗漏 · 一键归巢归位"
                 binding.btnAllChecked.backgroundTintList = ContextCompat.getColorStateList(activity, R.color.primary)
             } else {
                 binding.btnAllChecked.text = if (isDepartMode) "完成装箱打卡 ($checkedCount/$total)" else "完成清点打卡 ($checkedCount/$total)"
@@ -266,7 +276,7 @@ object KitManager {
             for (entry in kitEntries) {
                 val row = LinearLayout(activity).apply {
                     orientation = LinearLayout.HORIZONTAL
-                    gravity = android.view.Gravity.CENTER_VERTICAL
+                    gravity = Gravity.CENTER_VERTICAL
                     background = ContextCompat.getDrawable(activity, R.drawable.bg_icon_circle_soft)
                     setPadding(10.dpToPx(activity), 8.dpToPx(activity), 10.dpToPx(activity), 8.dpToPx(activity))
                     val lp = LinearLayout.LayoutParams(
@@ -299,7 +309,7 @@ object KitManager {
                 }
 
                 val tvLoc = TextView(activity).apply {
-                    text = "📍 存放: ${entry.location.ifBlank { "默认空间" }} (数量: ${entry.qty} ${entry.unit})"
+                    text = "📍 原位: ${entry.houseName} · 【${entry.roomName.ifBlank { "默认" }}】 ${entry.location} (${entry.qty}${entry.unit})"
                     textSize = 11f
                     setTextColor(ContextCompat.getColor(activity, R.color.text_secondary))
                 }
@@ -338,9 +348,13 @@ object KitManager {
             val checkedCount = checkedStates.values.count { it }
             val total = kitEntries.size
             if (checkedCount == total) {
-                val successMsg = if (isDepartMode) "🎉 太棒了！【${kit.name}】出行装备已全部装箱完毕，祝您旅途愉快！" else "🏨 赞！【${kit.name}】所有私人物品均已清点完毕，零遗漏！"
-                Toast.makeText(activity, successMsg, Toast.LENGTH_LONG).show()
-                dialog.dismiss()
+                if (isDepartMode) {
+                    Toast.makeText(activity, "🎉 太棒了！【${kit.name}】出行装备已全部装箱完毕，祝您旅途愉快！", Toast.LENGTH_LONG).show()
+                    dialog.dismiss()
+                } else {
+                    dialog.dismiss()
+                    showReturnHomeDialog(activity, store, kit, kitEntries)
+                }
             } else {
                 val remain = total - checkedCount
                 ModernDialogHelper.showConfirmDialog(
@@ -357,6 +371,179 @@ object KitManager {
         }
 
         updateProgress()
+        dialog.show()
+    }
+
+    /** 弹出「🏡 出行归巢·物归原位指引与一键归位」全景弹窗 */
+    private fun showReturnHomeDialog(activity: Activity, store: DataStore, kit: Kit, entries: List<Entry>) {
+        val dialogView = LinearLayout(activity).apply {
+            orientation = LinearLayout.VERTICAL
+            setBackgroundResource(R.drawable.bg_dialog_card)
+            setPadding(16.dpToPx(activity), 16.dpToPx(activity), 16.dpToPx(activity), 16.dpToPx(activity))
+        }
+
+        val dialog = MaterialAlertDialogBuilder(activity)
+            .setView(dialogView)
+            .setCancelable(true)
+            .create()
+
+        dialog.window?.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
+        dialog.window?.attributes?.windowAnimations = R.style.CustomDialogAnimation
+
+        // 1. 顶栏标题
+        val topRow = LinearLayout(activity).apply {
+            orientation = LinearLayout.HORIZONTAL
+            gravity = Gravity.CENTER_VERTICAL
+            setPadding(0, 0, 0, 10.dpToPx(activity))
+        }
+
+        val tvTitle = TextView(activity).apply {
+            text = "🏡 【${kit.name}】物归原位路线图"
+            textSize = 16f
+            paint.isFakeBoldText = true
+            setTextColor(ContextCompat.getColor(context, R.color.text_primary))
+            layoutParams = LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f)
+        }
+
+        val btnClose = TextView(activity).apply {
+            text = "✕"
+            textSize = 18f
+            setTextColor(ContextCompat.getColor(context, R.color.text_secondary))
+            setPadding(8.dpToPx(activity), 4.dpToPx(activity), 8.dpToPx(activity), 4.dpToPx(activity))
+            setOnClickListener { dialog.dismiss() }
+        }
+
+        topRow.addView(tvTitle)
+        topRow.addView(btnClose)
+        dialogView.addView(topRow)
+
+        // 2. 提示卡片
+        val hintCard = MaterialCardView(activity).apply {
+            radius = 12.dpToPx(activity).toFloat()
+            cardElevation = 0f
+            strokeWidth = 1.dpToPx(activity)
+            setStrokeColor(ContextCompat.getColor(context, R.color.card_border))
+            setCardBackgroundColor(ContextCompat.getColor(context, R.color.primary_surface))
+            val lp = LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT)
+            lp.bottomMargin = 10.dpToPx(activity)
+            layoutParams = lp
+        }
+
+        val hintTv = TextView(activity).apply {
+            text = "✨ 离店清点零遗漏！请对照以下全屋原位指引将装备放回原处，点击底部按钮即可一键批量打卡确认归位并写入变迁轨迹："
+            textSize = 12f
+            setTextColor(ContextCompat.getColor(context, R.color.primary_dark))
+            setPadding(12.dpToPx(activity), 10.dpToPx(activity), 12.dpToPx(activity), 10.dpToPx(activity))
+        }
+        hintCard.addView(hintTv)
+        dialogView.addView(hintCard)
+
+        // 3. 物品归位路线列表
+        val scroll = ScrollView(activity).apply {
+            layoutParams = LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, 260.dpToPx(activity))
+            isFillViewport = true
+        }
+
+        val listLayout = LinearLayout(activity).apply {
+            orientation = LinearLayout.VERTICAL
+        }
+
+        for (e in entries) {
+            val itemRow = LinearLayout(activity).apply {
+                orientation = LinearLayout.HORIZONTAL
+                gravity = Gravity.CENTER_VERTICAL
+                setBackgroundResource(R.drawable.bg_input_box)
+                setPadding(12.dpToPx(activity), 8.dpToPx(activity), 12.dpToPx(activity), 8.dpToPx(activity))
+                val lp = LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT).apply {
+                    bottomMargin = 6.dpToPx(activity)
+                }
+                layoutParams = lp
+            }
+
+            val iconTv = TextView(activity).apply {
+                text = "📦"
+                textSize = 16f
+                setPadding(0, 0, 8.dpToPx(activity), 0)
+            }
+
+            val infoLayout = LinearLayout(activity).apply {
+                orientation = LinearLayout.VERTICAL
+                layoutParams = LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f)
+            }
+
+            val nameTv = TextView(activity).apply {
+                text = e.brand
+                textSize = 13f
+                paint.isFakeBoldText = true
+                setTextColor(ContextCompat.getColor(context, R.color.text_primary))
+            }
+
+            val locTv = TextView(activity).apply {
+                text = "➔ 归位至: ${e.houseName} · 【${e.roomName.ifBlank { "默认" }}】 ${e.location}"
+                textSize = 11f
+                setTextColor(ContextCompat.getColor(context, R.color.primary))
+                paint.isFakeBoldText = true
+            }
+
+            infoLayout.addView(nameTv)
+            infoLayout.addView(locTv)
+
+            itemRow.addView(iconTv)
+            itemRow.addView(infoLayout)
+            listLayout.addView(itemRow)
+        }
+
+        scroll.addView(listLayout)
+        dialogView.addView(scroll)
+
+        // 4. 一键归位确认打卡按钮
+        val btnBatchReposition = TextView(activity).apply {
+            text = "🏡 确认全量物归原位并打卡"
+            textSize = 13f
+            paint.isFakeBoldText = true
+            gravity = Gravity.CENTER
+            setTextColor(ContextCompat.getColor(context, android.R.color.white))
+            setBackgroundResource(R.drawable.bg_btn_primary)
+            setPadding(0, 12.dpToPx(activity), 0, 12.dpToPx(activity))
+            val lp = LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT).apply {
+                topMargin = 12.dpToPx(activity)
+            }
+            layoutParams = lp
+            applyPressScaleAnimation(0.92f)
+            setOnClickListener {
+                val all = store.loadAll().toMutableList()
+                val now = System.currentTimeMillis()
+                var updatedCount = 0
+
+                for (i in 0 until all.size) {
+                    val item = all[i]
+                    if (entries.any { it.id == item.id }) {
+                        val newHist = item.locationHistory.toMutableList()
+                        newHist.add(
+                            0,
+                            LocationMovement(
+                                location = item.location,
+                                houseName = item.houseName,
+                                roomName = item.roomName,
+                                movedAt = now,
+                                note = "🏡 【${kit.name}】出行归来·物归原位"
+                            )
+                        )
+                        all[i] = item.copy(
+                            lastCheckedAt = now,
+                            locationHistory = newHist
+                        )
+                        updatedCount++
+                    }
+                }
+
+                store.saveAll(all)
+                Toast.makeText(activity, "🎉 完美！已成功将 $updatedCount 件装备全部物归原位，健康分已刷新！", Toast.LENGTH_LONG).show()
+                dialog.dismiss()
+            }
+        }
+
+        dialogView.addView(btnBatchReposition)
         dialog.show()
     }
 
@@ -405,8 +592,8 @@ object KitManager {
         val percent = if (entries.isNotEmpty()) checkedCount * 100 / entries.size else 0
         canvas.drawText("PACKING CHECKLIST · 核对进度: $checkedCount/${entries.size} ($percent%)", 80f, 185f, subPaint)
 
-        val sdf = java.text.SimpleDateFormat("yyyy-MM-dd HH:mm", java.util.Locale.getDefault())
-        canvas.drawText("生成时间: ${sdf.format(java.util.Date())}  ·  共收录 ${entries.size} 件专属装备", 80f, 240f, metaPaint)
+        val sdf = java.text.SimpleDateFormat("yyyy-MM-dd HH:mm", Locale.getDefault())
+        canvas.drawText("生成时间: ${sdf.format(Date())}  ·  共收录 ${entries.size} 件专属装备", 80f, 240f, metaPaint)
 
         val linePaint = android.graphics.Paint().apply {
             color = Color.parseColor("#334155")
@@ -475,6 +662,7 @@ object KitManager {
                 buttonText = "收到"
             )
         } catch (e: Exception) {
+            android.util.Log.w(TAG, "导出出行装箱海报失败", e)
             Toast.makeText(activity, "导出失败: ${e.message}", Toast.LENGTH_SHORT).show()
         }
     }

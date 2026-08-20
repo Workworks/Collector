@@ -6,6 +6,8 @@ import org.json.JSONArray
 import org.json.JSONObject
 import java.util.UUID
 
+typealias ResaleAnalytics = AnalyticsQueries.ResaleAnalytics
+
 /** 基于 SharedPreferences 的高可用持久化层，管理物品折旧、在役/退役待办归置、周期订阅资产与空间位置 */
 class DataStore(private val ctx: Context) {
     private val prefs = ctx.getSharedPreferences("collector_data", Context.MODE_PRIVATE)
@@ -17,6 +19,19 @@ class DataStore(private val ctx: Context) {
     private val keyHouses = "houses_v1"
     private val keyCategories = "custom_categories_v2"
     private val keyTheme = "app_theme_mode"
+    private val settingsStore = SettingsStore(prefs)
+    private val spaceRepo = SpaceRepository(prefs)
+    private val categoryRepo = CategoryRepository(prefs)
+    private val entryRepo = EntryRepository(prefs)
+
+    private fun notifyWidgets() {
+        try {
+            ExpiringAndSubWidgetProvider.updateAllWidgets(ctx)
+            QuickAddWidgetProvider.updateAllWidgets(ctx)
+        } catch (e: Exception) {
+            android.util.Log.w("DataStore", "更新桌面小组件失败", e)
+        }
+    }
 
     companion object {
         // 通用默认分类
@@ -50,839 +65,115 @@ class DataStore(private val ctx: Context) {
 
     // ==================== 物品出入库、折旧与订阅记录 ====================
 
-    fun loadAll(): List<Entry> {
-        val raw = prefs.getString(keyEntries, null) ?: prefs.getString("entries_v3", null) ?: prefs.getString("entries_v2", null) ?: return emptyList()
-        return try {
-            val arr = JSONArray(raw)
-            val result = mutableListOf<Entry>()
-            for (i in 0 until arr.length()) {
-                val o = arr.getJSONObject(i)
-                val histArr = o.optJSONArray("loc_hist")
-                val histList = mutableListOf<LocationMovement>()
-                if (histArr != null) {
-                    for (h in 0 until histArr.length()) {
-                        val ho = histArr.getJSONObject(h)
-                        histList.add(
-                            LocationMovement(
-                                location = ho.optString("loc", ""),
-                                houseName = ho.optString("h_name", "我的家"),
-                                roomName = ho.optString("r_name", ""),
-                                pinX = ho.optDouble("px", -1.0).toFloat(),
-                                pinY = ho.optDouble("py", -1.0).toFloat(),
-                                movedAt = ho.optLong("ts", System.currentTimeMillis()),
-                                note = ho.optString("note", "")
-                            )
-                        )
-                    }
-                }
+    fun loadAll(): List<Entry> = entryRepo.loadAll(keyEntries)
 
-                val ts = o.optLong("ts", System.currentTimeMillis())
-                val pDate = o.optLong("p_date", ts)
+    fun saveAll(entries: List<Entry>) = entryRepo.saveAll(entries, keyEntries) { notifyWidgets() }
 
-                val momentsArr = o.optJSONArray("moments")
-                val momentsList = mutableListOf<ItemMemoryMoment>()
-                if (momentsArr != null) {
-                    for (m in 0 until momentsArr.length()) {
-                        val mo = momentsArr.getJSONObject(m)
-                        momentsList.add(
-                            ItemMemoryMoment(
-                                id = mo.optString("id", java.util.UUID.randomUUID().toString()),
-                                title = mo.optString("title", ""),
-                                story = mo.optString("story", ""),
-                                photoPath = mo.optString("photo", ""),
-                                date = mo.optLong("date", System.currentTimeMillis()),
-                                moodEmoji = mo.optString("emoji", "✨"),
-                                rating = mo.optInt("rating", 5)
-                            )
-                        )
-                    }
-                }
+    fun updateEntry(index: Int, newEntry: Entry): Boolean = entryRepo.updateEntry(index, newEntry, keyEntries) { notifyWidgets() }
 
-                val lendingArr = o.optJSONArray("lending_hist")
-                val lendingList = mutableListOf<LendingRecord>()
-                if (lendingArr != null) {
-                    for (l in 0 until lendingArr.length()) {
-                        val lo = lendingArr.getJSONObject(l)
-                        lendingList.add(
-                            LendingRecord(
-                                id = lo.optString("id", java.util.UUID.randomUUID().toString()),
-                                borrowerName = lo.optString("b_name", ""),
-                                borrowerContact = lo.optString("b_contact", ""),
-                                lentDate = lo.optLong("l_date", System.currentTimeMillis()),
-                                expectedReturnDate = lo.optLong("exp_date", 0L),
-                                actualReturnDate = lo.optLong("act_date", 0L),
-                                deposit = lo.optDouble("dep", 0.0),
-                                notes = lo.optString("notes", ""),
-                                photoPath = lo.optString("photo", ""),
-                                status = lo.optString("status", "lent"),
-                                returnConditionRating = lo.optInt("rating", 5)
-                            )
-                        )
-                    }
-                }
+    fun deleteEntryAt(index: Int): Boolean = entryRepo.deleteEntryAt(index, keyEntries) { notifyWidgets() }
 
-                result.add(
-                    Entry(
-                        id = o.optString("id", java.util.UUID.randomUUID().toString()),
-                        category = o.optString("cat", "数码"),
-                        brand = o.optString("brand", "物品"),
-                        qty = o.optInt("qty", 1),
-                        price = o.optDouble("price", 0.0),
-                        currentValuation = o.optDouble("cur_val", 0.0),
-                        purchaseDate = pDate,
-                        ts = ts,
-                        isIn = o.optBoolean("in", true),
-                        notes = o.optString("notes", ""),
-                        unit = o.optString("unit", "件"),
-                        location = o.optString("loc", ""),
-                        houseId = o.optString("h_id", "default_house"),
-                        houseName = o.optString("h_name", "我的家"),
-                        roomName = o.optString("r_name", ""),
-                        pinX = o.optDouble("px", -1.0).toFloat(),
-                        pinY = o.optDouble("py", -1.0).toFloat(),
-                        locationHistory = histList,
-                        isImportant = o.optBoolean("imp", false),
-                        reminderEnabled = o.optBoolean("rem_en", false),
-                        reminderIntervalDays = o.optInt("rem_int", 1),
-                        reminderTime = o.optString("rem_tm", "09:00"),
-                        lastCheckedAt = o.optLong("chk_ts", 0L),
-                        isRetired = o.optBoolean("is_ret", false),
-                        retiredAt = o.optLong("ret_at", 0L),
-                        retiredAction = o.optString("ret_act", ""),
-                        retiredSoldPrice = o.optDouble("ret_sp", 0.0),
-                        retiredNote = o.optString("ret_note", ""),
-                        isSubscription = o.optBoolean("is_sub", false),
-                        subCycle = o.optString("sub_cyc", "按月"),
-                        subNextBillingDate = o.optLong("sub_nxt", 0L),
-                        subAutoRenew = o.optBoolean("sub_rnw", true),
-                        assetType = o.optString("a_type", if (o.optBoolean("is_sub", false)) "subscription" else "consumable"),
-                        manufactureDate = o.optLong("m_date", 0L),
-                        expiryDate = o.optLong("e_date", 0L),
-                        photoPath = o.optString("img_p", ""),
-                        receiptPath = o.optString("rec_p", ""),
-                        minStockThreshold = o.optInt("min_th", 0),
-                        isDigital = o.optBoolean("is_dig", false),
-                        digitalType = o.optString("dig_type", "album"),
-                        digitalUrl = o.optString("dig_url", ""),
-                        digitalSize = o.optString("dig_sz", ""),
-                        digitalLicenseKey = o.optString("dig_key", ""),
-                        backupStatus = o.optString("bak_st", "local"),
-                        memoryMoments = momentsList,
-                        isLentOut = o.optBoolean("is_lent", false),
-                        currentBorrower = o.optString("c_borrower", ""),
-                        currentBorrowerContact = o.optString("c_contact", ""),
-                        currentLentDate = o.optLong("c_lent_ts", 0L),
-                        expectedReturnDate = o.optLong("exp_ret_ts", 0L),
-                        currentDeposit = o.optDouble("c_dep", 0.0),
-                        lendingHistory = lendingList
-                    )
-                )
-            }
-            result
-        } catch (_: Exception) {
-            emptyList()
-        }
-    }
+    fun setRetired(entryId: String, isRetired: Boolean, action: String = "挂闲鱼代售", soldPrice: Double = 0.0, note: String = "") =
+        entryRepo.setRetired(entryId, isRetired, action, soldPrice, note, keyEntries) { notifyWidgets() }
 
-    fun saveAll(entries: List<Entry>) {
-        val arr = JSONArray()
-        for (e in entries) {
-            val histArr = JSONArray()
-            for (h in e.locationHistory) {
-                histArr.put(
-                    JSONObject()
-                        .put("loc", h.location)
-                        .put("h_name", h.houseName)
-                        .put("r_name", h.roomName)
-                        .put("px", h.pinX.toDouble())
-                        .put("py", h.pinY.toDouble())
-                        .put("ts", h.movedAt)
-                        .put("note", h.note)
-                )
-            }
+    fun clearAllData() = entryRepo.clearAllData(keyEntries)
 
-            val momentsArr = JSONArray()
-            for (m in e.memoryMoments) {
-                momentsArr.put(
-                    JSONObject()
-                        .put("id", m.id)
-                        .put("title", m.title)
-                        .put("story", m.story)
-                        .put("photo", m.photoPath)
-                        .put("date", m.date)
-                        .put("emoji", m.moodEmoji)
-                        .put("rating", m.rating)
-                )
-            }
+    fun getLastUsedUnit(): String = entryRepo.getLastUsedUnit()
 
-            val lendingArr = JSONArray()
-            for (l in e.lendingHistory) {
-                lendingArr.put(
-                    JSONObject()
-                        .put("id", l.id)
-                        .put("b_name", l.borrowerName)
-                        .put("b_contact", l.borrowerContact)
-                        .put("l_date", l.lentDate)
-                        .put("exp_date", l.expectedReturnDate)
-                        .put("act_date", l.actualReturnDate)
-                        .put("dep", l.deposit)
-                        .put("notes", l.notes)
-                        .put("photo", l.photoPath)
-                        .put("status", l.status)
-                        .put("rating", l.returnConditionRating)
-                )
-            }
-
-            arr.put(
-                JSONObject()
-                    .put("id", e.id)
-                    .put("cat", e.category)
-                    .put("brand", e.brand)
-                    .put("qty", e.qty)
-                    .put("price", e.price)
-                    .put("cur_val", e.currentValuation)
-                    .put("p_date", e.purchaseDate)
-                    .put("ts", e.ts)
-                    .put("in", e.isIn)
-                    .put("notes", e.notes)
-                    .put("unit", e.unit)
-                    .put("loc", e.location)
-                    .put("h_id", e.houseId)
-                    .put("h_name", e.houseName)
-                    .put("r_name", e.roomName)
-                    .put("px", e.pinX.toDouble())
-                    .put("py", e.pinY.toDouble())
-                    .put("loc_hist", histArr)
-                    .put("imp", e.isImportant)
-                    .put("rem_en", e.reminderEnabled)
-                    .put("rem_int", e.reminderIntervalDays)
-                    .put("rem_tm", e.reminderTime)
-                    .put("chk_ts", e.lastCheckedAt)
-                    .put("is_ret", e.isRetired)
-                    .put("ret_at", e.retiredAt)
-                    .put("ret_act", e.retiredAction)
-                    .put("ret_sp", e.retiredSoldPrice)
-                    .put("ret_note", e.retiredNote)
-                    .put("is_sub", e.isSubscription)
-                    .put("sub_cyc", e.subCycle)
-                    .put("sub_nxt", e.subNextBillingDate)
-                    .put("sub_rnw", e.subAutoRenew)
-                    .put("a_type", e.assetType)
-                    .put("m_date", e.manufactureDate)
-                    .put("e_date", e.expiryDate)
-                    .put("img_p", e.photoPath)
-                    .put("rec_p", e.receiptPath)
-                    .put("min_th", e.minStockThreshold)
-                    .put("is_dig", e.isDigital)
-                    .put("dig_type", e.digitalType)
-                    .put("dig_url", e.digitalUrl)
-                    .put("dig_sz", e.digitalSize)
-                    .put("dig_key", e.digitalLicenseKey)
-                    .put("bak_st", e.backupStatus)
-                    .put("moments", momentsArr)
-                    .put("is_lent", e.isLentOut)
-                    .put("c_borrower", e.currentBorrower)
-                    .put("c_contact", e.currentBorrowerContact)
-                    .put("c_lent_ts", e.currentLentDate)
-                    .put("exp_ret_ts", e.expectedReturnDate)
-                    .put("c_dep", e.currentDeposit)
-                    .put("lending_hist", lendingArr)
-            )
-        }
-        prefs.edit().putString(keyEntries, arr.toString()).apply()
-        try {
-            ExpiringAndSubWidgetProvider.updateAllWidgets(ctx)
-            QuickAddWidgetProvider.updateAllWidgets(ctx)
-        } catch (_: Exception) {}
-    }
-
-    fun updateEntry(index: Int, newEntry: Entry): Boolean {
-        val list = loadAll().toMutableList()
-        if (index in 0 until list.size) {
-            val oldEntry = list[index]
-            // 如果位置发生了挪动，自动追加位置历史记录
-            val finalEntry = if (oldEntry.location.isNotBlank() && oldEntry.location != newEntry.location) {
-                val newHist = oldEntry.locationHistory.toMutableList()
-                newHist.add(
-                    0,
-                    LocationMovement(
-                        location = oldEntry.location,
-                        houseName = oldEntry.houseName,
-                        roomName = oldEntry.roomName,
-                        pinX = oldEntry.pinX,
-                        pinY = oldEntry.pinY,
-                        movedAt = System.currentTimeMillis(),
-                        note = "原位置变更为【${newEntry.location}】"
-                    )
-                )
-                newEntry.copy(locationHistory = newHist)
-            } else {
-                newEntry
-            }
-
-            list[index] = finalEntry
-            saveAll(list)
-            return true
-        }
-        return false
-    }
-
-    fun deleteEntryAt(index: Int): Boolean {
-        val list = loadAll().toMutableList()
-        if (index in 0 until list.size) {
-            list.removeAt(index)
-            saveAll(list)
-            return true
-        }
-        return false
-    }
-
-    fun setRetired(entryId: String, isRetired: Boolean, action: String = "挂闲鱼代售", soldPrice: Double = 0.0, note: String = "") {
-        val list = loadAll().toMutableList()
-        val idx = list.indexOfFirst { it.id == entryId }
-        if (idx != -1) {
-            list[idx] = list[idx].copy(
-                isRetired = isRetired,
-                retiredAt = if (isRetired) System.currentTimeMillis() else 0L,
-                retiredAction = if (isRetired) action else "",
-                retiredSoldPrice = soldPrice,
-                retiredNote = note
-            )
-            saveAll(list)
-        }
-    }
-
-    fun clearAllData() {
-        prefs.edit().remove(keyEntries).apply()
-    }
-
-    fun getLastUsedUnit(): String {
-        return prefs.getString("last_used_unit", "件") ?: "件"
-    }
-
-    fun setLastUsedUnit(unit: String) {
-        val trimmed = unit.trim()
-        if (trimmed.isNotEmpty()) {
-            prefs.edit().putString("last_used_unit", trimmed).apply()
-        }
-    }
+    fun setLastUsedUnit(unit: String) = entryRepo.setLastUsedUnit(unit)
 
     // ==================== 重要物品与订阅提醒 ====================
 
-    fun getImportantEntries(): List<Entry> {
-        return loadAll().filter { it.isImportant || it.reminderEnabled }
-    }
+    fun getImportantEntries(): List<Entry> = loadAll().filter { it.isImportant || it.reminderEnabled }
 
-    fun getSubscriptionEntries(): List<Entry> {
-        return loadAll().filter { it.isSubscription }
-    }
+    fun getSubscriptionEntries(): List<Entry> = loadAll().filter { it.isSubscription }
 
-    fun getNonSubscriptionEntries(): List<Entry> {
-        return loadAll().filter { !it.isSubscription }
-    }
+    fun getNonSubscriptionEntries(): List<Entry> = loadAll().filter { !it.isSubscription }
 
-    fun confirmItemChecked(entryId: String) {
-        val list = loadAll().toMutableList()
-        val idx = list.indexOfFirst { it.id == entryId }
-        if (idx != -1) {
-            list[idx] = list[idx].copy(lastCheckedAt = System.currentTimeMillis())
-            saveAll(list)
-        }
-    }
+    fun confirmItemChecked(entryId: String) = entryRepo.confirmItemChecked(entryId, keyEntries) { notifyWidgets() }
 
     // ==================== 多空间/家庭空间管理 ====================
 
-    fun getHouses(): List<HouseSpace> {
-        val raw = prefs.getString(keyHouses, null)
-        if (raw == null) {
-            val defaultList = listOf(
-                HouseSpace(id = "house_default", name = "🏠 自己的家", type = "住宅", isDefault = true),
-                HouseSpace(id = "house_parents", name = "🏡 父母家", type = "住宅", isDefault = false),
-                HouseSpace(id = "house_office", name = "🏢 办公室", type = "办公", isDefault = false)
-            )
-            saveHouses(defaultList)
-            return defaultList
-        }
+    fun getHouses(): List<HouseSpace> = spaceRepo.getHouses()
 
-        return try {
-            val arr = JSONArray(raw)
-            val result = mutableListOf<HouseSpace>()
-            for (i in 0 until arr.length()) {
-                val o = arr.getJSONObject(i)
-                val roomArr = o.optJSONArray("rooms")
-                val rooms = mutableListOf<HouseRoom>()
-                if (roomArr != null) {
-                    for (r in 0 until roomArr.length()) {
-                        val ro = roomArr.getJSONObject(r)
-                        rooms.add(
-                            HouseRoom(
-                                id = ro.optString("id", java.util.UUID.randomUUID().toString()),
-                                name = ro.optString("name", "房间"),
-                                icon = ro.optString("icon", "🚪"),
-                                colorHex = ro.optString("color", "#10B981"),
-                                xPct = ro.optDouble("x", 0.1).toFloat(),
-                                yPct = ro.optDouble("y", 0.1).toFloat(),
-                                widthPct = ro.optDouble("w", 0.35).toFloat(),
-                                heightPct = ro.optDouble("h", 0.35).toFloat()
-                            )
-                        )
-                    }
-                }
-                result.add(
-                    HouseSpace(
-                        id = o.optString("id", "house_$i"),
-                        name = o.optString("name", "我的家"),
-                        type = o.optString("type", "住宅"),
-                        rooms = if (rooms.isNotEmpty()) rooms else HouseSpace.defaultRooms(),
-                        isDefault = o.optBoolean("is_def", i == 0)
-                    )
-                )
-            }
-            if (result.isEmpty()) HouseSpace.defaultRooms()
-            result
-        } catch (_: Exception) {
-            listOf(HouseSpace(id = "house_default", name = "🏠 自己的家", type = "住宅", isDefault = true))
-        }
-    }
+    fun saveHouses(houses: List<HouseSpace>) = spaceRepo.saveHouses(houses)
 
-    fun saveHouses(houses: List<HouseSpace>) {
-        val arr = JSONArray()
-        for (h in houses) {
-            val roomArr = JSONArray()
-            for (r in h.rooms) {
-                roomArr.put(
-                    JSONObject()
-                        .put("id", r.id)
-                        .put("name", r.name)
-                        .put("icon", r.icon)
-                        .put("color", r.colorHex)
-                        .put("x", r.xPct.toDouble())
-                        .put("y", r.yPct.toDouble())
-                        .put("w", r.widthPct.toDouble())
-                        .put("h", r.heightPct.toDouble())
-                )
-            }
-            arr.put(
-                JSONObject()
-                    .put("id", h.id)
-                    .put("name", h.name)
-                    .put("type", h.type)
-                    .put("rooms", roomArr)
-                    .put("is_def", h.isDefault)
-            )
-        }
-        prefs.edit().putString(keyHouses, arr.toString()).apply()
-    }
+    fun addHouse(name: String, type: String = "住宅"): HouseSpace = spaceRepo.addHouse(name, type)
 
-    fun addHouse(name: String, type: String = "住宅"): HouseSpace {
-        val houses = getHouses().toMutableList()
-        val newHouse = HouseSpace(
-            id = "house_" + System.currentTimeMillis(),
-            name = name,
-            type = type,
-            rooms = HouseSpace.defaultRooms(),
-            isDefault = houses.isEmpty()
-        )
-        houses.add(newHouse)
-        saveHouses(houses)
-        return newHouse
-    }
+    fun deleteHouse(houseId: String): Boolean = spaceRepo.deleteHouse(houseId)
 
-    fun deleteHouse(houseId: String): Boolean {
-        val houses = getHouses().toMutableList()
-        val removed = houses.removeAll { it.id == houseId }
-        if (removed && houses.isNotEmpty()) {
-            if (houses.none { it.isDefault }) {
-                houses[0] = houses[0].copy(isDefault = true)
-            }
-            saveHouses(houses)
-        }
-        return removed
-    }
+    fun updateHouse(updatedHouse: HouseSpace): Boolean = spaceRepo.updateHouse(updatedHouse)
 
-    fun updateHouse(updatedHouse: HouseSpace): Boolean {
-        val houses = getHouses().toMutableList()
-        val idx = houses.indexOfFirst { it.id == updatedHouse.id }
-        if (idx != -1) {
-            houses[idx] = updatedHouse
-            saveHouses(houses)
-            return true
-        }
-        return false
-    }
+    fun addRoomToHouse(houseId: String, room: HouseRoom): Boolean = spaceRepo.addRoomToHouse(houseId, room)
 
-    fun addRoomToHouse(houseId: String, room: HouseRoom): Boolean {
-        val houses = getHouses().toMutableList()
-        val idx = houses.indexOfFirst { it.id == houseId }
-        if (idx != -1) {
-            val house = houses[idx]
-            val currentRooms = house.rooms.toMutableList()
-            currentRooms.add(room)
-            houses[idx] = house.copy(rooms = currentRooms)
-            saveHouses(houses)
-            return true
-        }
-        return false
-    }
+    fun updateRoomInHouse(houseId: String, room: HouseRoom): Boolean = spaceRepo.updateRoomInHouse(houseId, room)
 
-    fun updateRoomInHouse(houseId: String, room: HouseRoom): Boolean {
-        val houses = getHouses().toMutableList()
-        val idx = houses.indexOfFirst { it.id == houseId }
-        if (idx != -1) {
-            val house = houses[idx]
-            val currentRooms = house.rooms.toMutableList()
-            val rIdx = currentRooms.indexOfFirst { it.id == room.id }
-            if (rIdx != -1) {
-                currentRooms[rIdx] = room
-                houses[idx] = house.copy(rooms = currentRooms)
-                saveHouses(houses)
-                return true
-            }
-        }
-        return false
-    }
+    fun deleteRoomFromHouse(houseId: String, roomId: String): Boolean = spaceRepo.deleteRoomFromHouse(houseId, roomId)
 
-    fun deleteRoomFromHouse(houseId: String, roomId: String): Boolean {
-        val houses = getHouses().toMutableList()
-        val idx = houses.indexOfFirst { it.id == houseId }
-        if (idx != -1) {
-            val house = houses[idx]
-            val currentRooms = house.rooms.toMutableList()
-            val removed = currentRooms.removeAll { it.id == roomId }
-            if (removed) {
-                houses[idx] = house.copy(rooms = currentRooms)
-                saveHouses(houses)
-                return true
-            }
-        }
-        return false
-    }
-
-    fun resetRoomsInHouse(houseId: String): List<HouseRoom> {
-        val houses = getHouses().toMutableList()
-        val idx = houses.indexOfFirst { it.id == houseId }
-        if (idx != -1) {
-            val defaults = HouseSpace.defaultRooms()
-            houses[idx] = houses[idx].copy(rooms = defaults)
-            saveHouses(houses)
-            return defaults
-        }
-        return HouseSpace.defaultRooms()
-    }
+    fun resetRoomsInHouse(houseId: String): List<HouseRoom> = spaceRepo.resetRoomsInHouse(houseId)
 
     // ==================== 通用分类分组管理 ====================
 
-    fun getCategories(): List<String> {
-        val raw = prefs.getString(keyCategories, null)
-        val list = mutableListOf<String>()
-        if (raw != null) {
-            try {
-                val arr = JSONArray(raw)
-                for (i in 0 until arr.length()) {
-                    val s = arr.optString(i)?.trim()
-                    if (!s.isNullOrEmpty() && !list.contains(s)) {
-                        list.add(s)
-                    }
-                }
-            } catch (_: Exception) {}
-        }
+    fun getCategories(): List<String> = categoryRepo.getCategories { loadAll() }
 
-        if (list.isEmpty()) {
-            list.addAll(DEFAULT_CATEGORIES)
-        }
+    fun saveCategories(categories: List<String>) = categoryRepo.saveCategories(categories)
 
-        val existingEntries = loadAll()
-        for (entry in existingEntries) {
-            val cat = entry.category.trim()
-            if (cat.isNotEmpty() && !list.contains(cat)) {
-                list.add(cat)
-            }
-        }
+    fun addCategory(category: String): Boolean = categoryRepo.addCategory(category) { loadAll() }
 
-        return list
-    }
+    fun deleteCategory(category: String): Boolean = categoryRepo.deleteCategory(category) { loadAll() }
 
-    fun saveCategories(categories: List<String>) {
-        val arr = JSONArray()
-        for (c in categories) {
-            val trimmed = c.trim()
-            if (trimmed.isNotEmpty()) {
-                arr.put(trimmed)
-            }
-        }
-        prefs.edit().putString(keyCategories, arr.toString()).apply()
-    }
+    fun resetCategories(): List<String> = categoryRepo.resetCategories { loadAll() }
 
-    fun addCategory(category: String): Boolean {
-        val trimmed = category.trim()
-        if (trimmed.isEmpty()) return false
-        val current = getCategories().toMutableList()
-        if (current.any { it.equals(trimmed, ignoreCase = true) }) {
-            return false
-        }
-        current.add(trimmed)
-        saveCategories(current)
-        return true
-    }
-
-    fun deleteCategory(category: String): Boolean {
-        val current = getCategories().toMutableList()
-        val removed = current.remove(category)
-        if (removed) {
-            saveCategories(current)
-        }
-        return removed
-    }
-
-    fun resetCategories(): List<String> {
-        val defaults = DEFAULT_CATEGORIES.toMutableList()
-        for (entry in loadAll()) {
-            val cat = entry.category.trim()
-            if (cat.isNotEmpty() && !defaults.contains(cat)) {
-                defaults.add(cat)
-            }
-        }
-        saveCategories(defaults)
-        return defaults
-    }
-
-    fun isPresetCategory(category: String): Boolean {
-        return DEFAULT_CATEGORIES.contains(category)
-    }
+    fun isPresetCategory(category: String): Boolean = categoryRepo.isPresetCategory(category)
 
     // ==================== 主题设置（深色/浅色/系统） ====================
 
-    fun getThemeMode(): Int {
-        return prefs.getInt(keyTheme, THEME_SYSTEM)
-    }
+    fun getThemeMode(): Int = settingsStore.getThemeMode()
 
-    fun setThemeMode(mode: Int) {
-        prefs.edit().putInt(keyTheme, mode).apply()
-        applyThemeMode(mode)
-    }
+    fun setThemeMode(mode: Int) = settingsStore.setThemeMode(mode)
 
     // ==================== GitHub 更新仓库设置 ====================
 
-    fun getGithubRepo(): String {
-        return prefs.getString("github_repo", "Workworks/Collector") ?: "Workworks/Collector"
-    }
+    fun getGithubRepo(): String = settingsStore.getGithubRepo()
 
-    fun setGithubRepo(repo: String) {
-        prefs.edit().putString("github_repo", repo.trim()).apply()
-    }
+    fun setGithubRepo(repo: String) = settingsStore.setGithubRepo(repo)
 
     // ==================== 通知提醒设置 ====================
 
-    fun isNotificationEnabled(): Boolean {
-        return prefs.getBoolean("reminders_enabled", true)
-    }
+    fun isNotificationEnabled(): Boolean = settingsStore.isNotificationEnabled()
 
-    fun setNotificationEnabled(enabled: Boolean) {
-        prefs.edit().putBoolean("reminders_enabled", enabled).apply()
-    }
+    fun setNotificationEnabled(enabled: Boolean) = settingsStore.setNotificationEnabled(enabled)
 
-    fun getNotificationHour(): Int {
-        return prefs.getInt("reminder_hour", 9)
-    }
+    fun getNotificationHour(): Int = settingsStore.getNotificationHour()
 
-    fun getNotificationMinute(): Int {
-        return prefs.getInt("reminder_minute", 0)
-    }
+    fun getNotificationMinute(): Int = settingsStore.getNotificationMinute()
 
-    fun setNotificationTime(hour: Int, minute: Int) {
-        prefs.edit()
-            .putInt("reminder_hour", hour)
-            .putInt("reminder_minute", minute)
-            .apply()
-    }
+    fun setNotificationTime(hour: Int, minute: Int) = settingsStore.setNotificationTime(hour, minute)
 
     // ==================== 备份与恢复 ====================
 
-    fun exportBackupJson(): String {
-        val root = JSONObject()
-        root.put("version", 4)
-        root.put("timestamp", System.currentTimeMillis())
+    fun exportBackupJson(): String = BackupCodec.exportBackupJson(getCategories(), loadAll())
 
-        val catArr = JSONArray()
-        for (c in getCategories()) catArr.put(c)
-        root.put("categories", catArr)
-
-        val entryArr = JSONArray()
-        for (e in loadAll()) {
-            val histArr = JSONArray()
-            for (h in e.locationHistory) {
-                histArr.put(
-                    JSONObject()
-                        .put("loc", h.location)
-                        .put("h_name", h.houseName)
-                        .put("r_name", h.roomName)
-                        .put("ts", h.movedAt)
-                        .put("note", h.note)
-                )
-            }
-
-            entryArr.put(
-                JSONObject()
-                    .put("id", e.id)
-                    .put("cat", e.category)
-                    .put("brand", e.brand)
-                    .put("qty", e.qty)
-                    .put("price", e.price)
-                    .put("cur_val", e.currentValuation)
-                    .put("p_date", e.purchaseDate)
-                    .put("ts", e.ts)
-                    .put("in", e.isIn)
-                    .put("notes", e.notes)
-                    .put("unit", e.unit)
-                    .put("loc", e.location)
-                    .put("h_id", e.houseId)
-                    .put("h_name", e.houseName)
-                    .put("r_name", e.roomName)
-                    .put("px", e.pinX.toDouble())
-                    .put("py", e.pinY.toDouble())
-                    .put("loc_hist", histArr)
-                    .put("imp", e.isImportant)
-                    .put("rem_en", e.reminderEnabled)
-                    .put("rem_int", e.reminderIntervalDays)
-                    .put("chk_ts", e.lastCheckedAt)
-                    .put("is_ret", e.isRetired)
-                    .put("ret_at", e.retiredAt)
-                    .put("ret_act", e.retiredAction)
-                    .put("ret_sp", e.retiredSoldPrice)
-                    .put("ret_note", e.retiredNote)
-                    .put("is_sub", e.isSubscription)
-                    .put("sub_cyc", e.subCycle)
-                    .put("sub_nxt", e.subNextBillingDate)
-                    .put("sub_rnw", e.subAutoRenew)
-                    .put("a_type", e.assetType)
-                    .put("m_date", e.manufactureDate)
-                    .put("e_date", e.expiryDate)
-            )
-        }
-        root.put("entries", entryArr)
-        return root.toString(2)
-    }
-
-    fun importBackupJson(jsonStr: String): Boolean {
-        return try {
-            val root = JSONObject(jsonStr)
-            val catArr = root.optJSONArray("categories")
-            if (catArr != null) {
-                val cats = getCategories().toMutableList()
-                for (i in 0 until catArr.length()) {
-                    val c = catArr.optString(i).trim()
-                    if (c.isNotEmpty() && !cats.contains(c)) {
-                        cats.add(c)
-                    }
-                }
-                if (cats.isNotEmpty()) {
-                    saveCategories(cats)
-                }
-            }
-
-            val entryArr = root.optJSONArray("entries")
-            if (entryArr != null) {
-                val list = mutableListOf<Entry>()
-                for (i in 0 until entryArr.length()) {
-                    val o = entryArr.getJSONObject(i)
-                    val histArr = o.optJSONArray("loc_hist")
-                    val histList = mutableListOf<LocationMovement>()
-                    if (histArr != null) {
-                        for (h in 0 until histArr.length()) {
-                            val ho = histArr.getJSONObject(h)
-                            histList.add(
-                                LocationMovement(
-                                    location = ho.optString("loc", ""),
-                                    houseName = ho.optString("h_name", "我的家"),
-                                    roomName = ho.optString("r_name", ""),
-                                    movedAt = ho.optLong("ts", System.currentTimeMillis()),
-                                    note = ho.optString("note", "")
-                                )
-                            )
-                        }
-                    }
-
-                    val ts = o.optLong("ts", System.currentTimeMillis())
-                    val pDate = o.optLong("p_date", ts)
-
-                    list.add(
-                        Entry(
-                            id = o.optString("id", java.util.UUID.randomUUID().toString()),
-                            category = o.optString("cat", "数码"),
-                            brand = o.optString("brand", "物品"),
-                            qty = o.optInt("qty", 1),
-                            price = o.optDouble("price", 0.0),
-                            currentValuation = o.optDouble("cur_val", 0.0),
-                            purchaseDate = pDate,
-                            ts = ts,
-                            isIn = o.optBoolean("in", true),
-                            notes = o.optString("notes", ""),
-                            unit = o.optString("unit", "件"),
-                            location = o.optString("loc", ""),
-                            houseId = o.optString("h_id", "default_house"),
-                            houseName = o.optString("h_name", "我的家"),
-                            roomName = o.optString("r_name", ""),
-                            pinX = o.optDouble("px", -1.0).toFloat(),
-                            pinY = o.optDouble("py", -1.0).toFloat(),
-                            locationHistory = histList,
-                            isImportant = o.optBoolean("imp", false),
-                            reminderEnabled = o.optBoolean("rem_en", false),
-                            reminderIntervalDays = o.optInt("rem_int", 1),
-                            reminderTime = o.optString("rem_tm", "09:00"),
-                            lastCheckedAt = o.optLong("chk_ts", 0L),
-                            isRetired = o.optBoolean("is_ret", false),
-                            retiredAt = o.optLong("ret_at", 0L),
-                            retiredAction = o.optString("ret_act", ""),
-                            retiredSoldPrice = o.optDouble("ret_sp", 0.0),
-                            retiredNote = o.optString("ret_note", ""),
-                            isSubscription = o.optBoolean("is_sub", false),
-                            subCycle = o.optString("sub_cyc", "按月"),
-                            subNextBillingDate = o.optLong("sub_nxt", 0L),
-                            subAutoRenew = o.optBoolean("sub_rnw", true),
-                            assetType = o.optString("a_type", if (o.optBoolean("is_sub", false)) "subscription" else "consumable"),
-                            manufactureDate = o.optLong("m_date", 0L),
-                            expiryDate = o.optLong("e_date", 0L),
-                            photoPath = o.optString("img_p", ""),
-                            receiptPath = o.optString("rec_p", "")
-                        )
-                    )
-                }
-                saveAll(list)
-            }
-            true
-        } catch (_: Exception) {
-            false
-        }
-    }
+    fun importBackupJson(jsonStr: String): Boolean = BackupCodec.importBackupJson(
+        jsonStr,
+        getCategories = { getCategories() },
+        saveCategories = { saveCategories(it) },
+        saveEntries = { saveAll(it) }
+    )
 
     // ==================== 触感震动反馈配置 ====================
 
-    fun isHapticFeedbackEnabled(): Boolean {
-        return prefs.getBoolean("haptic_feedback_enabled", true)
-    }
+    fun isHapticFeedbackEnabled(): Boolean = settingsStore.isHapticFeedbackEnabled()
 
-    fun setHapticFeedbackEnabled(enabled: Boolean) {
-        prefs.edit().putBoolean("haptic_feedback_enabled", enabled).apply()
-    }
+    fun setHapticFeedbackEnabled(enabled: Boolean) = settingsStore.setHapticFeedbackEnabled(enabled)
 
     // ==================== 备份提醒持久化控制 ====================
 
-    fun getNextBackupPromptTime(): Long {
-        return prefs.getLong("next_backup_prompt_time", 0L)
-    }
+    fun getNextBackupPromptTime(): Long = settingsStore.getNextBackupPromptTime()
 
-    fun snoozeBackupPrompt(days: Int = 3) {
-        val nextTime = System.currentTimeMillis() + days.toLong() * 24L * 60 * 60 * 1000
-        prefs.edit().putLong("next_backup_prompt_time", nextTime).apply()
-    }
+    fun snoozeBackupPrompt(days: Int = 3) = settingsStore.snoozeBackupPrompt(days)
 
-    fun recordBackupDone() {
-        val now = System.currentTimeMillis()
-        prefs.edit()
-            .putLong("last_backup_time", now)
-            .putLong("next_backup_prompt_time", now + 7L * 24 * 60 * 60 * 1000)
-            .apply()
-    }
+    fun recordBackupDone() = settingsStore.recordBackupDone()
 
     fun shouldShowBackupBanner(): Boolean {
         val list = loadAll()
@@ -894,179 +185,70 @@ class DataStore(private val ctx: Context) {
 
     // ==================== 生物识别指纹应用锁 ====================
 
-    fun isBiometricLockEnabled(): Boolean {
-        return prefs.getBoolean("biometric_lock_enabled", false)
-    }
+    fun isBiometricLockEnabled(): Boolean = settingsStore.isBiometricLockEnabled()
 
-    fun setBiometricLockEnabled(enabled: Boolean) {
-        prefs.edit().putBoolean("biometric_lock_enabled", enabled).apply()
-    }
+    fun setBiometricLockEnabled(enabled: Boolean) = settingsStore.setBiometricLockEnabled(enabled)
 
     // ==================== WebDAV 私有云配置 ====================
 
-    fun getWebDavUrl(): String {
-        return prefs.getString("webdav_server_url", "https://dav.jianguoyun.com/dav/") ?: "https://dav.jianguoyun.com/dav/"
-    }
+    fun getWebDavUrl(): String = settingsStore.getWebDavUrl()
 
-    fun setWebDavUrl(url: String) {
-        prefs.edit().putString("webdav_server_url", url.trim()).apply()
-    }
+    fun setWebDavUrl(url: String) = settingsStore.setWebDavUrl(url)
 
-    fun getWebDavUsername(): String {
-        return prefs.getString("webdav_username", "") ?: ""
-    }
+    fun getWebDavUsername(): String = settingsStore.getWebDavUsername()
 
-    fun setWebDavUsername(user: String) {
-        prefs.edit().putString("webdav_username", user.trim()).apply()
-    }
+    fun setWebDavUsername(user: String) = settingsStore.setWebDavUsername(user)
 
-    fun getWebDavPassword(): String {
-        return prefs.getString("webdav_password", "") ?: ""
-    }
+    fun getWebDavPassword(): String = settingsStore.getWebDavPassword()
 
-    fun setWebDavPassword(pass: String) {
-        prefs.edit().putString("webdav_password", pass).apply()
-    }
+    fun setWebDavPassword(pass: String) = settingsStore.setWebDavPassword(pass)
 
     // ==================== 简易库存模式 (Simplified Mode) ====================
 
-    fun isSimpleMode(): Boolean {
-        return prefs.getBoolean("app_simple_mode_enabled", false)
-    }
+    fun isSimpleMode(): Boolean = settingsStore.isSimpleMode()
 
-    fun setSimpleMode(enabled: Boolean) {
-        prefs.edit().putBoolean("app_simple_mode_enabled", enabled).apply()
-    }
+    fun setSimpleMode(enabled: Boolean) = settingsStore.setSimpleMode(enabled)
 
     // ==================== 闲置变现与回血 ROI 统计 (Cashback Analytics) ====================
 
-    data class ResaleAnalytics(
-        val totalInvested: Double,
-        val totalRecovered: Double,
-        val netCost: Double,
-        val recoveryRate: Double,
-        val soldItems: List<Entry>
-    )
-
-    fun getResaleAnalytics(): ResaleAnalytics {
-        val all = loadAll()
-        val retiredItems = all.filter { it.isRetired }
-        val soldItems = retiredItems.filter { it.retiredSoldPrice > 0.0 }
-        val totalInvested = retiredItems.sumOf { it.price * it.qty }
-        val totalRecovered = retiredItems.sumOf { it.retiredSoldPrice }
-        val netCost = (totalInvested - totalRecovered).coerceAtLeast(0.0)
-        val recoveryRate = if (totalInvested > 0.0) (totalRecovered / totalInvested) * 100.0 else 0.0
-
-        return ResaleAnalytics(
-            totalInvested = totalInvested,
-            totalRecovered = totalRecovered,
-            netCost = netCost,
-            recoveryRate = recoveryRate,
-            soldItems = soldItems.sortedByDescending { if (it.retiredAt > 0) it.retiredAt else it.ts }
-        )
-    }
+    fun getResaleAnalytics(): ResaleAnalytics = AnalyticsQueries.getResaleAnalytics(loadAll())
 
     // ==================== 耗材安全库存预警与智能采购清单 ====================
 
-    fun getLowStockItems(): List<Entry> {
-        return loadAll().filter { it.isLowStock() }
-    }
+    fun getLowStockItems(): List<Entry> = AnalyticsQueries.getLowStockItems(loadAll())
 
-    fun generateReplenishmentListText(): String {
-        val lowStock = getLowStockItems()
-        if (lowStock.isEmpty()) return "🎉 当前所有耗材库存充足，无需补货！"
-
-        val sb = StringBuilder()
-        sb.append("🛒【Collecter 智能待采购清单】\n")
-        sb.append("----------------------------\n")
-        val sdf = java.text.SimpleDateFormat("yyyy-MM-dd HH:mm", java.util.Locale.getDefault())
-        sb.append("生成时间: ${sdf.format(java.util.Date())}\n\n")
-
-        for ((idx, item) in lowStock.withIndex()) {
-            val diff = (item.minStockThreshold - item.qty).coerceAtLeast(1)
-            val lackStr = " (需补 $diff ${item.unit})"
-            sb.append("${idx + 1}. 【${item.brand}】\n")
-            sb.append("   • 所属分类: ${item.category}\n")
-            sb.append("   • 当前库存: ${item.qty} ${item.unit} / 安全预警线: ${item.minStockThreshold} ${item.unit}$lackStr\n")
-            if (item.location.isNotBlank()) sb.append("   • 放置位置: ${item.location}\n")
-            sb.append("\n")
-        }
-        sb.append("----------------------------\n")
-        sb.append("共计 ${lowStock.size} 项物品急需补货采购")
-        return sb.toString()
-    }
+    fun generateReplenishmentListText(): String = AnalyticsQueries.generateReplenishmentListText(loadAll())
 
     // ==================== 🎞️ 时光胶囊与数字资产扩展管理 ====================
 
     /** 获取所有数字与电子资产（电子相册、软件授权、数字文档等） */
-    fun getDigitalAssets(): List<Entry> {
-        return loadAll().filter { it.isDigital }
-    }
+    fun getDigitalAssets(): List<Entry> = loadAll().filter { it.isDigital }
 
     /** 获取所有带有生活时光回忆瞬间的资产 */
-    fun getMemoryAssets(): List<Entry> {
-        return loadAll().filter { it.memoryMoments.isNotEmpty() }
-    }
+    fun getMemoryAssets(): List<Entry> = loadAll().filter { it.memoryMoments.isNotEmpty() }
 
     /** 为指定资产追加一条时光回忆瞬间 */
-    fun addMemoryMoment(entryId: String, moment: ItemMemoryMoment): Boolean {
-        val all = loadAll().toMutableList()
-        val idx = all.indexOfFirst { it.id == entryId }
-        if (idx == -1) return false
-        val entry = all[idx]
-        val newMoments = (entry.memoryMoments + moment).sortedByDescending { it.date }
-        all[idx] = entry.copy(memoryMoments = newMoments)
-        saveAll(all)
-        return true
-    }
+    fun addMemoryMoment(entryId: String, moment: ItemMemoryMoment): Boolean =
+        entryRepo.addMemoryMoment(entryId, moment, keyEntries) { notifyWidgets() }
 
     /** 更新指定资产的某条时光回忆瞬间 */
-    fun updateMemoryMoment(entryId: String, moment: ItemMemoryMoment): Boolean {
-        val all = loadAll().toMutableList()
-        val idx = all.indexOfFirst { it.id == entryId }
-        if (idx == -1) return false
-        val entry = all[idx]
-        val newMoments = entry.memoryMoments.map { if (it.id == moment.id) moment else it }.sortedByDescending { it.date }
-        all[idx] = entry.copy(memoryMoments = newMoments)
-        saveAll(all)
-        return true
-    }
+    fun updateMemoryMoment(entryId: String, moment: ItemMemoryMoment): Boolean =
+        entryRepo.updateMemoryMoment(entryId, moment, keyEntries) { notifyWidgets() }
 
     /** 删除指定资产的某条时光回忆瞬间 */
-    fun deleteMemoryMoment(entryId: String, momentId: String): Boolean {
-        val all = loadAll().toMutableList()
-        val idx = all.indexOfFirst { it.id == entryId }
-        if (idx == -1) return false
-        val entry = all[idx]
-        val newMoments = entry.memoryMoments.filter { it.id != momentId }
-        all[idx] = entry.copy(memoryMoments = newMoments)
-        saveAll(all)
-        return true
-    }
+    fun deleteMemoryMoment(entryId: String, momentId: String): Boolean =
+        entryRepo.deleteMemoryMoment(entryId, momentId, keyEntries) { notifyWidgets() }
 
     // ==================== 📤 实物外借与共享借还流转管理 ====================
 
     /** 获取所有当前处于借出状态的资产 */
-    fun getLentOutAssets(): List<Entry> {
-        return loadAll().filter { it.isLentOut }
-    }
+    fun getLentOutAssets(): List<Entry> = loadAll().filter { it.isLentOut }
 
     /** 获取所有借出已逾期的资产 */
-    fun getOverdueLendingAssets(): List<Entry> {
-        return loadAll().filter { it.isLendingOverdue() }
-    }
+    fun getOverdueLendingAssets(): List<Entry> = loadAll().filter { it.isLendingOverdue() }
 
     /** 获取所有历史借用人姓名列表 (用于自动补全) */
-    fun getAllBorrowerNames(): List<String> {
-        val names = mutableSetOf<String>()
-        for (e in loadAll()) {
-            if (e.currentBorrower.isNotBlank()) names.add(e.currentBorrower)
-            for (r in e.lendingHistory) {
-                if (r.borrowerName.isNotBlank()) names.add(r.borrowerName)
-            }
-        }
-        return names.toList()
-    }
+    fun getAllBorrowerNames(): List<String> = entryRepo.getAllBorrowerNames(keyEntries)
 
     /** 登记借出资产 */
     fun lendAsset(
@@ -1077,37 +259,7 @@ class DataStore(private val ctx: Context) {
         deposit: Double = 0.0,
         notes: String = "",
         photoPath: String = ""
-    ): Boolean {
-        val all = loadAll().toMutableList()
-        val idx = all.indexOfFirst { it.id == entryId }
-        if (idx == -1) return false
-        val entry = all[idx]
-
-        val newRecord = LendingRecord(
-            id = java.util.UUID.randomUUID().toString(),
-            borrowerName = borrowerName,
-            borrowerContact = borrowerContact,
-            lentDate = System.currentTimeMillis(),
-            expectedReturnDate = expectedReturnDate,
-            actualReturnDate = 0L,
-            deposit = deposit,
-            notes = notes,
-            photoPath = photoPath,
-            status = "lent"
-        )
-
-        all[idx] = entry.copy(
-            isLentOut = true,
-            currentBorrower = borrowerName,
-            currentBorrowerContact = borrowerContact,
-            currentLentDate = System.currentTimeMillis(),
-            expectedReturnDate = expectedReturnDate,
-            currentDeposit = deposit,
-            lendingHistory = listOf(newRecord) + entry.lendingHistory
-        )
-        saveAll(all)
-        return true
-    }
+    ): Boolean = entryRepo.lendAsset(entryId, borrowerName, borrowerContact, expectedReturnDate, deposit, notes, photoPath, keyEntries) { notifyWidgets() }
 
     /** 归还打卡登记 */
     fun returnAsset(
@@ -1115,490 +267,58 @@ class DataStore(private val ctx: Context) {
         actualReturnDate: Long = System.currentTimeMillis(),
         returnConditionRating: Int = 5,
         notes: String = ""
-    ): Boolean {
-        val all = loadAll().toMutableList()
-        val idx = all.indexOfFirst { it.id == entryId }
-        if (idx == -1) return false
-        val entry = all[idx]
-
-        val updatedHistory = entry.lendingHistory.mapIndexed { index, record ->
-            if (index == 0 && (record.status == "lent" || record.actualReturnDate == 0L)) {
-                record.copy(
-                    actualReturnDate = actualReturnDate,
-                    status = "returned",
-                    returnConditionRating = returnConditionRating,
-                    notes = if (notes.isNotBlank()) "${record.notes}\n[归还备注] $notes".trim() else record.notes
-                )
-            } else {
-                record
-            }
-        }
-
-        all[idx] = entry.copy(
-            isLentOut = false,
-            currentBorrower = "",
-            currentBorrowerContact = "",
-            currentLentDate = 0L,
-            expectedReturnDate = 0L,
-            currentDeposit = 0.0,
-            lendingHistory = updatedHistory
-        )
-        saveAll(all)
-        return true
-    }
+    ): Boolean = entryRepo.returnAsset(entryId, actualReturnDate, returnConditionRating, notes, keyEntries) { notifyWidgets() }
 
     // =========================================================================
-    // 🎟️ 第一性原理收纳：时效权益与卡券票据收纳馆 (Voucher & Privilege Vault)
+    // 📦 第一性原理收纳馆门面
+    //
+    // 以下方法的实现已拆分至 VaultRepositories.kt，此处仅作委托。
+    // 公开签名与拆分前完全一致，调用方无需改动。
     // =========================================================================
 
-    private val keyVouchers = "vault_vouchers_v1"
+    // ---- 🎟️ 时效权益与卡券票据收纳馆 (Voucher & Privilege Vault) ----
+    private val voucherRepo = VoucherVaultRepository(prefs)
 
-    fun getVouchers(): List<VoucherRecord> {
-        val raw = prefs.getString(keyVouchers, null) ?: return emptyList()
-        return try {
-            val arr = JSONArray(raw)
-            val list = mutableListOf<VoucherRecord>()
-            for (i in 0 until arr.length()) {
-                val o = arr.getJSONObject(i)
-                list.add(
-                    VoucherRecord(
-                        id = o.optString("id", UUID.randomUUID().toString()),
-                        title = o.optString("title", ""),
-                        type = o.optString("type", "coupon"),
-                        valueAmount = o.optDouble("val", 0.0),
-                        minSpend = o.optDouble("min", 0.0),
-                        remainingTimes = o.optInt("rem_t", 1),
-                        totalTimes = o.optInt("tot_t", 1),
-                        startDate = o.optLong("s_date", System.currentTimeMillis()),
-                        expiryDate = o.optLong("e_date", 0L),
-                        code = o.optString("code", ""),
-                        platform = o.optString("plat", ""),
-                        photoPath = o.optString("photo", ""),
-                        notes = o.optString("notes", ""),
-                        isUsed = o.optBoolean("used", false),
-                        usedAt = o.optLong("used_at", 0L)
-                    )
-                )
-            }
-            list
-        } catch (_: Exception) {
-            emptyList()
-        }
-    }
+    fun getVouchers(): List<VoucherRecord> = voucherRepo.getVouchers()
+    fun saveVouchers(list: List<VoucherRecord>) = voucherRepo.saveVouchers(list)
+    fun addOrUpdateVoucher(voucher: VoucherRecord) = voucherRepo.addOrUpdateVoucher(voucher)
+    fun deleteVoucher(voucherId: String) = voucherRepo.deleteVoucher(voucherId)
+    fun useTimesCardOneTime(voucherId: String): Boolean = voucherRepo.useTimesCardOneTime(voucherId)
+    fun markVoucherUsed(voucherId: String, used: Boolean) = voucherRepo.markVoucherUsed(voucherId, used)
 
-    fun saveVouchers(list: List<VoucherRecord>) {
-        val arr = JSONArray()
-        for (v in list) {
-            arr.put(
-                JSONObject()
-                    .put("id", v.id)
-                    .put("title", v.title)
-                    .put("type", v.type)
-                    .put("val", v.valueAmount)
-                    .put("min", v.minSpend)
-                    .put("rem_t", v.remainingTimes)
-                    .put("tot_t", v.totalTimes)
-                    .put("s_date", v.startDate)
-                    .put("e_date", v.expiryDate)
-                    .put("code", v.code)
-                    .put("plat", v.platform)
-                    .put("photo", v.photoPath)
-                    .put("notes", v.notes)
-                    .put("used", v.isUsed)
-                    .put("used_at", v.usedAt)
-            )
-        }
-        prefs.edit().putString(keyVouchers, arr.toString()).apply()
-    }
+    // ---- 🪪 家庭多成员证照与敏感凭证 (Family Identity & Safe) ----
+    private val identityRepo = IdentityVaultRepository(prefs)
 
-    fun addOrUpdateVoucher(voucher: VoucherRecord) {
-        val list = getVouchers().toMutableList()
-        val idx = list.indexOfFirst { it.id == voucher.id }
-        if (idx != -1) {
-            list[idx] = voucher
-        } else {
-            list.add(0, voucher)
-        }
-        saveVouchers(list)
-    }
+    fun getIdentityDocs(): List<IdentityDocument> = identityRepo.getIdentityDocs()
+    fun saveIdentityDocs(list: List<IdentityDocument>) = identityRepo.saveIdentityDocs(list)
+    fun addOrUpdateIdentityDoc(doc: IdentityDocument) = identityRepo.addOrUpdateIdentityDoc(doc)
+    fun deleteIdentityDoc(docId: String) = identityRepo.deleteIdentityDoc(docId)
 
-    fun deleteVoucher(voucherId: String) {
-        val list = getVouchers().filter { it.id != voucherId }
-        saveVouchers(list)
-    }
+    // ---- 💊 家庭智能健康药箱 (Medicine & Scenario Vault) ----
+    private val medicineRepo = MedicineVaultRepository(prefs)
 
-    /** 次卡一键减扣 1 次 */
-    fun useTimesCardOneTime(voucherId: String): Boolean {
-        val list = getVouchers().toMutableList()
-        val idx = list.indexOfFirst { it.id == voucherId }
-        if (idx == -1) return false
-        val card = list[idx]
-        val newRemaining = (card.remainingTimes - 1).coerceAtLeast(0)
-        val isNowUsed = newRemaining == 0
-        list[idx] = card.copy(
-            remainingTimes = newRemaining,
-            isUsed = isNowUsed,
-            usedAt = if (isNowUsed) System.currentTimeMillis() else card.usedAt
-        )
-        saveVouchers(list)
-        return true
-    }
+    fun getMedicines(): List<MedicineRecord> = medicineRepo.getMedicines()
+    fun saveMedicines(list: List<MedicineRecord>) = medicineRepo.saveMedicines(list)
+    fun addOrUpdateMedicine(medicine: MedicineRecord) = medicineRepo.addOrUpdateMedicine(medicine)
+    fun deleteMedicine(medicineId: String) = medicineRepo.deleteMedicine(medicineId)
+    fun markMedicineOpened(medicineId: String) = medicineRepo.markMedicineOpened(medicineId)
 
-    /** 标记卡券已核销/已使用 */
-    fun markVoucherUsed(voucherId: String, used: Boolean) {
-        val list = getVouchers().toMutableList()
-        val idx = list.indexOfFirst { it.id == voucherId }
-        if (idx != -1) {
-            list[idx] = list[idx].copy(
-                isUsed = used,
-                usedAt = if (used) System.currentTimeMillis() else 0L
-            )
-            saveVouchers(list)
-        }
-    }
+    // ---- 🥦 冰箱冷冻与食材生鲜鲜度库 (Food & Fresh Vault) ----
+    private val foodRepo = FoodVaultRepository(prefs)
 
-    // =========================================================================
-    // 🪪 第一性原理收纳：家庭多成员证照与敏感凭证 (Family Identity & Safe)
-    // =========================================================================
+    fun getFoods(): List<FoodRecord> = foodRepo.getFoods()
+    fun saveFoods(list: List<FoodRecord>) = foodRepo.saveFoods(list)
+    fun addOrUpdateFood(food: FoodRecord) = foodRepo.addOrUpdateFood(food)
+    fun deleteFood(foodId: String) = foodRepo.deleteFood(foodId)
+    fun markFoodOpened(foodId: String) = foodRepo.markFoodOpened(foodId)
+    fun consumeFood(foodId: String, delta: Double = 1.0) = foodRepo.consumeFood(foodId, delta)
 
-    private val keyIdentityDocs = "vault_identity_docs_v1"
+    // ---- 🏆 全家成长履历与职业荣誉考级勋章馆 (Honor & Credentials) ----
+    private val honorRepo = HonorVaultRepository(prefs)
 
-    fun getIdentityDocs(): List<IdentityDocument> {
-        val raw = prefs.getString(keyIdentityDocs, null) ?: return emptyList()
-        return try {
-            val arr = JSONArray(raw)
-            val list = mutableListOf<IdentityDocument>()
-            for (i in 0 until arr.length()) {
-                val o = arr.getJSONObject(i)
-                list.add(
-                    IdentityDocument(
-                        id = o.optString("id", UUID.randomUUID().toString()),
-                        member = o.optString("mem", "本人"),
-                        docType = o.optString("dtype", "id_card"),
-                        docNumber = o.optString("dnum", ""),
-                        nameOnDoc = o.optString("name", ""),
-                        issueDate = o.optLong("iss_d", 0L),
-                        expiryDate = o.optLong("exp_d", 0L),
-                        frontPhotoPath = o.optString("f_photo", ""),
-                        backPhotoPath = o.optString("b_photo", ""),
-                        issuingAuthority = o.optString("auth", ""),
-                        notes = o.optString("notes", "")
-                    )
-                )
-            }
-            list
-        } catch (_: Exception) {
-            emptyList()
-        }
-    }
+    fun getHonorCredentials(): List<HonorCredential> = honorRepo.getHonorCredentials()
+    fun saveHonorCredentials(list: List<HonorCredential>) = honorRepo.saveHonorCredentials(list)
+    fun addOrUpdateHonorCredential(honor: HonorCredential) = honorRepo.addOrUpdateHonorCredential(honor)
+    fun deleteHonorCredential(honorId: String) = honorRepo.deleteHonorCredential(honorId)
 
-    fun saveIdentityDocs(list: List<IdentityDocument>) {
-        val arr = JSONArray()
-        for (d in list) {
-            arr.put(
-                JSONObject()
-                    .put("id", d.id)
-                    .put("mem", d.member)
-                    .put("dtype", d.docType)
-                    .put("dnum", d.docNumber)
-                    .put("name", d.nameOnDoc)
-                    .put("iss_d", d.issueDate)
-                    .put("exp_d", d.expiryDate)
-                    .put("f_photo", d.frontPhotoPath)
-                    .put("b_photo", d.backPhotoPath)
-                    .put("auth", d.issuingAuthority)
-                    .put("notes", d.notes)
-            )
-        }
-        prefs.edit().putString(keyIdentityDocs, arr.toString()).apply()
-    }
-
-    fun addOrUpdateIdentityDoc(doc: IdentityDocument) {
-        val list = getIdentityDocs().toMutableList()
-        val idx = list.indexOfFirst { it.id == doc.id }
-        if (idx != -1) {
-            list[idx] = doc
-        } else {
-            list.add(0, doc)
-        }
-        saveIdentityDocs(list)
-    }
-
-    fun deleteIdentityDoc(docId: String) {
-        val list = getIdentityDocs().filter { it.id != docId }
-        saveIdentityDocs(list)
-    }
-
-    // =========================================================================
-    // 💊 第一性原理收纳：家庭智能健康药箱 (Medicine & Scenario Vault)
-    // =========================================================================
-
-    private val keyMedicines = "vault_medicines_v1"
-
-    fun getMedicines(): List<MedicineRecord> {
-        val raw = prefs.getString(keyMedicines, null) ?: return emptyList()
-        return try {
-            val arr = JSONArray(raw)
-            val list = mutableListOf<MedicineRecord>()
-            for (i in 0 until arr.length()) {
-                val o = arr.getJSONObject(i)
-                list.add(
-                    MedicineRecord(
-                        id = o.optString("id", UUID.randomUUID().toString()),
-                        name = o.optString("name", ""),
-                        category = o.optString("cat", "fever"),
-                        form = o.optString("form", "片剂"),
-                        qty = o.optInt("qty", 1),
-                        unit = o.optString("unit", "盒"),
-                        location = o.optString("loc", "家庭急救药箱"),
-                        dosage = o.optString("dos", ""),
-                        targetAudience = o.optString("aud", "全家通用"),
-                        expiryDate = o.optLong("e_date", 0L),
-                        isOpened = o.optBoolean("opened", false),
-                        openedAt = o.optLong("o_date", 0L),
-                        openedValidityDays = o.optInt("o_days", 0),
-                        photoPath = o.optString("photo", ""),
-                        contraindications = o.optString("contra", "")
-                    )
-                )
-            }
-            list
-        } catch (_: Exception) {
-            emptyList()
-        }
-    }
-
-    fun saveMedicines(list: List<MedicineRecord>) {
-        val arr = JSONArray()
-        for (m in list) {
-            arr.put(
-                JSONObject()
-                    .put("id", m.id)
-                    .put("name", m.name)
-                    .put("cat", m.category)
-                    .put("form", m.form)
-                    .put("qty", m.qty)
-                    .put("unit", m.unit)
-                    .put("loc", m.location)
-                    .put("dos", m.dosage)
-                    .put("aud", m.targetAudience)
-                    .put("e_date", m.expiryDate)
-                    .put("opened", m.isOpened)
-                    .put("o_date", m.openedAt)
-                    .put("o_days", m.openedValidityDays)
-                    .put("photo", m.photoPath)
-                    .put("contra", m.contraindications)
-            )
-        }
-        prefs.edit().putString(keyMedicines, arr.toString()).apply()
-    }
-
-    fun addOrUpdateMedicine(medicine: MedicineRecord) {
-        val list = getMedicines().toMutableList()
-        val idx = list.indexOfFirst { it.id == medicine.id }
-        if (idx != -1) {
-            list[idx] = medicine
-        } else {
-            list.add(0, medicine)
-        }
-        saveMedicines(list)
-    }
-
-    fun deleteMedicine(medicineId: String) {
-        val list = getMedicines().filter { it.id != medicineId }
-        saveMedicines(list)
-    }
-
-    /** 药品开封打卡 */
-    fun markMedicineOpened(medicineId: String) {
-        val list = getMedicines().toMutableList()
-        val idx = list.indexOfFirst { it.id == medicineId }
-        if (idx != -1) {
-            list[idx] = list[idx].copy(
-                isOpened = true,
-                openedAt = System.currentTimeMillis()
-            )
-            saveMedicines(list)
-        }
-    }
-
-    // =========================================================================
-    // 🥦 第一性原理收纳：冰箱冷冻与食材生鲜鲜度库 (Food & Fresh Vault)
-    // =========================================================================
-
-    private val keyFoods = "vault_foods_v1"
-
-    fun getFoods(): List<FoodRecord> {
-        val raw = prefs.getString(keyFoods, null) ?: return emptyList()
-        return try {
-            val arr = JSONArray(raw)
-            val list = mutableListOf<FoodRecord>()
-            for (i in 0 until arr.length()) {
-                val o = arr.getJSONObject(i)
-                list.add(
-                    FoodRecord(
-                        id = o.optString("id", UUID.randomUUID().toString()),
-                        name = o.optString("name", ""),
-                        zone = o.optString("zone", "freezer"),
-                        qty = o.optDouble("qty", 1.0),
-                        unit = o.optString("unit", "份"),
-                        location = o.optString("loc", "冰箱冷冻二层"),
-                        purchaseDate = o.optLong("p_date", System.currentTimeMillis()),
-                        expiryDate = o.optLong("e_date", 0L),
-                        isOpened = o.optBoolean("opened", false),
-                        openedAt = o.optLong("o_date", 0L),
-                        openedValidityDays = o.optInt("o_days", 0),
-                        photoPath = o.optString("photo", ""),
-                        notes = o.optString("notes", ""),
-                        isConsumed = o.optBoolean("consumed", false)
-                    )
-                )
-            }
-            list
-        } catch (_: Exception) {
-            emptyList()
-        }
-    }
-
-    fun saveFoods(list: List<FoodRecord>) {
-        val arr = JSONArray()
-        for (f in list) {
-            arr.put(
-                JSONObject()
-                    .put("id", f.id)
-                    .put("name", f.name)
-                    .put("zone", f.zone)
-                    .put("qty", f.qty)
-                    .put("unit", f.unit)
-                    .put("loc", f.location)
-                    .put("p_date", f.purchaseDate)
-                    .put("e_date", f.expiryDate)
-                    .put("opened", f.isOpened)
-                    .put("o_date", f.openedAt)
-                    .put("o_days", f.openedValidityDays)
-                    .put("photo", f.photoPath)
-                    .put("notes", f.notes)
-                    .put("consumed", f.isConsumed)
-            )
-        }
-        prefs.edit().putString(keyFoods, arr.toString()).apply()
-    }
-
-    fun addOrUpdateFood(food: FoodRecord) {
-        val list = getFoods().toMutableList()
-        val idx = list.indexOfFirst { it.id == food.id }
-        if (idx != -1) {
-            list[idx] = food
-        } else {
-            list.add(0, food)
-        }
-        saveFoods(list)
-    }
-
-    fun deleteFood(foodId: String) {
-        val list = getFoods().filter { it.id != foodId }
-        saveFoods(list)
-    }
-
-    /** 食材开封保鲜打卡 */
-    fun markFoodOpened(foodId: String) {
-        val list = getFoods().toMutableList()
-        val idx = list.indexOfFirst { it.id == foodId }
-        if (idx != -1) {
-            list[idx] = list[idx].copy(
-                isOpened = true,
-                openedAt = System.currentTimeMillis()
-            )
-            saveFoods(list)
-        }
-    }
-
-    /** 烹饪/消耗食材打卡 (扣减数量或标记吃完) */
-    fun consumeFood(foodId: String, delta: Double = 1.0) {
-        val list = getFoods().toMutableList()
-        val idx = list.indexOfFirst { it.id == foodId }
-        if (idx != -1) {
-            val item = list[idx]
-            val newQty = (item.qty - delta).coerceAtLeast(0.0)
-            list[idx] = item.copy(
-                qty = newQty,
-                isConsumed = newQty <= 0.0
-            )
-            saveFoods(list)
-        }
-    }
-
-    // =========================================================================
-    // 🏆 第一性原理收纳：全家成长履历与职业荣誉考级勋章馆 (Honor & Credentials)
-    // =========================================================================
-
-    private val keyHonors = "vault_honors_v1"
-
-    fun getHonorCredentials(): List<HonorCredential> {
-        val raw = prefs.getString(keyHonors, null) ?: return emptyList()
-        return try {
-            val arr = JSONArray(raw)
-            val list = mutableListOf<HonorCredential>()
-            for (i in 0 until arr.length()) {
-                val o = arr.getJSONObject(i)
-                list.add(
-                    HonorCredential(
-                        id = o.optString("id", UUID.randomUUID().toString()),
-                        member = o.optString("mem", "本人"),
-                        category = o.optString("cat", "career"),
-                        title = o.optString("title", ""),
-                        certNumber = o.optString("cnum", ""),
-                        issuer = o.optString("issuer", ""),
-                        issueDate = o.optLong("iss_d", 0L),
-                        expiryDate = o.optLong("exp_d", 0L),
-                        scoreOrLevel = o.optString("score", ""),
-                        photoPath = o.optString("photo", ""),
-                        verifyUrl = o.optString("vurl", ""),
-                        notes = o.optString("notes", "")
-                    )
-                )
-            }
-            list
-        } catch (_: Exception) {
-            emptyList()
-        }
-    }
-
-    fun saveHonorCredentials(list: List<HonorCredential>) {
-        val arr = JSONArray()
-        for (h in list) {
-            arr.put(
-                JSONObject()
-                    .put("id", h.id)
-                    .put("mem", h.member)
-                    .put("cat", h.category)
-                    .put("title", h.title)
-                    .put("cnum", h.certNumber)
-                    .put("issuer", h.issuer)
-                    .put("iss_d", h.issueDate)
-                    .put("exp_d", h.expiryDate)
-                    .put("score", h.scoreOrLevel)
-                    .put("photo", h.photoPath)
-                    .put("vurl", h.verifyUrl)
-                    .put("notes", h.notes)
-            )
-        }
-        prefs.edit().putString(keyHonors, arr.toString()).apply()
-    }
-
-    fun addOrUpdateHonorCredential(honor: HonorCredential) {
-        val list = getHonorCredentials().toMutableList()
-        val idx = list.indexOfFirst { it.id == honor.id }
-        if (idx != -1) {
-            list[idx] = honor
-        } else {
-            list.add(0, honor)
-        }
-        saveHonorCredentials(list)
-    }
-
-    fun deleteHonorCredential(honorId: String) {
-        val list = getHonorCredentials().filter { it.id != honorId }
-        saveHonorCredentials(list)
-    }
 }

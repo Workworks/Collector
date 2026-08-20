@@ -49,7 +49,9 @@ class MainWindow(private val store: DesktopDataStore) : JFrame() {
             if (iconUrl != null) {
                 iconImage = ImageIcon(iconUrl).image
             }
-        } catch (_: Exception) {}
+        } catch (e: Exception) {
+            System.err.println("加载应用图标失败: ${e.message}")
+        }
 
         setupUI()
         setupShortcuts()

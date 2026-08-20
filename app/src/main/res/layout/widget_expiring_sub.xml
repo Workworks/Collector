@@ -6,7 +6,7 @@
     android:layout_height="match_parent"
     android:orientation="vertical"
     android:background="@drawable/bg_dialog_card"
-    android:backgroundTint="#1E293B"
+    android:backgroundTint="@color/card"
     android:padding="12dp">
 
     <!-- 小组件顶栏 -->
@@ -23,7 +23,7 @@
             android:text="Collecter 临期预警"
             android:textSize="12sp"
             android:textStyle="bold"
-            android:textColor="#38BDF8" />
+            android:textColor="@color/tag_custom_text" />
 
         <TextView
             android:id="@+id/widget_update_time"
@@ -31,13 +31,13 @@
             android:layout_height="wrap_content"
             android:text="刚刚"
             android:textSize="10sp"
-            android:textColor="#94A3B8" />
+            android:textColor="@color/text_secondary" />
     </LinearLayout>
 
     <View
         android:layout_width="match_parent"
         android:layout_height="1dp"
-        android:background="#334155"
+        android:background="@color/card_border"
         android:layout_marginVertical="6dp" />
 
     <!-- 临期物品行 -->
@@ -55,7 +55,7 @@
             android:text="⏳ 暂无临期物品"
             android:textSize="13sp"
             android:textStyle="bold"
-            android:textColor="#FFFFFF"
+            android:textColor="@color/text_primary"
             android:maxLines="1"
             android:ellipsize="end" />
 
@@ -66,7 +66,7 @@
             android:text="安全"
             android:textSize="11sp"
             android:textStyle="bold"
-            android:textColor="#10B981"
+            android:textColor="@color/primary_light"
             android:paddingHorizontal="6dp"
             android:paddingVertical="2dp"
             android:background="@drawable/bg_stock_healthy" />
@@ -88,7 +88,7 @@
             android:text="🔄 暂无近期扣费订阅"
             android:textSize="13sp"
             android:textStyle="bold"
-            android:textColor="#FFFFFF"
+            android:textColor="@color/text_primary"
             android:maxLines="1"
             android:ellipsize="end" />
 
@@ -98,7 +98,7 @@
             android:layout_height="wrap_content"
             android:text="无"
             android:textSize="11sp"
-            android:textColor="#F59E0B"
+            android:textColor="@color/warning"
             android:paddingHorizontal="6dp"
             android:paddingVertical="2dp"
             android:background="@drawable/bg_chip_inactive" />

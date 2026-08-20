@@ -86,7 +86,7 @@
             android:text="保存配置"
             android:textSize="14sp"
             android:textStyle="bold"
-            android:textColor="#FFFFFF"
+            android:textColor="@color/white"
             android:background="@drawable/bg_btn_primary"
             style="?android:attr/borderlessButtonStyle" />
     </LinearLayout>

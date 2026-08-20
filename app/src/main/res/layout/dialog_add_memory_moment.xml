@@ -294,7 +294,7 @@
             android:text="✨ 保存回忆"
             android:textSize="13sp"
             android:textStyle="bold"
-            android:textColor="#FFFFFF"
+            android:textColor="@color/white"
             android:backgroundTint="@color/primary"
             app:cornerRadius="12dp" />
     </LinearLayout>

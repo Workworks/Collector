@@ -17,6 +17,7 @@ import java.util.regex.Pattern
  */
 object SmartIntakeHelper {
 
+    private const val TAG = "SmartIntakeHelper"
     data class ParsedItem(
         val brand: String = "",
         val category: String = "日用品",
@@ -219,7 +220,9 @@ object SmartIntakeHelper {
                 try {
                     val d = sdf.parse(dateStr)
                     if (d != null) return d.time
-                } catch (_: Exception) {}
+                } catch (e: Exception) {
+                    android.util.Log.w(TAG, "解析日期候选格式失败: $dateStr with pattern ${sdf.toPattern()}", e)
+                }
             }
         }
         return 0L

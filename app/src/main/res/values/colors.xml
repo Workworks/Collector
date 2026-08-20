@@ -49,6 +49,13 @@
     <color name="stock_empty_bg">#FEE2E2</color>
     <color name="stock_empty_text">#B91C1C</color>
 
+    <!-- 通用高亮白/纯黑与半透明遮罩 -->
+    <color name="white">#FFFFFF</color>
+    <color name="black">#000000</color>
+    <color name="overlay_dark">#99000000</color>
+    <color name="tint_subtle_emerald">#1010B981</color>
+    <color name="tint_subtle_emerald_alt">#1510B981</color>
+
     <!-- 图标启动背景 -->
     <color name="ic_launcher_background">#059669</color>
 </resources>

@@ -11,8 +11,8 @@ android {
         applicationId = "com.kfaino.diapertracker"
         minSdk = 26
         targetSdk = 34
-        versionCode = 36
-        versionName = "4.2.0"
+        versionCode = 37
+        versionName = "4.3.0"
     }
 
     buildTypes {
@@ -33,6 +33,11 @@ android {
     buildFeatures {
         viewBinding = true
     }
+
+    // 单元测试底座：让 android.util.Log 等桩方法返回默认值而不是抛异常
+    testOptions {
+        unitTests.isReturnDefaultValues = true
+    }
 }
 
 dependencies {
@@ -46,4 +51,7 @@ dependencies {
     implementation("com.journeyapps:zxing-android-embedded:4.3.0")
     implementation("androidx.biometric:biometric:1.1.0")
     implementation("com.google.mlkit:text-recognition-chinese:16.0.0")
+
+    testImplementation("junit:junit:4.13.2")
+    testImplementation("org.json:json:20231013")
 }

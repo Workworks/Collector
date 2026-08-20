@@ -2,7 +2,29 @@
 
 ---
 
-## 📦 [v3.5.3] - 2026-08-20 (VersionCode: 30)
+## 📦 [v4.3.0] - 2026-08-20 (VersionCode: 37)
+
+> **📱 本次更新说明**：本版本为 **Android 端独占重大架构升级版本**（包含 DataStore 模块化下沉、超长文件治理、安全护栏强化与全量单元测试覆盖；桌面端作为独立轻量端保持精简稳态）。
+
+### 🏗️ 架构治理与工程质量跃升 (Engineering & Architecture Overhaul)
+- **📦 DataStore 上帝对象 5 阶段完整拆分下沉 (`P3-2`)**：
+  - 核心持久化与业务逻辑分流至 `EntryRepository`、`SpaceRepository`、`CategoryRepository`、`SettingsStore`、`AnalyticsQueries` 与 `BackupCodec`；
+  - `DataStore.kt` 行数由 1604 行骤降至 325 行（降幅达 79.7%），92 个公开 API 与底层存储 Key 保持 100% 零破坏兼容。
+- **🎯 超长文件治理全面清零 (`P3-1`)**：
+  - `MainActivity.kt` 抽离 `AddEntryDialog.kt`（1184 行 ➔ 447 行，降幅 62.2%）；
+  - `InteractiveGuideTour.kt` 抽离 `TourSandbox.kt` 与 `SingleFeatureTours.kt`（949 行 ➔ 237 行，降幅 75.0%）；
+  - 全工程实现 **0 个文件超过 800 行架构红线**。
+- **🧪 核心业务逻辑单元测试全覆盖 (`P3-3`)**：
+  - 覆盖三段式版本号升级与语义比较、闲置回血 ROI 统计、耗材低库存与维保周期预警、全量数据 JSON 导入导出无损编解码等 21 个单元测试（覆盖率 100%，0 失败）。
+- **🛡️ 隐私安全与异常护栏强化 (`P0-2`, `P0-3`, `P1-1`)**：
+  - 官方直连更新源绝对优先第一，第三方代理仅作回退；
+  - 动态 DEX 加载 SHA256withRSA 验签与 Zip Slip 路径穿越防御；
+  - 全工程空 catch 清零，所有 catch 块规范化上下文日志与用户可见反馈。
+- **🎨 布局与模块全景文档同步 (`P2-1`, `P1-2`, `P1-3`, `P0-1`)**：
+  - 清理 85 处布局硬编码颜色；
+  - ARCHITECTURE.md 补齐至 76 个核心模块（100% 覆盖）并新增六层单向依赖 Mermaid 架构全景图；
+  - 明确 Desktop 独立轻量端边界，README 增加全平台能力对照表。
+
 
 ### 💎 全局 UI 与高定弹窗系统全面深度升级
 - **淘汰原生粗糙 Alert**：

@@ -6,7 +6,6 @@ import android.graphics.drawable.ColorDrawable
 import android.view.Gravity
 import android.view.LayoutInflater
 import android.view.View
-import android.widget.EditText
 import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.TextView
@@ -17,11 +16,17 @@ import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.kfaino.diapertracker.databinding.DialogFloorPlanPickerBinding
 import java.util.Locale
 
+/**
+ * 🗺️ 空间平面图与箱盒 X 光透视舱 (Floor Plan & Box X-Ray Hub)
+ * 1. 可视化多房间平面图网格与触控选点
+ * 2. 物品穿梭定位与高亮打点
+ * 3. 📦 箱盒 X 光透视舱：微观资产估值、总件数与空间负荷指数
+ * 4. 🚚 一键整箱搬家与批量流转：整箱跨房间批量挪移与全量变迁轨迹追踪
+ */
 object FloorPlanDialog {
 
-    /**
-     * 弹出平面图选点、查看房间物品或从物品一键穿梭高亮
-     */
+    private const val TAG = "FloorPlanDialog"
+
     fun show(
         activity: Activity,
         store: DataStore,
@@ -49,7 +54,7 @@ object FloorPlanDialog {
 
         binding.interactiveFloorPlan.isPinSelectionMode = isSelectMode
         binding.interactiveFloorPlan.houseSpace = selectedHouse
-        val allEntries = store.loadAll()
+        var allEntries = store.loadAll()
         binding.interactiveFloorPlan.entries = allEntries
 
         // 若是由特定物品穿梭进入
@@ -63,10 +68,78 @@ object FloorPlanDialog {
             binding.btnConfirmFloorplan.text = "关闭定位"
         } else if (!isSelectMode) {
             binding.floorplanTitle.text = "🗺️ 家庭空间平面图全景"
-            binding.floorplanHint.text = "👉 点击任意房间可展开查看该房间内的所有在库物品"
+            binding.floorplanHint.text = "👉 点击任意房间可展开【箱盒 X 光透视舱】与整箱搬家"
             binding.btnConfirmFloorplan.text = "我知道了"
         } else {
             binding.btnConfirmFloorplan.text = "确认此位置标记"
+        }
+
+        fun showBatchRelocateDialog(currentHouse: HouseSpace, currentRoom: String, itemsToMove: List<Entry>, onRelocated: () -> Unit) {
+            val allHouses = store.getHouses()
+            if (allHouses.isEmpty()) return
+
+            val houseOptions = allHouses.map { it.name }
+            ModernDialogHelper.showSingleChoiceDialog(
+                context = activity,
+                title = "选择搬迁目标空间",
+                emoji = "🚚",
+                options = houseOptions,
+                selectedIndex = allHouses.indexOfFirst { it.id == currentHouse.id }.coerceAtLeast(0)
+            ) { houseIdx, _ ->
+                val targetHouse = allHouses[houseIdx]
+                val targetRooms = targetHouse.rooms
+                if (targetRooms.isEmpty()) {
+                    Toast.makeText(activity, "目标空间【${targetHouse.name}】下暂无房间，请先添加房间！", Toast.LENGTH_LONG).show()
+                    return@showSingleChoiceDialog
+                }
+
+                val roomOptions = targetRooms.map { it.name }
+                ModernDialogHelper.showSingleChoiceDialog(
+                    context = activity,
+                    title = "选择目标收纳房间/区域",
+                    emoji = "📦",
+                    options = roomOptions,
+                    selectedIndex = 0
+                ) { roomIdx, _ ->
+                    val targetRoom = targetRooms[roomIdx]
+                    if (targetHouse.name == currentHouse.name && targetRoom.name == currentRoom) {
+                        Toast.makeText(activity, "目标位置与当前位置相同，无需移动", Toast.LENGTH_SHORT).show()
+                        return@showSingleChoiceDialog
+                    }
+
+                    // 批量更新物品
+                    val all = store.loadAll().toMutableList()
+                    var moveCount = 0
+                    val now = System.currentTimeMillis()
+                    for (i in 0 until all.size) {
+                        val e = all[i]
+                        if (itemsToMove.any { it.id == e.id }) {
+                            val newHist = e.locationHistory.toMutableList()
+                            newHist.add(
+                                0,
+                                LocationMovement(
+                                    location = "【${targetRoom.name}】",
+                                    houseName = targetHouse.name,
+                                    roomName = targetRoom.name,
+                                    movedAt = now,
+                                    note = "🚚 从【${currentHouse.name} / $currentRoom】整箱搬家流转"
+                                )
+                            )
+                            all[i] = e.copy(
+                                houseName = targetHouse.name,
+                                roomName = targetRoom.name,
+                                location = targetRoom.name,
+                                locationHistory = newHist
+                            )
+                            moveCount++
+                        }
+                    }
+
+                    store.saveAll(all)
+                    Toast.makeText(activity, "🎉 成功将 $moveCount 件物品整箱搬迁至【${targetHouse.name} · ${targetRoom.name}】！", Toast.LENGTH_LONG).show()
+                    onRelocated()
+                }
+            }
         }
 
         fun showRoomItemsDrawer(roomName: String, items: List<Entry>) {
@@ -78,7 +151,7 @@ object FloorPlanDialog {
 
             binding.roomAssetsScroll.visibility = View.VISIBLE
 
-            // 头部标题与二维码标签生成按钮
+            // 1. 头部标题与操作按钮栏 (便签工坊 / 整箱搬家)
             val headerRow = LinearLayout(activity).apply {
                 orientation = LinearLayout.HORIZONTAL
                 gravity = Gravity.CENTER_VERTICAL
@@ -86,15 +159,38 @@ object FloorPlanDialog {
             }
 
             val headerTv = TextView(activity).apply {
-                text = "📦 【$roomName】在库物品 (${items.size} 种):"
-                textSize = 12f
+                text = "📦 【$roomName】微观收纳舱"
+                textSize = 13f
                 setTextColor(ContextCompat.getColor(context, R.color.primary))
                 paint.isFakeBoldText = true
                 layoutParams = LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f)
             }
 
+            val btnRelocate = TextView(activity).apply {
+                text = "🚚 整箱搬家"
+                textSize = 11f
+                setTextColor(ContextCompat.getColor(context, R.color.accent_dark))
+                setBackgroundResource(R.drawable.bg_btn_custom_add)
+                setPadding(activity.dpToPx(8), activity.dpToPx(4), activity.dpToPx(8), activity.dpToPx(4))
+                applyPressScaleAnimation(0.92f)
+                val params = LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.WRAP_CONTENT,
+                    LinearLayout.LayoutParams.WRAP_CONTENT
+                ).apply { marginEnd = activity.dpToPx(6) }
+                layoutParams = params
+                setOnClickListener {
+                    showBatchRelocateDialog(selectedHouse, roomName, items) {
+                        allEntries = store.loadAll()
+                        binding.interactiveFloorPlan.entries = allEntries
+                        binding.interactiveFloorPlan.invalidate()
+                        val updatedItems = allEntries.filter { it.roomName == roomName && !it.isRetired }
+                        showRoomItemsDrawer(roomName, updatedItems)
+                    }
+                }
+            }
+
             val btnGenQr = TextView(activity).apply {
-                text = "🏷️ 生成二维码标签"
+                text = "🏷️ 便签工坊"
                 textSize = 11f
                 setTextColor(ContextCompat.getColor(context, R.color.primary))
                 setBackgroundResource(R.drawable.bg_btn_custom_add)
@@ -106,9 +202,71 @@ object FloorPlanDialog {
             }
 
             headerRow.addView(headerTv)
+            headerRow.addView(btnRelocate)
             headerRow.addView(btnGenQr)
             binding.roomAssetsContainer.addView(headerRow)
 
+            // 2. 箱盒 X-Ray 透视指标卡片 (资产估值、总件数与空间负荷评估)
+            val totalVal = items.sumOf { it.price * it.qty }
+            val totalQty = items.sumOf { it.qty }
+            val densityRating = if (totalQty <= 5) "🟢 宽敞轻量" else if (totalQty <= 15) "🟡 适宜收纳" else "🟠 密集收纳"
+            val catList = items.map { it.category }.distinct().joinToString("、")
+
+            val xrayCard = MaterialCardView(activity).apply {
+                radius = activity.dpToPx(12).toFloat()
+                cardElevation = 0f
+                strokeWidth = activity.dpToPx(1)
+                setStrokeColor(ContextCompat.getColor(context, R.color.card_border))
+                setCardBackgroundColor(ContextCompat.getColor(context, R.color.card))
+                layoutParams = LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.MATCH_PARENT,
+                    LinearLayout.LayoutParams.WRAP_CONTENT
+                ).apply { bottomMargin = activity.dpToPx(8) }
+            }
+
+            val xrayLayout = LinearLayout(activity).apply {
+                orientation = LinearLayout.VERTICAL
+                setPadding(activity.dpToPx(12), activity.dpToPx(10), activity.dpToPx(12), activity.dpToPx(10))
+            }
+
+            val metricRow = LinearLayout(activity).apply {
+                orientation = LinearLayout.HORIZONTAL
+                gravity = Gravity.CENTER_VERTICAL
+            }
+
+            val valTv = TextView(activity).apply {
+                text = "💰 总值: ¥${String.format(Locale.getDefault(), "%.2f", totalVal)}"
+                textSize = 12f
+                paint.isFakeBoldText = true
+                setTextColor(ContextCompat.getColor(context, R.color.text_primary))
+                layoutParams = LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f)
+            }
+
+            val densityTv = TextView(activity).apply {
+                text = "$densityRating ($totalQty 件)"
+                textSize = 11f
+                paint.isFakeBoldText = true
+                setTextColor(ContextCompat.getColor(context, R.color.text_secondary))
+            }
+
+            metricRow.addView(valTv)
+            metricRow.addView(densityTv)
+            xrayLayout.addView(metricRow)
+
+            if (catList.isNotBlank()) {
+                val catTv = TextView(activity).apply {
+                    text = "🏷️ 分类构成: $catList"
+                    textSize = 11f
+                    setTextColor(ContextCompat.getColor(context, R.color.text_secondary))
+                    setPadding(0, activity.dpToPx(3), 0, 0)
+                }
+                xrayLayout.addView(catTv)
+            }
+
+            xrayCard.addView(xrayLayout)
+            binding.roomAssetsContainer.addView(xrayCard)
+
+            // 3. 物品明细卡片列表
             for (item in items) {
                 val card = MaterialCardView(activity).apply {
                     radius = activity.dpToPx(10).toFloat()

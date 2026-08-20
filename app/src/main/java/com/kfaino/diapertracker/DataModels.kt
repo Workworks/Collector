@@ -112,8 +112,34 @@ data class Entry(
     val currentLentDate: Long = 0L,                 // 当前借出时间戳
     val expectedReturnDate: Long = 0L,              // 约定预计归还日期 (0表示未指定)
     val currentDeposit: Double = 0.0,               // 当前已付押金 (元)
-    val lendingHistory: List<LendingRecord> = emptyList() // 历史流转与借还记录
+    val lendingHistory: List<LendingRecord> = emptyList(), // 历史流转与借还记录
+
+    // 10. 全家耐用资产维保与年检周期体系 (Asset Maintenance & Service Cycles)
+    val maintenanceIntervalMonths: Int = 0,        // 定期维保周期 (月数, 0=无维保, 3=每季, 6=每半年, 12=每年)
+    val lastMaintainedAt: Long = 0L,               // 上次完成维保时间戳
+    val maintenanceNotes: String = ""              // 维保备忘/耗材型号 (如 "RO反渗透滤芯 400G")
 ) {
+    /** 是否配置了定期维保周期 */
+    fun isMaintenanceEnabled(): Boolean = maintenanceIntervalMonths > 0
+
+    /** 获取下次维保计划日期 */
+    fun getNextMaintenanceDate(): Long {
+        if (maintenanceIntervalMonths <= 0) return 0L
+        val baseDate = if (lastMaintainedAt > 0L) lastMaintainedAt else purchaseDate
+        val cal = java.util.Calendar.getInstance()
+        cal.timeInMillis = baseDate
+        cal.add(java.util.Calendar.MONTH, maintenanceIntervalMonths)
+        return cal.timeInMillis
+    }
+
+    /** 获取距离下次维保的剩余天数 (负数表示已逾期超期) */
+    fun getMaintenanceRemainingDays(): Int {
+        val nextDate = getNextMaintenanceDate()
+        if (nextDate <= 0L) return 9999
+        val diff = nextDate - System.currentTimeMillis()
+        return (diff / (24L * 60 * 60 * 1000)).toInt()
+    }
+
     /** 是否处于逾期未还状态 */
     fun isLendingOverdue(): Boolean {
         if (!isLentOut || expectedReturnDate <= 0L) return false
@@ -128,7 +154,7 @@ data class Entry(
             val diffMs = expectedReturnDate - now
             val days = (diffMs / (24L * 60 * 60 * 1000)).toInt()
             return if (days < 0) {
-                "⚠️ 借给 $currentBorrower · 逾期 ${Math.abs(days)} 天"
+                "⚠️ 借给 $currentBorrower · 逾期 ${kotlin.math.abs(days)} 天"
             } else if (days == 0) {
                 "⏰ 借给 $currentBorrower · 今日到期"
             } else {

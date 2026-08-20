@@ -383,7 +383,7 @@
                 android:text="💾 存入鲜度库"
                 android:textSize="14sp"
                 android:textStyle="bold"
-                android:textColor="#FFFFFFFF"
+                android:textColor="@color/white"
                 android:backgroundTint="@color/primary"
                 app:cornerRadius="12dp" />
         </LinearLayout>

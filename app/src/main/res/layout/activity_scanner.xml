@@ -1,4 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!-- 
+    合理例外说明（见 docs/debt/P2-1.md）：
+    相机扫码取景界面必须固定纯黑底色与半透明黑色浮层（Black / Semi-transparent Black），
+    以及纯白文字图标（White），以确保在任何相机画幅及深浅主题下均具备高对比度可视性。
+-->
 <FrameLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
