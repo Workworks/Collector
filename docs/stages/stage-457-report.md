@@ -45,6 +45,10 @@
 
 构建 APK SHA-256：`6e981fa1bbf858d9447f5ca63c0edf39fa8e550e06d444725c49503ee0004cf1`。本文件记录的是未发布整合构建，不应作为公开版本下载标识。
 
+## 提交与远端核对
+
+源码合并提交 `53c86f04f58e9137744f54be39c762861bab5c8c`，双亲为本地快照 `d3c1f4d` 与远端 `b0aafdd`。非强制推送成功后，HEAD、origin/main、`git ls-remote origin refs/heads/main` 三者一致，工作区干净。本节为完成后的文档回填。暂存审计覆盖 727 文件，未发现 keystore、JKS、APK、OBJ、环境凭据文件、已知 WebDAV 密码、私钥标记或冲突标记；没有修改历史 tag 或 Release。
+
 ## 未关闭的外部交付
 
 - 历史 v4.3.6 tag/附件未篡改，本次 main 修复不会自动安装到用户手机；完整新 APK 发布仍需独立版本与设备升级验收。
