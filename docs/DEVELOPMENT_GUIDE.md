@@ -1,4 +1,4 @@
-# 🛠️ 开发者与维护开发指南 (DEVELOPMENT_GUIDE.md)
+﻿# 🛠️ 开发者与维护开发指南 (DEVELOPMENT_GUIDE.md)
 
 本文档为后续参与维护 **Collecter** 的开发者提供环境配置、代码规范、架构约定及常见构建调试说明。
 

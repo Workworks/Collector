@@ -933,4 +933,17 @@ class DesktopDataStore(customDataDir: File? = null) {
         }
         return sb.toString()
     }
+    fun getLinkedIdeasForAsset(assetId: String): List<IdeaRecord> =
+        inMemoryIdeas.filter { it.linkedAssetIds.contains(assetId) }
+
+    fun getLinkedClippingsForAsset(assetId: String): List<ClippingRecord> =
+        inMemoryClippings.filter { it.linkedAssetIds.contains(assetId) }
+
+    fun getLinkedAssetsForIdea(idea: IdeaRecord): List<Entry> =
+        inMemoryEntries.filter { idea.linkedAssetIds.contains(it.id) }
+
+    fun getLinkedAssetsForClipping(clipping: ClippingRecord): List<Entry> =
+        inMemoryEntries.filter { clipping.linkedAssetIds.contains(it.id) }
+
+
 }

@@ -5,6 +5,18 @@ import org.json.JSONArray
 
 /** Explicit wire aliases; canonical keys match historical Android backups. Unknown keys survive. */
 object WireAliases {
+    // v4.3.6 used additional short names; keep one canonical value across both branches.
+    private val release436 = mapOf(
+        "wardrobe" to mapOf("cat" to listOf("category"), "mat" to listOf("material"), "wear_cnt" to listOf("w_cnt"), "last_worn" to listOf("w_at"), "sealed_at" to listOf("s_at")),
+        "emergency" to mapOf("kit" to listOf("k_type"), "chk_d" to listOf("test_at", "chk_at")),
+        "tools" to mapOf("interval_d" to listOf("m_days"), "last_maint_d" to listOf("m_at")),
+        "plants" to mapOf("water_d" to listOf("w_days"), "last_water_d" to listOf("w_at"), "fert_d" to listOf("f_days"), "last_fert_d" to listOf("f_at")),
+        "pets" to mapOf("chip_id" to listOf("chip"), "deworm_d" to listOf("dw_days"), "last_deworm_d" to listOf("dw_at"), "vax_d" to listOf("vac_days"), "last_vax_d" to listOf("vac_at")),
+        "books" to mapOf("category" to listOf("cat"), "total_p" to listOf("tot_p"), "location" to listOf("loc"), "cover" to listOf("photo")),
+        "beverages" to mapOf("category" to listOf("cat"), "best_year" to listOf("aging"), "location" to listOf("loc"), "opened_at" to listOf("open_at"), "open_life_d" to listOf("p_days")),
+        "ideas" to mapOf("created_at" to listOf("c_at"), "updated_at" to listOf("u_at")),
+        "clippings" to mapOf("captured_at" to listOf("cap_at"))
+    )
     private val aliases = mapOf(
         "vouchers" to mapOf("val" to listOf("valueAmount"), "min" to listOf("minSpend"), "rem_t" to listOf("remainingTimes"), "tot_t" to listOf("totalTimes"), "s_date" to listOf("startDate"), "e_date" to listOf("expiryDate"), "plat" to listOf("platform"), "photo" to listOf("photoPath"), "used" to listOf("isUsed"), "used_at" to listOf("usedAt")),
         "identity_docs" to mapOf("name" to listOf("nameOnDoc"), "mem" to listOf("member"), "dtype" to listOf("docType"), "dnum" to listOf("certNumber"), "iss_d" to listOf("issueDate"), "exp_d" to listOf("expiryDate"), "f_photo" to listOf("frontPhotoPath"), "b_photo" to listOf("backPhotoPath")),
@@ -23,6 +35,17 @@ object WireAliases {
 
     fun convert(document: JSONObject, expand: Boolean = false): JSONObject {
         val root = JSONObject(document.toString())
+        for ((collection, fields) in release436) {
+            val arr = root.optJSONArray(collection) ?: continue
+            for (i in 0 until arr.length()) {
+                val item = arr.getJSONObject(i)
+                for ((canonical, alternatives) in fields) {
+                    if (!item.has(canonical)) alternatives.firstOrNull { item.has(it) }?.let { item.put(canonical, item.get(it)) }
+                    // Preserve old keys as unknown fields; canonical values always win after migration.
+                }
+                if (collection == "clippings" && !item.has("progress") && item.has("prog")) item.put("progress", item.getDouble("prog") / 100.0)
+            }
+        }
         val cycles = mapOf("MONTHLY" to "按月", "QUARTERLY" to "按季", "YEARLY" to "按年", "WEEKLY" to "按周", "HALF_YEARLY" to "按半年")
         for ((collection, fields) in aliases) {
             val arr = root.optJSONArray(collection) ?: continue

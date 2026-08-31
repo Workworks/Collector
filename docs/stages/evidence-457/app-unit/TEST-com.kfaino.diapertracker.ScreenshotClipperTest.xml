@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="com.kfaino.diapertracker.ScreenshotClipperTest" tests="5" skipped="0" failures="0" errors="0" timestamp="2026-08-31T16:16:32" hostname="KFAINO" time="0.023">
+  <properties/>
+  <testcase name="网页剪藏平台识别与标题提取准确" classname="com.kfaino.diapertracker.ScreenshotClipperTest" time="0.004"/>
+  <testcase name="截图文本智能分析提取标题与电商标签" classname="com.kfaino.diapertracker.ScreenshotClipperTest" time="0.012"/>
+  <testcase name="HTML清洗转换为纯净Markdown正文" classname="com.kfaino.diapertracker.ScreenshotClipperTest" time="0.005"/>
+  <testcase name="截图文本智能分析提取技术与食谱标签" classname="com.kfaino.diapertracker.ScreenshotClipperTest" time="0.001"/>
+  <testcase name="截图文件命名与路径判断识别准确" classname="com.kfaino.diapertracker.ScreenshotClipperTest" time="0.001"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

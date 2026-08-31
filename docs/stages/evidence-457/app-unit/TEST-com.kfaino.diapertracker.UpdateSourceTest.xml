@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="com.kfaino.diapertracker.UpdateSourceTest" tests="6" skipped="0" failures="0" errors="0" timestamp="2026-08-31T16:16:32" hostname="KFAINO" time="0.004">
+  <properties/>
+  <testcase name="官方源必须排在候选列表第一位" classname="com.kfaino.diapertracker.UpdateSourceTest" time="0.003"/>
+  <testcase name="官方域名识别正确" classname="com.kfaino.diapertracker.UpdateSourceTest" time="0.001"/>
+  <testcase name="Releases API 地址走官方域名且官方优先" classname="com.kfaino.diapertracker.UpdateSourceTest" time="0.0"/>
+  <testcase name="第三方代理只能出现在官方源之后" classname="com.kfaino.diapertracker.UpdateSourceTest" time="0.0"/>
+  <testcase name="空地址返回空列表" classname="com.kfaino.diapertracker.UpdateSourceTest" time="0.0"/>
+  <testcase name="非官方地址不得被转发给第三方代理" classname="com.kfaino.diapertracker.UpdateSourceTest" time="0.0"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

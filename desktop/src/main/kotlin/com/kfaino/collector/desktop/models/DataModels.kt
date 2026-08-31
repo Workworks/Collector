@@ -390,7 +390,12 @@ data class IdeaRecord(
     val linkedAssetIds: List<String> = emptyList(),
     val createdAt: Long = System.currentTimeMillis(),
     val updatedAt: Long = createdAt
-)
+) {
+    fun getPreview(maxLen: Int = 40): String {
+        val clean = content.replace("\n", " ").trim()
+        return if (clean.length > maxLen) "${clean.take(maxLen)}..." else clean
+    }
+}
 
 /** 📰 智能截图与网络文章知识剪藏模型 */
 data class ClippingRecord(
@@ -407,5 +412,7 @@ data class ClippingRecord(
     val isArchived: Boolean = false,
     val linkedAssetIds: List<String> = emptyList(),
     val capturedAt: Long = System.currentTimeMillis()
-)
+) {
+    fun getSearchableContent(): String = "$title $summary $ocrRawText $fullMarkdown ${tags.joinToString(" ")}"
+}
 

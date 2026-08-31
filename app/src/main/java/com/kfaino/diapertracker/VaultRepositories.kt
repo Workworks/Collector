@@ -1135,7 +1135,7 @@ internal class BeverageTeaVaultRepository(private val prefs: SharedPreferences) 
                         vintageYear = o.optInt("vintage", 2020),
                         originRegion = o.optString("origin", ""),
                         storageLocation = o.optString("location", ""),
-                        qty = o.optInt("qty", 1),
+                        qty = o.optDouble("qty", 1.0),
                         unit = o.optString("unit", "瓶"),
                         openedAt = o.optLong("opened_at", 0L),
                         bestDrinkingYear = o.optInt("best_year", 2030),
@@ -1203,12 +1203,12 @@ internal class BeverageTeaVaultRepository(private val prefs: SharedPreferences) 
         }
     }
 
-    fun consumeQty(recordId: String, delta: Int = 1) {
+    fun consumeQty(recordId: String, delta: Double = 1.0) {
         val list = getBeverageRecords().toMutableList()
         val idx = list.indexOfFirst { it.id == recordId }
         if (idx != -1) {
             val cur = list[idx]
-            val newQty = (cur.qty - delta).coerceAtLeast(0)
+            val newQty = (cur.qty - delta).coerceAtLeast(0.0)
             list[idx] = cur.copy(qty = newQty)
             saveBeverageRecords(list)
         }

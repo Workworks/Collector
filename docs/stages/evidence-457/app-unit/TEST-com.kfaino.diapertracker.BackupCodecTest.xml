@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="com.kfaino.diapertracker.BackupCodecTest" tests="6" skipped="0" failures="0" errors="0" timestamp="2026-08-31T16:16:28" hostname="KFAINO" time="0.059">
+  <properties/>
+  <testcase name="导出CSV必须以UTF8_BOM开头" classname="com.kfaino.diapertracker.BackupCodecTest" time="0.017"/>
+  <testcase name="订阅类资产字段往返无损验证" classname="com.kfaino.diapertracker.BackupCodecTest" time="0.021"/>
+  <testcase name="备份空数据往返验证" classname="com.kfaino.diapertracker.BackupCodecTest" time="0.003"/>
+  <testcase name="畸形JSON导入应安全拒绝且不崩溃" classname="com.kfaino.diapertracker.BackupCodecTest" time="0.007"/>
+  <testcase name="备份导出与导入完整往返验证" classname="com.kfaino.diapertracker.BackupCodecTest" time="0.005"/>
+  <testcase name="旧版JSON缺少新字段应安全回退默认值" classname="com.kfaino.diapertracker.BackupCodecTest" time="0.004"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

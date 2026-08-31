@@ -413,7 +413,6 @@ object ResaleCopilotHelper {
                     isRetired = true,
                     retiredAt = System.currentTimeMillis(),
                     retiredAction = "📦 挂闲鱼代售",
-                    retiredSoldPrice = sellVal,
                     currentValuation = sellVal
                 )
                 store.saveAll(all)

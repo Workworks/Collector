@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="com.kfaino.diapertracker.Collecter5MasterSuiteTest" tests="4" skipped="0" failures="0" errors="0" timestamp="2026-08-31T16:16:28" hostname="KFAINO" time="0.052">
+  <properties/>
+  <testcase name="E2EE零知识信封加密与解密往返无损验证" classname="com.kfaino.diapertracker.Collecter5MasterSuiteTest" time="0.043"/>
+  <testcase name="BLE距离测算模型准确性验证" classname="com.kfaino.diapertracker.Collecter5MasterSuiteTest" time="0.002"/>
+  <testcase name="说明书客服电话与质保期正则提取测试" classname="com.kfaino.diapertracker.Collecter5MasterSuiteTest" time="0.006"/>
+  <testcase name="全品类非线性残值衰减算法验证" classname="com.kfaino.diapertracker.Collecter5MasterSuiteTest" time="0.001"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

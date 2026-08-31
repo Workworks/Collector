@@ -1,4 +1,4 @@
-package com.kfaino.collector.desktop.sync
+﻿package com.kfaino.collector.desktop.sync
 
 import com.kfaino.collector.desktop.storage.DesktopDataStore
 import java.io.ByteArrayOutputStream
@@ -67,6 +67,7 @@ object DesktopWebDavHelper {
             val fileUrl = URI.create(getFullRemoteFileUrl(store)).toURL()
             val condition = com.kfaino.collecter.core.WebDavRevisionGuard.prepare(fileUrl.toString(), store.getWebDavUsername(), getAuthHeader(store))
             val conn = fileUrl.openConnection() as HttpURLConnection
+            conn.instanceFollowRedirects = false
             conn.requestMethod = "PUT"
             conn.setRequestProperty("Authorization", getAuthHeader(store))
             conn.setRequestProperty("Content-Type", "application/json; charset=utf-8")
@@ -102,6 +103,7 @@ object DesktopWebDavHelper {
 
             val fileUrl = URI.create(getFullRemoteFileUrl(store)).toURL()
             val conn = fileUrl.openConnection() as HttpURLConnection
+            conn.instanceFollowRedirects = false
             conn.requestMethod = "GET"
             conn.setRequestProperty("Authorization", getAuthHeader(store))
             conn.connectTimeout = 10000
@@ -121,6 +123,8 @@ object DesktopWebDavHelper {
                 require(baos.size().toLong() + len <= com.kfaino.collecter.core.BackupDocument.MAX_BYTES) { "备份超过大小限制" }
                 baos.write(buffer, 0, len)
             }
+            stream.close()
+            com.kfaino.collecter.core.WebDavRevisionGuard.remember(fileUrl.toString(), store.getWebDavUsername(), conn)
             conn.disconnect()
 
             val jsonStr = baos.toString(StandardCharsets.UTF_8)

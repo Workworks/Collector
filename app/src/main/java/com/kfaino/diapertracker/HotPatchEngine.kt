@@ -2,16 +2,12 @@ package com.kfaino.diapertracker
 
 import android.content.Context
 import android.content.SharedPreferences
-import android.util.Base64
 import android.util.Log
 import dalvik.system.DexClassLoader
 import org.json.JSONObject
 import java.io.*
 import java.nio.charset.StandardCharsets
-import java.security.KeyFactory
 import java.security.MessageDigest
-import java.security.Signature
-import java.security.spec.X509EncodedKeySpec
 
 /**
  * 类游戏级动态热补丁与沙盒资源加载引擎 (Hot Patch Engine)
@@ -236,42 +232,9 @@ object HotPatchEngine {
      * - 签名与 dex 内容不匹配。
      */
     private fun verifyDexSignature(dexFile: File, sigFile: File): Boolean {
-        if (PATCH_PUBLIC_KEY_B64.isBlank()) {
-            Log.w(TAG, "未配置补丁签名公钥，按 fail-closed 策略拒绝加载动态 dex")
-            return false
-        }
-        if (!sigFile.exists()) {
-            Log.w(TAG, "补丁缺少签名文件 " + DEX_SIG_NAME + "，拒绝加载动态 dex")
-            return false
-        }
-        return try {
-            val keyBytes = Base64.decode(PATCH_PUBLIC_KEY_B64, Base64.DEFAULT)
-            val publicKey = KeyFactory.getInstance("RSA")
-                .generatePublic(X509EncodedKeySpec(keyBytes))
-
-            val signatureBytes = Base64.decode(
-                sigFile.readText(StandardCharsets.UTF_8).trim(),
-                Base64.DEFAULT
-            )
-
-            val verifier = Signature.getInstance("SHA256withRSA").apply {
-                initVerify(publicKey)
-                dexFile.inputStream().use { fis ->
-                    val buffer = ByteArray(8192)
-                    var read: Int
-                    while (fis.read(buffer).also { read = it } != -1) {
-                        update(buffer, 0, read)
-                    }
-                }
-            }
-
-            val ok = verifier.verify(signatureBytes)
-            if (!ok) Log.e(TAG, "补丁 dex 签名校验不通过")
-            ok
-        } catch (e: Exception) {
-            Log.e(TAG, "补丁 dex 验签过程异常，按 fail-closed 拒绝加载", e)
-            false
-        }
+        val valid = DexSignatureVerifier.verify(dexFile, sigFile, PATCH_PUBLIC_KEY_B64)
+        if (!valid) Log.e(TAG, "补丁 DEX 验签失败、缺少签名或未配置公钥，拒绝加载")
+        return valid
     }
 
     /**

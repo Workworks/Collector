@@ -26,7 +26,7 @@
 
 ### 2.1 截图监听与处理流程
 ```
-[用户在系统任意 App 截屏] 
+[用户在系统任意 App 截屏]
        │
        ▼ (ContentObserver 监听到 MediaStore 新增图片)
 [ScreenshotWatcherHelper 过滤判断] (是否在 /Screenshots/ 目录且未被处理)

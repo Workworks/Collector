@@ -17,7 +17,6 @@ import java.util.regex.Pattern
  */
 object SmartIntakeHelper {
 
-    private const val TAG = "SmartIntakeHelper"
     data class ParsedItem(
         val brand: String = "",
         val category: String = "日用品",
@@ -61,15 +60,6 @@ object SmartIntakeHelper {
         return parseRawText(text)
     }
 
-    /** 检测文本是否包含淘宝/京东/拼多多等电商订单或商品分享特征 */
-    fun isEcommerceContent(text: String): Boolean {
-        val t = text.lowercase()
-        return t.contains("tb.cn") || t.contains("taobao.com") || t.contains("tmall.com") ||
-               t.contains("jd.com") || t.contains("yangkeduo.com") || t.contains("pinduoduo") ||
-               t.contains("￥") || t.contains("【淘宝】") || t.contains("【京东】") ||
-               t.contains("实付款") || t.contains("订单编号") || t.contains("已发货")
-    }
-
     private fun parseRawText(raw: String): ParsedItem {
         val lines = raw.lines().map { it.trim() }.filter { it.isNotEmpty() }
         val flatText = raw.replace("\n", " ").trim()
@@ -79,35 +69,23 @@ object SmartIntakeHelper {
         var price = extractPrice(flatText)
         var qty = extractQty(flatText)
         var unit = extractUnit(flatText)
-        var purchaseDate = extractDate(flatText, listOf("购买", "下单", "日期", "交易", "开票", "创建时间"))
+        var purchaseDate = extractDate(flatText, listOf("购买", "下单", "日期", "交易", "开票"))
         var mfgDate = extractDate(flatText, listOf("生产", "制造", "出厂", "mfg"))
         var expDate = extractDate(flatText, listOf("保质期至", "到期", "有效", "截止", "exp", "最佳食用"))
         var assetType = "consumable"
-        var specs = ""
 
-        // 提取规格属性 (例如: 黑色 256GB / 颜色: 钛金灰 / 尺码: L)
-        val specRegex = Pattern.compile("(?:规格|颜色|尺码|型号|分类|版本)[：:]\\s*([^\\s,，\n]+)")
-        val specMatcher = specRegex.matcher(raw)
-        if (specMatcher.find()) {
-            specs = specMatcher.group(1)?.trim().orEmpty()
-        }
-
-        // 提取名称 (通常在小票/订单的前几行，去除电商与票据无用干扰词)
+        // 提取名称 (通常在小票的前几行，或者取去除了金额数量后的关键主体)
         if (lines.isNotEmpty()) {
             val candidate = lines.firstOrNull { l ->
                 !l.contains("小票") && !l.contains("发票") && !l.contains("收银") &&
                 !l.contains("欢迎光临") && !l.contains("总计") && !l.contains("金额") &&
-                !l.contains("实付款") && !l.contains("订单编号") && !l.contains("已发货") &&
-                !l.contains("退款") && !l.contains("售后") && !l.contains("旗舰店") &&
-                !l.contains("专卖店") && !l.contains("运费险") && !l.contains("店铺合计") &&
-                !l.contains("查看物流") && !l.contains("再次购买") && !l.contains("去评价") &&
-                l.length in 2..30
+                l.length in 2..25
             } ?: lines.first()
             brand = cleanBrandName(candidate)
         }
 
         if (brand.isBlank()) {
-            brand = cleanBrandName(flatText.take(25))
+            brand = cleanBrandName(flatText.take(20))
         }
 
         // 推断类型
@@ -116,8 +94,6 @@ object SmartIntakeHelper {
         } else if (category == "数码" || price > 500) {
             assetType = "depreciating"
         }
-
-        val noteText = if (specs.isNotBlank()) "规格: $specs (由电商订单自动提取)" else "由 AI 智能提取"
 
         return ParsedItem(
             brand = brand.ifBlank { "物品" },
@@ -129,7 +105,7 @@ object SmartIntakeHelper {
             mfgDate = mfgDate,
             expDate = expDate,
             assetType = assetType,
-            notes = noteText
+            notes = "由 AI 智能提取"
         )
     }
 
@@ -221,7 +197,8 @@ object SmartIntakeHelper {
                     val d = sdf.parse(dateStr)
                     if (d != null) return d.time
                 } catch (e: Exception) {
-                    android.util.Log.w(TAG, "解析日期候选格式失败: $dateStr with pattern ${sdf.toPattern()}", e)
+                    // 格式不匹配继续尝试下一个 SimpleDateFormat
+                    android.util.Log.d("SmartIntakeHelper", "日期格式不匹配: $dateStr with ${sdf.toPattern()}")
                 }
             }
         }
@@ -237,5 +214,13 @@ object SmartIntakeHelper {
             .replace("保质期", "")
             .replace("生产日期", "")
             .trim()
+    }
+
+    fun isEcommerceContent(text: String): Boolean {
+        val lower = text.lowercase()
+        return lower.contains("tb.cn") || lower.contains("jd.com") || lower.contains("yangkeduo.com") ||
+               lower.contains("pinduoduo") || lower.contains("taobao") || lower.contains("tmall") ||
+               text.contains("【淘宝】") || text.contains("【京东】") || text.contains("【拼多多】") ||
+               text.contains("￥") || text.contains("淘口令") || text.contains("付鴯") || text.contains("復製")
     }
 }

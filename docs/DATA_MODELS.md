@@ -1,4 +1,4 @@
-# 🗄️ 数据模型与存储协议规范 (DATA_MODELS.md)
+﻿# 🗄️ 数据模型与存储协议规范 (DATA_MODELS.md)
 
 本文档详细定义了 **Collecter** 的核心数据模型实体、字段说明及其在本地 JSON 存储中的序列化 Key。
 

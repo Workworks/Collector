@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="com.kfaino.diapertracker.Collecter80MasterSuiteTest" tests="5" skipped="0" failures="0" errors="0" timestamp="2026-08-31T16:16:28" hostname="KFAINO" time="0.059">
+  <properties/>
+  <testcase name="后量子密码学抗量子信封封装测试" classname="com.kfaino.diapertracker.Collecter80MasterSuiteTest" time="0.011"/>
+  <testcase name="极端战备生命维持物资配给算法测试" classname="com.kfaino.diapertracker.Collecter80MasterSuiteTest" time="0.012"/>
+  <testcase name="气压高程差分货架层级定位测试" classname="com.kfaino.diapertracker.Collecter80MasterSuiteTest" time="0.011"/>
+  <testcase name="机器人抓取受力自适应测试" classname="com.kfaino.diapertracker.Collecter80MasterSuiteTest" time="0.006"/>
+  <testcase name="疫苗冷链变质时间积分测试" classname="com.kfaino.diapertracker.Collecter80MasterSuiteTest" time="0.003"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

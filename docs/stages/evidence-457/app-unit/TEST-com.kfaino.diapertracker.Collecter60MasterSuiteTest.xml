@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="com.kfaino.diapertracker.Collecter60MasterSuiteTest" tests="5" skipped="0" failures="0" errors="0" timestamp="2026-08-31T16:16:28" hostname="KFAINO" time="0.023">
+  <properties/>
+  <testcase name="声学回声空间尺度与柜体材质推断测试" classname="com.kfaino.diapertracker.Collecter60MasterSuiteTest" time="0.003"/>
+  <testcase name="BIP39助记词生成与长度校验测试" classname="com.kfaino.diapertracker.Collecter60MasterSuiteTest" time="0.001"/>
+  <testcase name="物理常识因果推理测试" classname="com.kfaino.diapertracker.Collecter60MasterSuiteTest" time="0.002"/>
+  <testcase name="零知识资产脱敏证明验证" classname="com.kfaino.diapertracker.Collecter60MasterSuiteTest" time="0.015"/>
+  <testcase name="高分子材料水解老化风险模型验证" classname="com.kfaino.diapertracker.Collecter60MasterSuiteTest" time="0.002"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

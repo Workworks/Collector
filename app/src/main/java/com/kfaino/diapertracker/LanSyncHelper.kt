@@ -700,9 +700,9 @@ object LanSyncHelper {
 
         function filterTable() {
             const q = document.getElementById('searchBox').value.toLowerCase();
-            const filtered = allItems.filter(e => 
-                e.brand.toLowerCase().includes(q) || 
-                e.category.toLowerCase().includes(q) || 
+            const filtered = allItems.filter(e =>
+                e.brand.toLowerCase().includes(q) ||
+                e.category.toLowerCase().includes(q) ||
                 (e.location && e.location.toLowerCase().includes(q))
             );
             renderTable(filtered);

@@ -1,4 +1,4 @@
-package com.kfaino.diapertracker
+﻿package com.kfaino.diapertracker
 
 import android.app.Activity
 import android.content.Context
@@ -13,7 +13,7 @@ import java.util.concurrent.Executors
 
 /**
  * 类游戏极速热更新下载、校验与版本管理引擎
- * - 下载源统一走 UpdateSource：官方直连优先，第三方 CDN 代理仅作容灾 fallback
+ * - 内置多镜像极速 CDN 备用通道（ghfast.top、mirror.ghproxy.com、ghproxy.net）与直连容灾
  * - 智能跟随 301/302 重定向，解决国内网络直连 GitHub Releases 443 超时问题
  */
 object HotUpdateManager {
@@ -38,8 +38,12 @@ object HotUpdateManager {
         val activePatchVer = HotPatchEngine.getActivePatchVersion(context)
         val store = DataStore(context)
         val repo = store.getGithubRepo().ifBlank { "Workworks/Collector" }
-        // 安全不变量：官方 API 优先，代理仅作 fallback（见 UpdateSource / GEMINI.md 铁律 3）
-        val apiUrls = UpdateSource.candidates(UpdateSource.latestReleaseApi(repo))
+        val apiUrls = listOf(
+            "https://ghfast.top/https://api.github.com/repos/$repo/releases/latest",
+            "https://mirror.ghproxy.com/https://api.github.com/repos/$repo/releases/latest",
+            "https://ghproxy.net/https://api.github.com/repos/$repo/releases/latest",
+            "https://api.github.com/repos/$repo/releases/latest"
+        )
 
         executor.execute {
             var lastError = "无法连接至 GitHub 仓库"
@@ -133,8 +137,12 @@ object HotUpdateManager {
             val tempDir = File(context.cacheDir, "patch_download").apply { mkdirs() }
             val tempFile = File(tempDir, "patch_${info.patchVersion}.zip")
 
-            // 安全不变量：官方源优先，代理仅作 fallback（见 UpdateSource / GEMINI.md 铁律 3）
-            val urlsToTry = UpdateSource.candidates(info.downloadUrl)
+            val urlsToTry = listOf(
+                "https://ghfast.top/${info.downloadUrl}",
+                "https://mirror.ghproxy.com/${info.downloadUrl}",
+                "https://ghproxy.net/${info.downloadUrl}",
+                info.downloadUrl
+            )
 
             var lastError = "下载失败"
             var success = false

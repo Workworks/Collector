@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="com.kfaino.diapertracker.VersionCompareTest" tests="4" skipped="0" failures="0" errors="0" timestamp="2026-08-31T16:16:32" hostname="KFAINO" time="0.004">
+  <properties/>
+  <testcase name="带有大小写 v 前缀版本号正常兼容" classname="com.kfaino.diapertracker.VersionCompareTest" time="0.003"/>
+  <testcase name="常规三段版本号升级判定" classname="com.kfaino.diapertracker.VersionCompareTest" time="0.001"/>
+  <testcase name="不同分段长度版本号判定" classname="com.kfaino.diapertracker.VersionCompareTest" time="0.0"/>
+  <testcase name="相同版本与降级版本判定为假" classname="com.kfaino.diapertracker.VersionCompareTest" time="0.0"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

@@ -40,11 +40,11 @@ if (-not (Test-Path -LiteralPath (Join-Path $expanded "build\native\include\WebV
 }
 
 $vswhere = Join-Path ${env:ProgramFiles(x86)} "Microsoft Visual Studio\Installer\vswhere.exe"
-if (-not (Test-Path -LiteralPath $vswhere)) { 
+if (-not (Test-Path -LiteralPath $vswhere)) {
     throw "Visual Studio Build Tools not found via vswhere.exe. Native host was not built."
 }
 $visualStudio = & $vswhere -latest -products * -requires Microsoft.VisualStudio.Component.VC.Tools.x86.x64 -property installationPath
-if ([string]::IsNullOrWhiteSpace($visualStudio)) { 
+if ([string]::IsNullOrWhiteSpace($visualStudio)) {
     throw "MSVC x64 build tools are not installed. Native host was not built."
 }
 $vcvars = Join-Path $visualStudio "VC\Auxiliary\Build\vcvarsall.bat"

@@ -46,11 +46,17 @@ object PatchArchive {
             while (zis.nextEntry.also { entry = it } != null) {
                 val current = entry!!
 
+                // Reject platform-dependent names before File resolution (including Windows ADS).
+                val name = current.name.replace('\\', '/')
+                if (name.startsWith('/') || ':' in name || name.split('/').any { it == ".." }) {
+                    throw SecurityException("检测到非法补丁条目（路径穿越）：" + current.name)
+                }
+
                 if (++entryCount > MAX_ENTRY_COUNT) {
                     throw SecurityException("补丁包条目数超过上限（$MAX_ENTRY_COUNT），拒绝解压")
                 }
 
-                val outFile = File(targetDir, current.name)
+                val outFile = File(targetDir, name)
                 val outPath = outFile.canonicalPath
                 if (outPath != canonicalTargetPath && !outPath.startsWith(targetPrefix)) {
                     throw SecurityException("检测到非法补丁条目（路径穿越）：" + current.name)

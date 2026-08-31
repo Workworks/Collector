@@ -1,4 +1,4 @@
-package com.kfaino.diapertracker
+﻿package com.kfaino.diapertracker
 
 import android.os.Handler
 import android.os.Looper
@@ -597,7 +597,7 @@ object SingleFeatureTours {
                         vintageYear = 2018,
                         originRegion = "贵州茅台镇",
                         storageLocation = "餐边柜恒温酒柜 #02",
-                        qty = 2,
+                        qty = 2.0,
                         unit = "瓶",
                         bestDrinkingYear = 2028,
                         rating = 5.0f,

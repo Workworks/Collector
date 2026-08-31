@@ -90,4 +90,53 @@ class DesktopSyncMergeEngineTest {
         assertEquals(1, store.getMedicines().size)
         assertEquals("维生素C", store.getMedicines()[0].name)
     }
+
+    @Test
+    fun testIdeasAndClippingsMergeWithConflictResolution() {
+        val localIdea = IdeaRecord(
+            id = "idea-01",
+            content = "本地初始想法记录",
+            updatedAt = 1000L
+        )
+        store.addOrUpdateIdea(localIdea)
+
+        val incomingJson = JSONObject().apply {
+            val iArr = JSONArray().apply {
+                // 更新已有的 idea-01（时间戳更新）
+                put(JSONObject().apply {
+                    put("id", "idea-01")
+                    put("content", "手机对撞同步后的最新灵感想法")
+                    put("updatedAt", 2000L)
+                })
+                // 新增 idea-02
+                put(JSONObject().apply {
+                    put("id", "idea-02")
+                    put("content", "全新闪念记录")
+                    put("updatedAt", 1500L)
+                })
+            }
+            val cArr = JSONArray().apply {
+                put(JSONObject().apply {
+                    put("id", "clip-01")
+                    put("title", "局域网对撞同步的文章")
+                    put("sourcePlatform", "wechat")
+                })
+            }
+            put("ideas", iArr)
+            put("clippings", cArr)
+        }.toString()
+
+        val report = DesktopSyncMergeEngine.merge(store, incomingJson)
+        assertTrue(report.success)
+        assertEquals(3, report.mergedVaultItems)
+
+        val ideas = store.getIdeas()
+        assertEquals(2, ideas.size)
+        val updatedIdea = ideas.find { it.id == "idea-01" }!!
+        assertEquals("手机对撞同步后的最新灵感想法", updatedIdea.content)
+
+        val clips = store.getClippings()
+        assertEquals(1, clips.size)
+        assertEquals("局域网对撞同步的文章", clips[0].title)
+    }
 }

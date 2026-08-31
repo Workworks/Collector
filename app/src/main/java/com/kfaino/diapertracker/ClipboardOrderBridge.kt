@@ -12,7 +12,6 @@ import android.widget.Toast
  */
 object ClipboardOrderBridge {
 
-    private const val TAG = "ClipboardOrderBridge"
     private var lastProcessedHash: Int = 0
 
     fun checkClipboard(activity: Activity) {
@@ -48,7 +47,7 @@ object ClipboardOrderBridge {
                 }
             }
         } catch (e: Exception) {
-            android.util.Log.w(TAG, "剪贴板电商内容侦测异常", e)
+            android.util.Log.w("ClipboardOrderBridge", "检查剪贴板电商内容异常", e)
         }
     }
 }

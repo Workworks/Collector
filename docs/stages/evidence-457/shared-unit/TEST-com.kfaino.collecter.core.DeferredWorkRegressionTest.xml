@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="com.kfaino.collecter.core.DeferredWorkRegressionTest" tests="3" skipped="0" failures="0" errors="0" timestamp="2026-08-31T16:15:28" hostname="KFAINO" time="0.01">
+  <properties/>
+  <testcase name="ocrDoesNotResurrectDeletionOrOverwriteNewerRequestAndTitle" classname="com.kfaino.collecter.core.DeferredWorkRegressionTest" time="0.009"/>
+  <testcase name="remindersAcrossYearSnoozeBoundaryMuteAndNewCycle" classname="com.kfaino.collecter.core.DeferredWorkRegressionTest" time="0.0"/>
+  <testcase name="failurePreservesOriginalAndRetryCanSucceed" classname="com.kfaino.collecter.core.DeferredWorkRegressionTest" time="0.0"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

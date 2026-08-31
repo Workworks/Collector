@@ -1003,7 +1003,7 @@ data class BeverageTeaRecord(
     val vintageYear: Int = 2020,                   // 生产/采摘/陈化起始年份 (如 2018)
     val originRegion: String = "",                 // 产区产地 (如 "贵州茅台镇", "法国波尔多梅多克", "云南西双版纳")
     val storageLocation: String = "",              // 存放位置与环境 (如 "餐边柜恒温酒柜 #02", "书房避光存茶缸")
-    val qty: Int = 1,                              // 在库数量
+    val qty: Double = 1.0,                         // 在库数量（兼容 4.3.6 小数余量）
     val unit: String = "瓶",                       // 单位 (瓶 / 饼 / 罐 / 袋)
     val openedAt: Long = 0L,                       // 开瓶/拆封时间戳 (0 表示未开封整件陈化)
     val bestDrinkingYear: Int = 2030,              // 最佳适饮/熟成峰值年份 (0 表示不限)

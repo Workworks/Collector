@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="com.kfaino.diapertracker.PatchArchiveTest" tests="5" skipped="0" failures="0" errors="0" timestamp="2026-08-31T16:16:30" hostname="KFAINO" time="2.224">
+  <properties/>
+  <testcase name="路径穿越条目不得在沙盒目录之外落地任何文件" classname="com.kfaino.diapertracker.PatchArchiveTest" time="0.013"/>
+  <testcase name="绝对路径条目同样必须被拒绝" classname="com.kfaino.diapertracker.PatchArchiveTest" time="0.009"/>
+  <testcase name="正常补丁包可以正确解压" classname="com.kfaino.diapertracker.PatchArchiveTest" time="0.02"/>
+  <testcase name="含 dot dot 路径穿越的条目必须被拒绝" classname="com.kfaino.diapertracker.PatchArchiveTest" time="0.009"/>
+  <testcase name="条目数量超过上限时必须拒绝解压" classname="com.kfaino.diapertracker.PatchArchiveTest" time="2.173"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

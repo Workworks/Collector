@@ -35,7 +35,7 @@ class PlantCareAdapter(
 
         binding.itemPlantName.text = record.name
         binding.itemPlantLightBadge.text = record.getLightDemandDisplayName()
-        
+
         if (record.species.isNotBlank()) {
             binding.itemPlantSpeciesBadge.visibility = View.VISIBLE
             binding.itemPlantSpeciesBadge.text = record.species

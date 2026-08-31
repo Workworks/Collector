@@ -149,4 +149,45 @@ class DesktopDataStoreTest {
         assertTrue("CSV must start with UTF-8 BOM", csv.startsWith("\uFEFF"))
         assertTrue("CSV contains item brand", csv.contains("机械键盘"))
     }
+
+    @Test
+    fun testIdeaAndClippingPersistenceAndCrossLinking() {
+        val entry = Entry(brand = "富士 X-T5 相机", category = "摄影", price = 11990.0)
+        store.addEntry(entry)
+
+        val idea = IdeaRecord(
+            content = "街头抓拍胶片模拟色彩配方",
+            tags = listOf("摄影", "胶片"),
+            linkedAssetIds = listOf(entry.id)
+        )
+        store.addOrUpdateIdea(idea)
+
+        val clip = ClippingRecord(
+            title = "经典黑白摄影影调控制深度解析",
+            sourcePlatform = "wechat",
+            summary = "高反差与中间调细腻过渡技巧",
+            linkedAssetIds = listOf(entry.id)
+        )
+        store.addOrUpdateClipping(clip)
+
+        // 重新加载验证
+        val reloadedStore = DesktopDataStore(storeDir)
+        assertEquals(1, reloadedStore.getIdeas().size)
+        assertEquals("街头抓拍胶片模拟色彩配方", reloadedStore.getIdeas()[0].content)
+        assertEquals(1, reloadedStore.getClippings().size)
+        assertEquals("经典黑白摄影影调控制深度解析", reloadedStore.getClippings()[0].title)
+
+        // 验证双向关联
+        val linkedIdeas = reloadedStore.getLinkedIdeasForAsset(entry.id)
+        assertEquals(1, linkedIdeas.size)
+        assertEquals(idea.id, linkedIdeas[0].id)
+
+        val linkedClippings = reloadedStore.getLinkedClippingsForAsset(entry.id)
+        assertEquals(1, linkedClippings.size)
+        assertEquals(clip.id, linkedClippings[0].id)
+
+        val linkedAssetsForIdea = reloadedStore.getLinkedAssetsForIdea(linkedIdeas[0])
+        assertEquals(1, linkedAssetsForIdea.size)
+        assertEquals("富士 X-T5 相机", linkedAssetsForIdea[0].brand)
+    }
 }

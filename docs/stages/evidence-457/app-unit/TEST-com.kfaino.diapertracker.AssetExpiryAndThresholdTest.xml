@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="com.kfaino.diapertracker.AssetExpiryAndThresholdTest" tests="12" skipped="0" failures="0" errors="0" timestamp="2026-08-31T16:16:28" hostname="KFAINO" time="0.031">
+  <properties/>
+  <testcase name="耐用资产定期维保周期推算准确性" classname="com.kfaino.diapertracker.AssetExpiryAndThresholdTest" time="0.002"/>
+  <testcase name="家庭绿植花卉水肥日历排期与需浇水施肥判定准确性" classname="com.kfaino.diapertracker.AssetExpiryAndThresholdTest" time="0.002"/>
+  <testcase name="换季衣橱长期沉睡未穿预警判定准确性" classname="com.kfaino.diapertracker.AssetExpiryAndThresholdTest" time="0.002"/>
+  <testcase name="家庭萌宠疫苗驱虫排期与逾期状态判定准确性" classname="com.kfaino.diapertracker.AssetExpiryAndThresholdTest" time="0.002"/>
+  <testcase name="全维度收纳大厅时效健康度评分算法准确性" classname="com.kfaino.diapertracker.AssetExpiryAndThresholdTest" time="0.0"/>
+  <testcase name="家庭应急物资时效与轮换演练判定准确性" classname="com.kfaino.diapertracker.AssetExpiryAndThresholdTest" time="0.001"/>
+  <testcase name="书房藏书阅读进度百分比与借阅归档状态判定准确性" classname="com.kfaino.diapertracker.AssetExpiryAndThresholdTest" time="0.013"/>
+  <testcase name="换季衣橱次均穿戴成本精算准确性" classname="com.kfaino.diapertracker.AssetExpiryAndThresholdTest" time="0.0"/>
+  <testcase name="物品实物外借逾期判定准确性" classname="com.kfaino.diapertracker.AssetExpiryAndThresholdTest" time="0.0"/>
+  <testcase name="耗材低库存安全预警判定准确性" classname="com.kfaino.diapertracker.AssetExpiryAndThresholdTest" time="0.001"/>
+  <testcase name="茶窖酒品陈化年份、适饮黄金期与开封保鲜超期判定准确性" classname="com.kfaino.diapertracker.AssetExpiryAndThresholdTest" time="0.003"/>
+  <testcase name="家庭工具五金维保排期与逾期状态判定准确性" classname="com.kfaino.diapertracker.AssetExpiryAndThresholdTest" time="0.003"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

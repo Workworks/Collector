@@ -236,3 +236,85 @@ graph TD
 | `CollectShareActivity.kt` | Android 分享文字与照片，先保存原件 |
 
 共享模块 `shared`：`BackupDocument.kt` 管理 JSON/附件边界；`WireAliases.kt` 统一两端历史字段；`SnapshotSync.kt` 实现合并；`LanHttp.kt` 处理鉴权和有界请求；`WorkspaceRecords.kt` 管理关联及提醒规则。
+
+## Stage 457：远端模块整合索引
+
+`VaultSchemaMigration.kt`：一次性、原子兼容 v4.3.6 与本地集合键及字段，保留原始键与未知字段，成功标记防止删除后再次导入旧记录。
+
+下列职责摘自源码注释，仅表示源码已合入。许多空间感知、AI、物联网模块为规则计算或模拟器，不能据此宣称真实硬件、模型或生产场景已验收。远端历史文档见 `stages/remote-4.3.6/`。本轮范围为同步、安全和合并兼容性。
+
+| 源码 | 源码声明的用途 |
+| --- | --- |
+| `AcousticEchoLocatorHelper.kt` | 🔊 空间声学指纹与敲击回声室内定位助手 (Acoustic Echo Locator Helper) |
+| `AmbientDegradationMonitor.kt` | 🌡️ 环境温湿度与光照资产劣化主动预警系统 (Ambient Degradation Monitor) |
+| `ArSpatialAnchorHelper.kt` | 🥽 Android ARCore 空间全息锚定与虚拟箱柜投射助手 (AR Spatial Anchor Helper) |
+| `AssetCashflowSimulator.kt` | 💰 家庭重资产净值沉没成本与未来现金流推演模拟器 (Asset Cashflow Simulator) |
+| `AssetHealthRadar.kt` | 🛡️ 全息资产动态健康评分与家庭风险全景雷达 (Asset Health Radar) |
+| `BarometricElevationHelper.kt` | ⏱️ 空间环境微气压与海拔动态高度差寻物助手 (Barometric Elevation Helper) |
+| `BatterySoHCalendarSimulator.kt` | 🔋 闲置锂电池自放电与健康度（SoH）日历寿命模拟器 (Battery SoH Simulator) |
+| `BinPacking3dOptimizer.kt` | 📦 智能空间容积率与 3D Bin Packing 装箱推演器 (Bin Packing 3D Optimizer) |
+| `Bip39AssetMnemonicVault.kt` | 🔑 BIP-39 分层确定性资产冷备份助记词保险库 (BIP-39 Asset Mnemonic Vault) |
+| `BleProximityRadarHelper.kt` | 📡 蓝牙 BLE 智能寻物标签雷达测距助手 (BLE Proximity Radar Helper) |
+| `BoxArInspectionDialog.kt` | 源码模块，参见同名 Kotlin 文件 |
+| `CarbonFootprintCalculator.kt` | 🌿 物品碳足迹与全生命周期环境影响精算器 (Carbon Footprint Calculator) |
+| `ColdChainVaccineIntegrator.kt` | 💉 医用冷链生物制品与疫苗温区时间积分器 (Cold-Chain Vaccine Integrator) |
+| `ConsumptionVelocityPredictor.kt` | ⏳ 智能耗材用量流速预测与自动补货助手 (Consumption Velocity Predictor) |
+| `CrisisSurvivalRationAllocator.kt` | 🥫 极端防灾战备生命维持物资配给算法 (Crisis Survival Ration Allocator) |
+| `CrossLinkManager.kt` | 源码模块，参见同名 Kotlin 文件 |
+| `DeclutterDecisionHelper.kt` | 🧘 智能断舍离（KonMari / 极简主义）回血决策系统 (Declutter Decision Helper) |
+| `DexSignatureVerifier.kt` | Detached SHA256withRSA verification; absent or malformed material always fails closed. |
+| `DisasterResilientFederation.kt` | 🌐 Collecter 7.0 分布式去中心化抗毁联邦资产网络 (Disaster Resilient Federation) |
+| `DynamicDepreciationEngine.kt` | 📉 全品类二手残值动态衰减曲线与折旧引擎 (Dynamic Depreciation Engine) |
+| `E2eeSyncEngine.kt` | 🔒 全家庭 E2EE 端到端零知识加密对撞同步引擎 (E2EE Sync Engine) |
+| `EInkLabelSyncHelper.kt` | 🏷️ 智能电子墨水屏（E-Ink）标签无线离线刷屏助手 (E-Ink Label Sync Helper) |
+| `EthyleneRipeningMatrix.kt` | 🍎 生鲜果蔬乙烯释放与催熟阻隔矩阵 (Ethylene Ripening Matrix) |
+| `FloorPlanHeatmapHelper.kt` | 🗺️ 空间走道动线热力图与收纳效率评分 (Floor Plan Heatmap & Logistics Score) |
+| `HeritageDigitalTrustContract.kt` | 📜 家庭遗产与世代传承资产契约数字信托协议 (Heritage Digital Trust Contract) |
+| `ImpactTiltTelemetryHelper.kt` | 📐 收纳箱震动倾角遥测与跌落受损报警助手 (Impact & Tilt Telemetry Helper) |
+| `InsuranceClaimPackager.kt` | 📑 商业保险契约理赔一键证据链打包引擎 (Insurance Claim Packager) |
+| `KnowledgeGraphDialog.kt` | 源码模块，参见同名 Kotlin 文件 |
+| `LocalMatterBridge.kt` | 🔌 Matter / Home Assistant 局域网协议本地直连桥接器 (Local Matter Bridge) |
+| `LocalPaxosConsensusEngine.kt` | 🏛️ 家庭局域网多机去中心化 Paxos/Raft 共识对撞引擎 (Local Paxos Consensus Engine) |
+| `LoraPacketRadioHelper.kt` | 📻 LoRa / 业余无线电超远距离无网资产广播助手 (LoRa Packet Radio Helper) |
+| `MagneticAnomalyLocatorHelper.kt` | 🧲 空间环境地磁异常指纹寻物辅助助手 (Magnetic Anomaly Locator Helper) |
+| `ManualKnowledgeExtractor.kt` | 📖 物品使用说明书与保修卡智能知识提取器 (Manual Knowledge Extractor) |
+| `MicroscopicTextureComparator.kt` | 🔬 微距光学指纹与高保真防伪材质微观比对器 (Microscopic Texture Comparator) |
+| `MultiCurrencyConverter.kt` | 💱 多语言国际化与多币种离线实时汇率换算引擎 (Multi-Currency Converter) |
+| `MultiFloor3dNavigator.kt` | 🏢 多房间空间拓扑层级与 3D 楼层穿梭导航引擎 (Multi-Floor 3D Navigator) |
+| `NaturalQueryHelper.kt` | 源码模块，参见同名 Kotlin 文件 |
+| `NfcVaultTouchHelper.kt` | 源码模块，参见同名 Kotlin 文件 |
+| `OffGridMeshNetProtocol.kt` | 🌲 Wi-Fi Direct / BLE Mesh 自组网野外极端无网联络协议 (Off-Grid Mesh Net Protocol) |
+| `OnDeviceLlmPlanner.kt` | 🤖 端侧大语言模型（On-Device Small LLM）资产管家自主规划器 (On-Device LLM Planner) |
+| `OnDeviceRagEngine.kt` | 🧠 端侧离线向量嵌入与智能问答 RAG 引擎 (On-Device RAG Engine) |
+| `OnDeviceVisionHelper.kt` | 👁️ 端侧轻量离线视觉识物与品类预测助手 (On-Device Vision Helper) |
+| `OpenPhysicalAssetSpec.kt` | 🌐 全球离线开放物质代码规范（Open Physical Asset Spec）解析与导出器 |
+| `P2pBarterRingProtocol.kt` | 🤝 社区/熟人去中心化闲置物资免信任互换协议 (P2P Barter Ring Protocol) |
+| `P2pDirectPipeHelper.kt` | ⚡ 跨端即时双向剪贴板与大文件局域网直连管道 (P2P Direct Pipe) |
+| `PhysicalCausalReasoner.kt` | 🧩 端侧物理世界常识因果推理引擎 (Physical Causal Reasoner) |
+| `PhysicalChronicleHistoryGenerator.kt` | 📜 跨世代家族物理文明编年史与口述历史生成器 (Physical Chronicle History Generator) |
+| `PolymerHydrolysisModel.kt` | 🧪 高分子聚合物与橡胶水解老化动力学模型 (Polymer Hydrolysis Model) |
+| `PostQuantumCryptoVault.kt` | 🛡️ 全息物理空间抗量子密码学（PQC）硬化保险库 (Post-Quantum Crypto Vault) |
+| `PufHardwareKeyBinding.kt` | 🔒 物理防篡改物理不可克隆函数（PUF）硬件安全绑定助手 (PUF Hardware Key Binding) |
+| `ResaleCardGenerator.kt` | 🏷️ 闲鱼/转转标准化二手商品长图卡片生成排版器 (Resale Card Generator) |
+| `RestockingPathPlanner.kt` | 🤖 自动化物品归位路径规划与 6-DoF 动作求解器 (Restocking Path Planner) |
+| `RigidBodyContactDeformation.kt` | 📦 空间物理碰撞干涉与受力形变应力模拟器 (Rigid Body Contact Deformation) |
+| `RoboticGraspTopologyApi.kt` | 🦾 通用机器人抓取姿态与碰撞体积拓扑接口 (Robotic Grasp Topology API) |
+| `SemanticLinkHelper.kt` | 源码模块，参见同名 Kotlin 文件 |
+| `SmartNotificationHook.kt` | 📬 跨应用智能账单与电商物流通知智能归档助手 (Smart Notification Hook) |
+| `SmartPacklistEngine.kt` | 🎒 智能出行场景装备动态装配引擎 (Smart Packlist Engine) |
+| `Spatial3dMeshView.kt` | 🧊 空间 3D 实景网格投影与三维收纳视窗 (Spatial 3D Mesh View) |
+| `SpatialTemporalAnomalyTracker.kt` | ⏳ 家庭资产流转动线因果图与失踪溯源回溯器 (Spatial-Temporal Anomaly Tracker) |
+| `StoragePersonaDynamics.kt` | 🎨 自适应极简与极繁收纳人格空间动力学引擎 (Storage Persona Dynamics) |
+| `TabletLayoutHelper.kt` | 📱 Android 大屏 / 平板与折叠屏双栏响应式分流助手 (Tablet Layout Helper) |
+| `ThermalLeakageTelemetryHelper.kt` | 🌡️ 多光谱与红外热成像资产热损耗感知助手 (Thermal Leakage Telemetry Helper) |
+| `TopicClusterEngine.kt` | 🕸️ 灵感闪念与剪藏文章自组织主题网络聚类引擎 (Topic Cluster Engine) |
+| `TradeinValuationMatrix.kt` | 📱 电子产品官方 Trade-in 以旧换新行情比价矩阵 (Trade-in Valuation Matrix) |
+| `UvRadiationDegradationModel.kt` | ☀️ 高能辐射与紫外光累积辐照老化预警模型 (UV Radiation Degradation Model) |
+| `UwbSpatialCompassHelper.kt` | 🧭 超宽带 UWB 厘米级空间精准测距与罗盘指向引擎 (UWB Spatial Compass Helper) |
+| `VacuumGasBarrierDegradation.kt` | 🌬️ 真空密封袋与充氮防氧化气体阻隔衰减推演器 (Vacuum Gas Barrier Degradation) |
+| `VlaSpatialChoreographer.kt` | 🗣️ 视觉-语言-动作（VLA）端侧意图编排器 (VLA Spatial Choreographer) |
+| `VulkanVoxelRendererHelper.kt` | 🌌 Android Vulkan 硬件加速光场体素渲染助手 (Vulkan Voxel Renderer Helper) |
+| `WifiCsiChannelSounderHelper.kt` | 📡 Wi-Fi CSI / 蓝牙信道探测高精测距与穿墙防盗感知助手 (Wi-Fi CSI & Channel Sounding Helper) |
+| `WoodLeatherHysteresisEngine.kt` | 🪵 实木家具、皮具与古籍纸张等温吸附滞后回线精算引擎 (Wood & Leather Hysteresis Engine) |
+| `ZkAssetProofVerifier.kt` | 🛡️ 零知识证明（ZK-SNARKs）资产凭据脱敏验证器 (ZK Asset Proof Verifier) |
+| `ZkRingSignatureEscrow.kt` | ⭕ 端对端零知识环签名秘密资产托管契约 (ZK Ring Signature Escrow) |

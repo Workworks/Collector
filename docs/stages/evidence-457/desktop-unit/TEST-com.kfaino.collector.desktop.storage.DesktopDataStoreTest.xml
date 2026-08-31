@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="com.kfaino.collector.desktop.storage.DesktopDataStoreTest" tests="6" skipped="0" failures="0" errors="0" timestamp="2026-08-31T16:19:25" hostname="KFAINO" time="0.285">
+  <properties/>
+  <testcase name="testDataDirectoryResolution" classname="com.kfaino.collector.desktop.storage.DesktopDataStoreTest" time="0.011"/>
+  <testcase name="testAll12VaultsPersistenceAndRoundTrip" classname="com.kfaino.collector.desktop.storage.DesktopDataStoreTest" time="0.144"/>
+  <testcase name="testEntriesCrudAndCalculations" classname="com.kfaino.collector.desktop.storage.DesktopDataStoreTest" time="0.029"/>
+  <testcase name="testCsvExportWithUtf8Bom" classname="com.kfaino.collector.desktop.storage.DesktopDataStoreTest" time="0.039"/>
+  <testcase name="testVaultAlertAggregator" classname="com.kfaino.collector.desktop.storage.DesktopDataStoreTest" time="0.03"/>
+  <testcase name="testIdeaAndClippingPersistenceAndCrossLinking" classname="com.kfaino.collector.desktop.storage.DesktopDataStoreTest" time="0.031"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

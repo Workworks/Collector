@@ -362,6 +362,11 @@ class ProfileFragment : Fragment() {
         dBinding.btnDialogDone.setOnClickListener { dialog.dismiss() }
 
         dialog.show()
+        val dm = resources.displayMetrics
+        dialog.window?.setLayout(
+            (dm.widthPixels * 0.94).toInt().coerceAtMost((440 * dm.density + 0.5f).toInt()),
+            (dm.heightPixels * 0.82).toInt())
+
     }
 
     // =========================================================================
@@ -768,11 +773,11 @@ class ProfileFragment : Fragment() {
         val ver = UpdateManager.getAppVersionName(requireContext())
         val msg = """
             Collecter 个人资产与全屋收纳数字孪生系统
-            
+
             • 运行版本：v$ver
             • 隐私规范：100% 本地沙盒，无后台数据上报
             • 开源仓库：https://github.com/${store.getGithubRepo()}
-            
+
             让每一件精心挑选的物品，都找到专属归宿。
         """.trimIndent()
 

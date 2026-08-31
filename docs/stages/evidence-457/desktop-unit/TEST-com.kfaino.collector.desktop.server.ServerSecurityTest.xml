@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="com.kfaino.collector.desktop.server.ServerSecurityTest" tests="1" skipped="0" failures="0" errors="0" timestamp="2026-08-31T16:19:25" hostname="KFAINO" time="0.126">
+  <properties/>
+  <testcase name="authOriginEscapingAndShutdownAreEnforcedOverHttp" classname="com.kfaino.collector.desktop.server.ServerSecurityTest" time="0.126"/>
+  <system-out><![CDATA[Collecter Embedded Server started on http://127.0.0.1:1763/ (local only)
+]]></system-out>
+  <system-err><![CDATA[恢复失败，保留原数据: 备份必须为 JSON 对象
+]]></system-err>
+</testsuite>

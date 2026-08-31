@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="com.kfaino.collector.desktop.storage.DesktopSyncMergeEngineTest" tests="3" skipped="0" failures="0" errors="0" timestamp="2026-08-31T16:19:25" hostname="KFAINO" time="0.086">
+  <properties/>
+  <testcase name="testIdeasAndClippingsMergeWithConflictResolution" classname="com.kfaino.collector.desktop.storage.DesktopSyncMergeEngineTest" time="0.035"/>
+  <testcase name="testVaultsIncrementMerge" classname="com.kfaino.collector.desktop.storage.DesktopSyncMergeEngineTest" time="0.024"/>
+  <testcase name="testEntryMergeWithTimestampConflictResolution" classname="com.kfaino.collector.desktop.storage.DesktopSyncMergeEngineTest" time="0.027"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

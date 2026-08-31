@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="com.kfaino.diapertracker.AssetDepreciationTest" tests="2" skipped="0" failures="0" errors="0" timestamp="2026-08-31T16:16:28" hostname="KFAINO" time="0.107">
+  <properties/>
+  <testcase name="闲置变现与回血 ROI 计算准确性验证" classname="com.kfaino.diapertracker.AssetDepreciationTest" time="0.107"/>
+  <testcase name="在役与退役多态过滤准确性验证" classname="com.kfaino.diapertracker.AssetDepreciationTest" time="0.0"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

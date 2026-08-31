@@ -87,7 +87,7 @@ object BeverageTeaDialog {
                     }
                 },
                 onConsumeQtyClick = { record ->
-                    store.consumeBeverageQty(record.id, 1)
+                    store.consumeBeverageQty(record.id, 1.0)
                     val updated = store.getBeverageRecords().firstOrNull { it.id == record.id }
                     Toast.makeText(activity, "📉 【${record.name}】库存已消耗 1 ${record.unit} (剩余: ${updated?.qty ?: 0} ${record.unit})", Toast.LENGTH_SHORT).show()
                     reloadList()
@@ -236,7 +236,7 @@ object BeverageTeaDialog {
 
             val vintage = etVintage.text.toString().toIntOrNull() ?: 2020
             val bestYear = etBestYear.text.toString().toIntOrNull() ?: 2030
-            val qty = etQty.text.toString().toIntOrNull() ?: 1
+            val qty = etQty.text.toString().toDoubleOrNull()?.takeIf { it.isFinite() && it >= 0.0 } ?: 1.0
             val unit = etUnit.text.toString().trim().ifBlank { "瓶" }
             val openLifeDays = etOpenLifeDays.text.toString().toIntOrNull() ?: 0
             val location = etLocation.text.toString().trim()

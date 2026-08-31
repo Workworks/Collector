@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="com.kfaino.collector.desktop.storage.SafeRestoreTest" tests="3" skipped="0" failures="0" errors="0" timestamp="2026-08-31T16:19:25" hostname="KFAINO" time="0.083">
+  <properties/>
+  <testcase name="badImportLeavesExistingFileUnchanged" classname="com.kfaino.collector.desktop.storage.SafeRestoreTest" time="0.025"/>
+  <testcase name="legacyImportRetainsAbsentCollectionsAndNewFieldsSurviveEdit" classname="com.kfaino.collector.desktop.storage.SafeRestoreTest" time="0.034"/>
+  <testcase name="androidYearlyCycleSurvivesDesktopEdit" classname="com.kfaino.collector.desktop.storage.SafeRestoreTest" time="0.024"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[恢复失败，保留原数据: 备份必须为 JSON 对象
+恢复失败，保留原数据: 未找到有效数据集合
+恢复失败，保留原数据: JSONObject["entries"] is not a JSONArray (class org.json.JSONObject).
+恢复失败，保留原数据: entries 中有空或重复 ID
+]]></system-err>
+</testsuite>

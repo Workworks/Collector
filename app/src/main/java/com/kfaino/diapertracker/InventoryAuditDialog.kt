@@ -1,4 +1,4 @@
-package com.kfaino.diapertracker
+﻿package com.kfaino.diapertracker
 
 import android.app.Activity
 import android.content.ClipData
@@ -38,31 +38,30 @@ object InventoryAuditDialog {
             }
         }
 
-        ModernDialogHelper.showSingleChoiceDialog(
-            context = activity,
-            title = "选择大盘点目标区域",
-            emoji = "📋",
-            options = allRooms,
-            selectedIndex = 0
-        ) { which, selectedTarget ->
-            val allEntries = store.loadAll().filter { it.isIn && !it.isRetired }
+        MaterialAlertDialogBuilder(activity)
+            .setTitle("📋 选择大盘点目标区域")
+            .setItems(allRooms.toTypedArray()) { _, which ->
+                val selectedTarget = allRooms[which]
+                val allEntries = store.loadAll().filter { it.isIn && !it.isRetired }
 
-            val auditEntries = if (which == 0) {
-                allEntries
-            } else {
-                val parts = selectedTarget.split(" · ")
-                val hName = parts[0]
-                val rName = parts.getOrNull(1) ?: ""
-                allEntries.filter { it.houseName == hName && (it.roomName == rName || it.location.contains(rName)) }
+                val auditEntries = if (which == 0) {
+                    allEntries
+                } else {
+                    val parts = selectedTarget.split(" · ")
+                    val hName = parts[0]
+                    val rName = parts.getOrNull(1) ?: ""
+                    allEntries.filter { it.houseName == hName && (it.roomName == rName || it.location.contains(rName)) }
+                }
+
+                if (auditEntries.isEmpty()) {
+                    Toast.makeText(activity, "所选区域暂无在库资产记录！", Toast.LENGTH_SHORT).show()
+                    return@setItems
+                }
+
+                showAuditSessionDialog(activity, store, selectedTarget, auditEntries, onCompleted)
             }
-
-            if (auditEntries.isEmpty()) {
-                Toast.makeText(activity, "所选区域暂无在库资产记录！", Toast.LENGTH_SHORT).show()
-                return@showSingleChoiceDialog
-            }
-
-            showAuditSessionDialog(activity, store, selectedTarget, auditEntries, onCompleted)
-        }
+            .setNegativeButton("取消", null)
+            .show()
     }
 
     private fun showAuditSessionDialog(
@@ -181,20 +180,22 @@ object InventoryAuditDialog {
                     textSize = 11f
                     layoutParams = LinearLayout.LayoutParams(0, 76, 1f).apply { marginEnd = 6 }
                     setOnClickListener {
-                        ModernDialogHelper.showInputDialog(
-                            context = activity,
-                            title = "修正实物数量",
-                            subtitle = "输入【${state.entry.brand}】的实际在库数量：",
-                            defaultValue = state.actualQty.toString(),
-                            emoji = "🔢",
-                            positiveText = "确认修正"
-                        ) { inputVal ->
-                            val v = inputVal.toIntOrNull() ?: state.entry.qty
-                            state.actualQty = v
-                            state.status = "adjusted"
-                            renderAuditList()
-                            updateProgress()
+                        val numInput = EditText(activity).apply {
+                            setText(state.actualQty.toString())
+                            inputType = android.text.InputType.TYPE_CLASS_NUMBER
                         }
+                        MaterialAlertDialogBuilder(activity)
+                            .setTitle("修正实物数量")
+                            .setMessage("输入【${state.entry.brand}】的实际在库数量：")
+                            .setView(numInput)
+                            .setPositiveButton("确认") { _, _ ->
+                                val v = numInput.text.toString().toIntOrNull() ?: state.entry.qty
+                                state.actualQty = v
+                                state.status = "adjusted"
+                                renderAuditList()
+                                updateProgress()
+                            }
+                            .show()
                     }
                 }
 
@@ -221,16 +222,13 @@ object InventoryAuditDialog {
 
         renderAuditList()
 
-        val mainDialog = MaterialAlertDialogBuilder(activity)
+        MaterialAlertDialogBuilder(activity)
             .setView(dialogView)
             .setPositiveButton("完成盘点并生成差异报告") { _, _ ->
                 finishAuditAndShowReport(activity, store, targetName, auditStates, onCompleted)
             }
             .setNegativeButton("中断退出", null)
-            .create()
-
-        mainDialog.window?.attributes?.windowAnimations = R.style.CustomDialogAnimation
-        mainDialog.show()
+            .show()
     }
 
     private fun finishAuditAndShowReport(
@@ -295,18 +293,18 @@ object InventoryAuditDialog {
             }
         }
 
-        ModernDialogHelper.showConfirmDialog(
-            context = activity,
-            title = "实物盘点差异报告",
-            message = reportText,
-            emoji = "📊",
-            positiveText = "复制报告并打卡",
-            negativeText = "完成并关闭"
-        ) {
-            val cm = activity.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
-            cm.setPrimaryClip(ClipData.newPlainText("Collecter 盘点报告", reportText))
-            Toast.makeText(activity, "🎉 已复制盘点报告到剪贴板并完成打卡！", Toast.LENGTH_SHORT).show()
-            onCompleted()
-        }
+        MaterialAlertDialogBuilder(activity)
+            .setTitle("🎉 盘点完成 · 差异报告")
+            .setMessage(reportText)
+            .setPositiveButton("复制报告") { _, _ ->
+                val cm = activity.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+                cm.setPrimaryClip(ClipData.newPlainText("Collecter 盘点报告", reportText))
+                Toast.makeText(activity, "已复制盘点报告到剪贴板！", Toast.LENGTH_SHORT).show()
+                onCompleted()
+            }
+            .setNegativeButton("关闭") { _, _ ->
+                onCompleted()
+            }
+            .show()
     }
 }

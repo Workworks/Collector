@@ -89,21 +89,18 @@ object RoomManagerDialog {
                     "确定要删除房间【${room.name}】吗？"
                 }
 
-                ModernDialogHelper.showConfirmDialog(
-                    context = context,
-                    title = "删除房间",
-                    message = msg,
-                    emoji = "🗑️",
-                    positiveText = "确认删除",
-                    negativeText = "取消",
-                    isDestructive = true
-                ) {
-                    rooms.removeAt(pos)
-                    currentHouse = currentHouse.copy(rooms = rooms.toList())
-                    store.updateHouse(currentHouse)
-                    refreshList()
-                    Toast.makeText(context, "已删除房间: ${room.name}", Toast.LENGTH_SHORT).show()
-                }
+                MaterialAlertDialogBuilder(context)
+                    .setTitle("删除房间")
+                    .setMessage(msg)
+                    .setNegativeButton(R.string.cancel, null)
+                    .setPositiveButton("删除") { _, _ ->
+                        rooms.removeAt(pos)
+                        currentHouse = currentHouse.copy(rooms = rooms.toList())
+                        store.updateHouse(currentHouse)
+                        refreshList()
+                        Toast.makeText(context, "已删除房间: ${room.name}", Toast.LENGTH_SHORT).show()
+                    }
+                    .show()
             }
         )
 
@@ -127,38 +124,27 @@ object RoomManagerDialog {
 
         // 恢复推荐
         binding.btnResetRooms.setOnClickListener {
-            ModernDialogHelper.showConfirmDialog(
-                context = context,
-                title = "恢复默认推荐房间",
-                message = "确定要将【${currentHouse.name}】恢复为默认推荐的 6 大标准房间（玄关、客厅、厨房、主卧、次卧、储物间）吗？",
-                emoji = "🔄",
-                positiveText = "恢复默认",
-                negativeText = "取消"
-            ) {
-                val defaultRooms = HouseSpace.defaultRooms()
-                currentHouse = currentHouse.copy(rooms = defaultRooms)
-                store.updateHouse(currentHouse)
-                refreshList()
-                Toast.makeText(context, "已恢复推荐房间布局", Toast.LENGTH_SHORT).show()
-            }
+            MaterialAlertDialogBuilder(context)
+                .setTitle("恢复默认推荐房间")
+                .setMessage("确定要将【${currentHouse.name}】恢复为默认推荐的 6 大标准房间（玄关、客厅、厨房、主卧、次卧、储物间）吗？")
+                .setNegativeButton(R.string.cancel, null)
+                .setPositiveButton(R.string.confirm) { _, _ ->
+                    val defaultRooms = HouseSpace.defaultRooms()
+                    currentHouse = currentHouse.copy(rooms = defaultRooms)
+                    store.updateHouse(currentHouse)
+                    refreshList()
+                    Toast.makeText(context, "已恢复推荐房间布局", Toast.LENGTH_SHORT).show()
+                }
+                .show()
         }
 
-        binding.tvRoomManageTitle.text = "【${currentHouse.name}】房间管理"
-
         val dialog = MaterialAlertDialogBuilder(context)
+            .setTitle("【${currentHouse.name}】房间管理与自定义")
             .setView(binding.root)
-            .setCancelable(true)
+            .setPositiveButton("完成", null)
             .create()
 
-        dialog.window?.setBackgroundDrawable(android.graphics.drawable.ColorDrawable(android.graphics.Color.TRANSPARENT))
         dialog.window?.attributes?.windowAnimations = R.style.CustomDialogAnimation
-
-        binding.btnCloseRooms.applyPressScaleAnimation(0.92f)
-        binding.btnCloseRooms.setOnClickListener { dialog.dismiss() }
-
-        binding.btnFinishRooms.applyPressScaleAnimation(0.94f)
-        binding.btnFinishRooms.setOnClickListener { dialog.dismiss() }
-
         dialog.show()
     }
 
@@ -292,7 +278,6 @@ object RoomManagerDialog {
             }
             .create()
 
-        dialog.window?.setBackgroundDrawable(android.graphics.drawable.ColorDrawable(android.graphics.Color.TRANSPARENT))
         dialog.window?.attributes?.windowAnimations = R.style.CustomDialogAnimation
         dialog.show()
     }
@@ -311,4 +296,7 @@ object RoomManagerDialog {
     private fun dpToPx(context: Context, dp: Int): Int {
         return (dp * context.resources.displayMetrics.density + 0.5f).toInt()
     }
+
+    private val Int.sp: Float
+        get() = this.toFloat()
 }

@@ -1,10 +1,10 @@
 # 外部阻塞项清单 (Blockers)
 
-## 最新关键阻塞（2026-08-31）
+## 最新关键阻塞（2026-09-01）
 
 | 编号 | 阻塞与解除条件 | 证据 |
 | --- | --- | --- |
-| BLK-04 | Android 旧签名缺失：需原 v4.3.0 keystore 匹配证书、重签并验覆盖升级。不得用卸载解决 | [发布报告](releases/v4.3.3-report.md) |
+| BLK-04 | 旧签名缺失已解除：F:\LANShare\debug.keystore 与发布证书一致；仍需物理设备覆盖升级及新版本发布验收，不得卸载绕过 | [发布报告](releases/v4.3.3-report.md) |
 | BLK-05 | 本轮重新构建仍缺 MSVC x64，当前会话非管理员，未安装系统工具链；需工具链及干净安装/升级环境 | [最新原生失败记录](stages/evidence-454/native-build.log) |
 | BLK-06 | 固定公网域名需账户、域名及受管隧道配置；临时 Quick Tunnel 不能提供固定地址承诺 | [WebDAV 联调](stages/webdav-integration-report.md) |
 
@@ -21,4 +21,4 @@
 | :--- | :--- | :--- | :--- |
 | **BLK-01** | Windows 桌面安装器 | Windows SmartScreen 在无受信数字签名时可能拦截新生成的 `.exe` 安装包 | 提供/采购正式 Windows EV/OV 代码签名证书或指引用户加入信任 |
 | **BLK-02** | macOS 桌面版本 | macOS Gatekeeper 要求 App 必须经 Apple 官方公证（Notarization）并由受信开发者证书签名 | 提供 Apple Developer 开发者账号与 App-Specific 密码用于 `notarytool` 签名公证 |
-| **BLK-03** | 动态 DEX 补丁验证 | 生产热补丁必须使用正式私钥签名，当前客户端已严格校验公钥指纹 | 生产发版时配置私钥签名生成 `patch.zip` |
+| **BLK-03** | 动态 DEX 补丁验证 | 客户端默认没有配置受信公钥，因此拒绝动态 DEX；WebDAV 原生调用没有接入动态替换 | 配置受信公钥、离线签发和调用接入后独立验收；本次 WebDAV 修复走完整 APK |

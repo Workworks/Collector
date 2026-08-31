@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="com.kfaino.diapertracker.LanSyncMergeEngineTest" tests="3" skipped="0" failures="0" errors="0" timestamp="2026-08-31T16:16:29" hostname="KFAINO" time="0.04">
+  <properties/>
+  <testcase name="同ID冲突条目按时间戳LastWriteWins仲裁" classname="com.kfaino.diapertracker.LanSyncMergeEngineTest" time="0.038"/>
+  <testcase name="合并新数据正常增量插入" classname="com.kfaino.diapertracker.LanSyncMergeEngineTest" time="0.001"/>
+  <testcase name="空输入与畸形输入安全回退" classname="com.kfaino.diapertracker.LanSyncMergeEngineTest" time="0.001"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

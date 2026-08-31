@@ -153,7 +153,10 @@ class DataStore(private val ctx: Context) {
 
     // ==================== 备份与恢复 ====================
 
-    init { CompleteBackupStore(ctx, keyEntries).recoverInterruptedRestore() }
+    init {
+        CompleteBackupStore(ctx, keyEntries).recoverInterruptedRestore()
+        VaultSchemaMigration.migrate(prefs)
+    }
 
     fun exportBackupJson(): String = CompleteBackupStore(ctx, keyEntries).exportJson()
 
@@ -396,7 +399,7 @@ class DataStore(private val ctx: Context) {
     fun addOrUpdateBeverageRecord(record: BeverageTeaRecord) = beverageRepo.addOrUpdateBeverageRecord(record)
     fun deleteBeverageRecord(recordId: String) = beverageRepo.deleteBeverageRecord(recordId)
     fun openBeverage(recordId: String) = beverageRepo.openBeverage(recordId)
-    fun consumeBeverageQty(recordId: String, delta: Int = 1) = beverageRepo.consumeQty(recordId, delta)
+    fun consumeBeverageQty(recordId: String, delta: Double = 1.0) = beverageRepo.consumeQty(recordId, delta)
 
     // ---- 💡 闪念灵感与想法收纳 (Idea & Thought Vault) ----
     private val ideaRepo = IdeaVaultRepository(prefs)

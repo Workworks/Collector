@@ -5,6 +5,7 @@ import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.graphics.Matrix
 import android.net.Uri
+import android.util.Log
 import android.util.LruCache
 import androidx.exifinterface.media.ExifInterface
 import java.io.File
@@ -20,7 +21,6 @@ import java.util.UUID
  */
 object ImageVaultHelper {
 
-    private const val TAG = "ImageVaultHelper"
     private const val VAULT_DIR_NAME = "item_vault"
     private const val MAX_IMAGE_DIMENSION = 1600
     private const val JPEG_QUALITY = 85
@@ -63,7 +63,7 @@ object ImageVaultHelper {
                     val exif = ExifInterface(input)
                     orientation = exif.getAttributeInt(ExifInterface.TAG_ORIENTATION, ExifInterface.ORIENTATION_NORMAL)
                 } catch (e: Exception) {
-                    android.util.Log.w(TAG, "读取图片 EXIF 旋转属性失败", e)
+                    Log.w("ImageVaultHelper", "读取 EXIF 旋转属性失败", e)
                 }
             }
 
@@ -106,7 +106,7 @@ object ImageVaultHelper {
 
             targetFilename
         } catch (e: Exception) {
-            android.util.Log.w(TAG, "保存图片至沙盒私有目录失败: $sourceUri", e)
+            e.printStackTrace()
             null
         }
     }
@@ -129,11 +129,29 @@ object ImageVaultHelper {
                 bitmap.recycle()
             }
             rotated
-        } catch (e: Exception) {
-            android.util.Log.w(TAG, "根据 EXIF 旋转位图失败", e)
+        } catch (_: Exception) {
             bitmap
         }
     }
+
+    /**
+     * 将 Bitmap 直接保存至私有沙盒
+     */
+    fun saveBitmapToVault(context: Context, bitmap: Bitmap, prefix: String = "photo"): String? {
+        return try {
+            val filename = "${prefix}_${UUID.randomUUID()}.jpg"
+            val outFile = File(getVaultDir(context), filename)
+            FileOutputStream(outFile).use { fos ->
+                bitmap.compress(Bitmap.CompressFormat.JPEG, JPEG_QUALITY, fos)
+            }
+            filename
+        } catch (e: Exception) {
+            android.util.Log.w("ImageVaultHelper", "保存 Bitmap 失败", e)
+            null
+        }
+    }
+
+    fun saveBitmap(context: Context, bitmap: Bitmap, prefix: String = "photo"): String? = saveBitmapToVault(context, bitmap, prefix)
 
     /**
      * 高效按需加载采样缩略图 (带 LRU 内存缓存)
@@ -169,8 +187,7 @@ object ImageVaultHelper {
                 memoryCache.put(cacheKey, resultBitmap)
             }
             resultBitmap
-        } catch (e: Exception) {
-            android.util.Log.w(TAG, "加载采样缩略图失败: $filename", e)
+        } catch (_: Exception) {
             null
         }
     }
@@ -191,7 +208,7 @@ object ImageVaultHelper {
                 }
             }
         } catch (e: Exception) {
-            android.util.Log.w(TAG, "删除沙盒图片失败: $filename", e)
+            Log.w("ImageVaultHelper", "从相册沙盒删除图片失败: $filename", e)
         }
     }
 }

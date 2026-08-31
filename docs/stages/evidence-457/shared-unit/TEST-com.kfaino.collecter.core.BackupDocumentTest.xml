@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="com.kfaino.collecter.core.BackupDocumentTest" tests="3" skipped="0" failures="0" errors="0" timestamp="2026-08-31T16:15:28" hostname="KFAINO" time="0.063">
+  <properties/>
+  <testcase name="corruptOrTraversalAssetNeverCreatesDestination" classname="com.kfaino.collecter.core.BackupDocumentTest" time="0.017"/>
+  <testcase name="attachmentsRestoreToNewDirectoryWithUnknownFieldsIntact" classname="com.kfaino.collecter.core.BackupDocumentTest" time="0.044"/>
+  <testcase name="rejectsMalformedRecordsAndMissingAssets" classname="com.kfaino.collecter.core.BackupDocumentTest" time="0.002"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

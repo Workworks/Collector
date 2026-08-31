@@ -1,0 +1,22 @@
+{
+  "app": {
+    "tests": 66,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  "shared": {
+    "tests": 26,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  "desktop": {
+    "tests": 22,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 2
+  },
+  "apkSha256": "6e981fa1bbf858d9447f5ca63c0edf39fa8e550e06d444725c49503ee0004cf1",
+  "selfcheckSha256": "297194f2deb20a8495d3fb483182d8904334db59d0c6b1a029417df15045b95d"
+}
