@@ -1,4 +1,4 @@
-package com.kfaino.diapertracker
+﻿package com.kfaino.diapertracker
 
 import android.content.ClipData
 import android.content.ClipboardManager
@@ -43,15 +43,7 @@ class ProfileFragment : Fragment() {
         super.onViewCreated(view, savedInstanceState)
 
         val verName = UpdateManager.getAppVersionName(requireContext())
-        val activePatch = HotPatchEngine.getActivePatchVersion(requireContext())
-        if (activePatch != null) {
-            binding.currentVersionBadge.text = "v$verName (⚡已热更)"
-        } else {
-            binding.currentVersionBadge.text = "v$verName"
-        }
-        val isSimple = store.isSimpleMode()
-        binding.cardUserTutorial.visibility = if (isSimple) View.GONE else View.VISIBLE
-        binding.btnFloorplanManage.visibility = if (isSimple) View.GONE else View.VISIBLE
+        binding.currentVersionBadge.text = "v$verName"
 
         setupClicks()
     }
@@ -59,9 +51,6 @@ class ProfileFragment : Fragment() {
     private fun setupClicks() {
         binding.btnCategoryManage.applyPressScaleAnimation(0.94f)
         binding.btnFloorplanManage.applyPressScaleAnimation(0.94f)
-        binding.btnLedgerManage.applyPressScaleAnimation(0.94f)
-        binding.btnLanSyncManage.applyPressScaleAnimation(0.94f)
-        binding.btnInventoryAudit.applyPressScaleAnimation(0.94f)
         binding.btnMoreSettings.applyPressScaleAnimation(0.94f)
         binding.btnBackupRestore.applyPressScaleAnimation(0.94f)
         binding.btnFeedback.applyPressScaleAnimation(0.94f)
@@ -69,12 +58,6 @@ class ProfileFragment : Fragment() {
         binding.btnPrivacy.applyPressScaleAnimation(0.94f)
         binding.btnUpdateVersion.applyPressScaleAnimation(0.94f)
         binding.btnAbout.applyPressScaleAnimation(0.94f)
-
-        // 0. 💡 功能全景与使用教程
-        binding.cardUserTutorial.applyPressScaleAnimation(0.96f)
-        binding.cardUserTutorial.setOnClickListener {
-            TutorialDialog.show(requireActivity())
-        }
 
         // 1. 分类管理
         binding.btnCategoryManage.setOnClickListener {
@@ -86,28 +69,6 @@ class ProfileFragment : Fragment() {
         // 2. 空间平面图与寻物地图
         binding.btnFloorplanManage.setOnClickListener {
             FloorPlanDialog.show(requireActivity(), store, isSelectMode = false)
-        }
-
-        // 2.1 多账本空间管理
-        binding.btnLedgerManage.setOnClickListener {
-            LedgerManager.showLedgerPicker(requireActivity()) {
-                Toast.makeText(requireContext(), "账本已切换，数据已即时同步！", Toast.LENGTH_SHORT).show()
-            }
-        }
-
-        // 2.2 局域网免密极速互传
-        binding.btnLanSyncManage.setOnClickListener {
-            LanSyncHelper.showLanSyncDialog(requireActivity(), store) {
-                Toast.makeText(requireContext(), "局域网同步完成！", Toast.LENGTH_SHORT).show()
-            }
-        }
-
-        // 2.3 空间实物大盘点模式
-        binding.btnInventoryAudit.applyPressScaleAnimation(0.94f)
-        binding.btnInventoryAudit.setOnClickListener {
-            InventoryAuditDialog.startAudit(requireActivity(), store) {
-                Toast.makeText(requireContext(), "盘点数据已更新", Toast.LENGTH_SHORT).show()
-            }
         }
 
         // 3. 更多设置（主题设置、触感震动、通知提醒、GitHub 仓库配置）
@@ -135,7 +96,7 @@ class ProfileFragment : Fragment() {
             showDocDialog("隐私政策", "Collecter 尊重并严格保护所有用户的个人隐私。\n\n1. 本应用不会在后台收集、上传任何个人隐私敏感数据。\n2. 检查更新功能仅与公开的 GitHub Releases API 通信，用于获取最新版本信息。\n3. 所有空间平面图与资产记录仅保存在本地设备应用沙盒中。")
         }
 
-        // 8. 🚀 检查与智能升级 (智能优先免重装热更新，必要时全量 APK 升级)
+        // 8. 更新最新版本 (GitHub Releases)
         binding.btnUpdateVersion.setOnClickListener {
             UpdateManager.checkUpdate(requireActivity(), isManual = true)
         }
@@ -158,20 +119,6 @@ class ProfileFragment : Fragment() {
 
         dialog.window?.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
         dialog.window?.attributes?.windowAnimations = R.style.CustomDialogAnimation
-
-        // 0. 简易库存模式开关
-        dBinding.switchSimpleMode.isChecked = store.isSimpleMode()
-        dBinding.switchSimpleMode.setOnCheckedChangeListener { _, isChecked ->
-            store.setSimpleMode(isChecked)
-            dBinding.root.performAppHapticFeedback()
-            if (isChecked) {
-                Toast.makeText(requireContext(), "📦 已切换至「简易库存模式」", Toast.LENGTH_SHORT).show()
-            } else {
-                Toast.makeText(requireContext(), "🌟 已切换回「标准全功能模式」", Toast.LENGTH_SHORT).show()
-            }
-            dialog.dismiss()
-            requireActivity().recreate()
-        }
 
         fun updateThemeText() {
             dBinding.tvCurrentThemeDesc.text = when (store.getThemeMode()) {
@@ -234,42 +181,6 @@ class ProfileFragment : Fragment() {
             showRepoEditDialog {
                 updateRepoText()
             }
-        }
-
-        // 5. 生物识别隐私锁开关
-        dBinding.switchBiometricLock.isChecked = store.isBiometricLockEnabled()
-        dBinding.switchBiometricLock.setOnCheckedChangeListener { _, isChecked ->
-            if (isChecked) {
-                if (!BiometricLockHelper.canAuthenticate(requireContext())) {
-                    Toast.makeText(requireContext(), "当前设备未设置指纹/锁屏密码或硬件不支持", Toast.LENGTH_LONG).show()
-                    dBinding.switchBiometricLock.isChecked = false
-                    return@setOnCheckedChangeListener
-                }
-                // 开启前先验证一次
-                BiometricLockHelper.authenticate(
-                    activity = requireActivity(),
-                    title = "启用生物识别锁",
-                    subtitle = "请验证指纹以确认开启",
-                    onSuccess = {
-                        store.setBiometricLockEnabled(true)
-                        dBinding.root.performAppHapticFeedback()
-                        Toast.makeText(requireContext(), "已开启生物识别隐私锁 🔐", Toast.LENGTH_SHORT).show()
-                    },
-                    onError = { err ->
-                        dBinding.switchBiometricLock.isChecked = false
-                        Toast.makeText(requireContext(), "验证失败: $err", Toast.LENGTH_SHORT).show()
-                    }
-                )
-            } else {
-                store.setBiometricLockEnabled(false)
-                Toast.makeText(requireContext(), "已关闭生物识别隐私锁", Toast.LENGTH_SHORT).show()
-            }
-        }
-
-        // 6. WebDAV 私有云同步
-        dBinding.cardSettingWebdav.applyPressScaleAnimation(0.96f)
-        dBinding.cardSettingWebdav.setOnClickListener {
-            showWebDavDialog()
         }
 
         // 关闭与完成按钮
@@ -466,193 +377,49 @@ class ProfileFragment : Fragment() {
     }
 
     private fun showClearDataDialog() {
-        ModernDialogHelper.showConfirmDialog(
-            context = requireContext(),
-            title = "清空全部本地数据",
-            message = "⚠️ 警告：确定要彻底清空本地所有物品记录、分类与空间位置历史吗？\n\n此操作不可逆，所有本地私有沙盒数据将被完全抹除！",
-            emoji = "⚠️",
-            positiveText = "彻底清空",
-            negativeText = "取消",
-            isDestructive = true
-        ) {
-            store.clearAllData()
-            Toast.makeText(requireContext(), "所有记录已彻底清空", Toast.LENGTH_SHORT).show()
-            (activity as? MainActivity)?.refreshCurrentFragment()
-        }
+        MaterialAlertDialogBuilder(requireContext())
+            .setTitle("⚠️ 警告：清空全部数据")
+            .setMessage("确定要彻底清空本地所有物品记录、分类与空间位置历史吗？此操作不可逆！")
+            .setPositiveButton("确定清空") { _, _ ->
+                store.clearAllData()
+                Toast.makeText(requireContext(), "所有记录已彻底清空", Toast.LENGTH_SHORT).show()
+                (activity as? MainActivity)?.refreshCurrentFragment()
+            }
+            .setNegativeButton(R.string.cancel, null)
+            .show()
     }
 
     private fun showFeedbackDialog() {
-        ModernDialogHelper.showConfirmDialog(
-            context = requireContext(),
-            title = "意见反馈与功能建议",
-            message = "欢迎提交您的宝贵建议或 Bug 反馈！\n\n我们将定期跟进 GitHub Issues 并持续演化系统：\nhttps://github.com/${store.getGithubRepo()}/issues",
-            emoji = "💬",
-            positiveText = "前往 GitHub Issues",
-            negativeText = "关闭"
-        ) {
-            try {
-                val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://github.com/${store.getGithubRepo()}/issues"))
-                startActivity(intent)
-            } catch (_: Exception) {
-                Toast.makeText(requireContext(), "无法打开系统浏览器", Toast.LENGTH_SHORT).show()
+        MaterialAlertDialogBuilder(requireContext())
+            .setTitle("意见反馈")
+            .setMessage("如在使用过程中遇到任何问题或有新功能建议，欢迎前往 GitHub 提交 Issue：\n\nhttps://github.com/${store.getGithubRepo()}/issues")
+            .setPositiveButton("访问 GitHub") { _, _ ->
+                try {
+                    val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://github.com/${store.getGithubRepo()}/issues"))
+                    startActivity(intent)
+                } catch (_: Exception) {
+                    Toast.makeText(requireContext(), "无法打开浏览器", Toast.LENGTH_SHORT).show()
+                }
             }
-        }
+            .setNegativeButton("关闭", null)
+            .show()
     }
 
     private fun showDocDialog(title: String, content: String) {
-        ModernDialogHelper.showInfoDialog(
-            context = requireContext(),
-            title = title,
-            message = content,
-            emoji = "📜",
-            buttonText = "我知道了"
-        )
-    }
-
-    // =========================================================================
-    // ☁️ 现代化「WebDAV 私有云同步」面板
-    // =========================================================================
-
-    private fun showWebDavDialog() {
-        val wBinding = com.kfaino.diapertracker.databinding.DialogWebdavConfigBinding.inflate(layoutInflater)
-        val dialog = MaterialAlertDialogBuilder(requireContext())
-            .setView(wBinding.root)
-            .create()
-
-        dialog.window?.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
-        dialog.window?.attributes?.windowAnimations = R.style.CustomDialogAnimation
-
-        wBinding.inputWebdavUrl.setText(store.getWebDavUrl())
-        wBinding.inputWebdavUser.setText(store.getWebDavUsername())
-        wBinding.inputWebdavPass.setText(store.getWebDavPassword())
-
-        wBinding.btnCloseWebdav.applyPressScaleAnimation(0.90f)
-        wBinding.btnCloseWebdav.setOnClickListener { dialog.dismiss() }
-
-        // 保存配置
-        wBinding.btnSaveWebdavConfig.applyPressScaleAnimation(0.94f)
-        wBinding.btnSaveWebdavConfig.setOnClickListener {
-            val url = wBinding.inputWebdavUrl.text.toString().trim()
-            val user = wBinding.inputWebdavUser.text.toString().trim()
-            val pass = wBinding.inputWebdavPass.text.toString()
-
-            store.setWebDavUrl(url)
-            store.setWebDavUsername(user)
-            store.setWebDavPassword(pass)
-            Toast.makeText(requireContext(), "WebDAV 配置已保存！", Toast.LENGTH_SHORT).show()
-        }
-
-        // 测试连接
-        wBinding.btnTestWebdav.applyPressScaleAnimation(0.94f)
-        wBinding.btnTestWebdav.setOnClickListener {
-            val url = wBinding.inputWebdavUrl.text.toString().trim()
-            val user = wBinding.inputWebdavUser.text.toString().trim()
-            val pass = wBinding.inputWebdavPass.text.toString()
-
-            if (url.isBlank() || user.isBlank() || pass.isBlank()) {
-                Toast.makeText(requireContext(), "请先完整填写 URL、用户名和密码", Toast.LENGTH_SHORT).show()
-                return@setOnClickListener
-            }
-
-            Toast.makeText(requireContext(), "正在测试连接 WebDAV 服务器...", Toast.LENGTH_SHORT).show()
-            Thread {
-                val (_, msg) = WebDavSyncHelper.testConnection(url, user, pass)
-                activity?.runOnUiThread {
-                    Toast.makeText(requireContext(), msg, Toast.LENGTH_LONG).show()
-                }
-            }.start()
-        }
-
-        // 立即上传备份
-        wBinding.btnUploadToWebdav.applyPressScaleAnimation(0.94f)
-        wBinding.btnUploadToWebdav.setOnClickListener {
-            val url = wBinding.inputWebdavUrl.text.toString().trim()
-            val user = wBinding.inputWebdavUser.text.toString().trim()
-            val pass = wBinding.inputWebdavPass.text.toString()
-
-            if (url.isBlank() || user.isBlank() || pass.isBlank()) {
-                Toast.makeText(requireContext(), "请先完整填写 WebDAV 配置", Toast.LENGTH_SHORT).show()
-                return@setOnClickListener
-            }
-
-            val json = store.exportBackupJson()
-            Toast.makeText(requireContext(), "正在上传备份至 WebDAV...", Toast.LENGTH_SHORT).show()
-            Thread {
-                val (ok, msg) = WebDavSyncHelper.uploadBackup(url, user, pass, json)
-                activity?.runOnUiThread {
-                    if (ok) {
-                        store.recordBackupDone()
-                        Toast.makeText(requireContext(), "🎉 $msg", Toast.LENGTH_SHORT).show()
-                    } else {
-                        Toast.makeText(requireContext(), "⚠️ $msg", Toast.LENGTH_LONG).show()
-                    }
-                }
-            }.start()
-        }
-
-        // 从云端恢复备份
-        wBinding.btnDownloadFromWebdav.applyPressScaleAnimation(0.94f)
-        wBinding.btnDownloadFromWebdav.setOnClickListener {
-            val url = wBinding.inputWebdavUrl.text.toString().trim()
-            val user = wBinding.inputWebdavUser.text.toString().trim()
-            val pass = wBinding.inputWebdavPass.text.toString()
-
-            if (url.isBlank() || user.isBlank() || pass.isBlank()) {
-                Toast.makeText(requireContext(), "请先完整填写 WebDAV 配置", Toast.LENGTH_SHORT).show()
-                return@setOnClickListener
-            }
-
-            ModernDialogHelper.showConfirmDialog(
-                context = requireContext(),
-                title = "从云端恢复数据",
-                message = "恢复云端备份将合并/更新现有数据，确定继续下载并覆盖？",
-                emoji = "☁️",
-                positiveText = "立即下载恢复",
-                negativeText = "取消"
-            ) {
-                Toast.makeText(requireContext(), "正在从 WebDAV 下载备份...", Toast.LENGTH_SHORT).show()
-                Thread {
-                    val (ok, result) = WebDavSyncHelper.downloadBackup(url, user, pass)
-                    activity?.runOnUiThread {
-                        if (ok) {
-                            val importOk = store.importBackupJson(result)
-                            if (importOk) {
-                                Toast.makeText(requireContext(), "🎉 云端数据恢复成功！", Toast.LENGTH_SHORT).show()
-                                (activity as? MainActivity)?.refreshCurrentFragment()
-                                dialog.dismiss()
-                            } else {
-                                Toast.makeText(requireContext(), "解析云端备份失败，数据可能已损坏", Toast.LENGTH_SHORT).show()
-                            }
-                        } else {
-                            Toast.makeText(requireContext(), "⚠️ $result", Toast.LENGTH_LONG).show()
-                        }
-                    }
-                }.start()
-            }
-        }
-
-        dialog.show()
+        MaterialAlertDialogBuilder(requireContext())
+            .setTitle(title)
+            .setMessage(content)
+            .setPositiveButton("知道了", null)
+            .show()
     }
 
     private fun showAboutDialog() {
         val ver = UpdateManager.getAppVersionName(requireContext())
-        val msg = """
-            Collecter 个人资产与全屋收纳数字孪生系统
-            
-            • 运行版本：v$ver
-            • 隐私规范：100% 本地沙盒，无后台数据上报
-            • 开源仓库：https://github.com/${store.getGithubRepo()}
-            
-            让每一件精心挑选的物品，都找到专属归宿。
-        """.trimIndent()
-
-        ModernDialogHelper.showInfoDialog(
-            context = requireContext(),
-            title = "关于 Collecter",
-            message = msg,
-            emoji = "💎",
-            buttonText = "确认"
-        )
+        MaterialAlertDialogBuilder(requireContext())
+            .setTitle("关于 Collecter")
+            .setMessage("Collecter 智能物品收纳与资产追踪助手\n\n版本：v$ver\n构建版本号：$ver:260818\n开源仓库：https://github.com/${store.getGithubRepo()}\n\n感谢您的使用与支持！")
+            .setPositiveButton("确定", null)
+            .show()
     }
 
     override fun onDestroyView() {

@@ -1,0 +1,187 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:background="@drawable/bg_changelog_box"
+    android:padding="14dp"
+    android:layout_marginBottom="10dp">
+
+    <!-- 顶部徽章栏 -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:layout_marginBottom="6dp">
+
+        <TextView
+            android:id="@+id/item_book_category_badge"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="📖 社科人文"
+            android:textSize="11sp"
+            android:textStyle="bold"
+            android:textColor="@color/primary"
+            android:background="@drawable/bg_chip_inactive"
+            android:paddingHorizontal="8dp"
+            android:paddingVertical="2dp"
+            android:layout_marginEnd="6dp" />
+
+        <TextView
+            android:id="@+id/item_book_rating_badge"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="⭐ 5.0"
+            android:textSize="11sp"
+            android:textStyle="bold"
+            android:textColor="@color/accent_dark"
+            android:background="@drawable/bg_chip_inactive"
+            android:paddingHorizontal="8dp"
+            android:paddingVertical="2dp"
+            android:layout_marginEnd="6dp" />
+
+        <View
+            android:layout_width="0dp"
+            android:layout_height="1dp"
+            android:layout_weight="1" />
+
+        <TextView
+            android:id="@+id/item_book_status_badge"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="📖 在读中 (35%)"
+            android:textSize="11sp"
+            android:textStyle="bold"
+            android:textColor="@color/primary" />
+    </LinearLayout>
+
+    <!-- 书名与作者 -->
+    <TextView
+        android:id="@+id/item_book_title_author"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="《置身事内》 · 兰小欢"
+        android:textSize="15sp"
+        android:textStyle="bold"
+        android:textColor="@color/text_primary"
+        android:fontFamily="sans-serif-medium"
+        android:layout_marginBottom="4dp" />
+
+    <!-- 书架物理位置 -->
+    <TextView
+        android:id="@+id/item_book_location_text"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="📍 存放于: 书房A柜第2层左侧"
+        android:textSize="12sp"
+        android:textColor="@color/text_secondary"
+        android:layout_marginBottom="4dp" />
+
+    <!-- 阅读进度条与文本 -->
+    <LinearLayout
+        android:id="@+id/layout_book_progress"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:layout_marginBottom="4dp">
+
+        <ProgressBar
+            android:id="@+id/item_book_progress_bar"
+            style="?android:attr/progressBarStyleHorizontal"
+            android:layout_width="match_parent"
+            android:layout_height="6dp"
+            android:progress="35"
+            android:max="100"
+            android:progressTint="@color/primary"
+            android:progressBackgroundTint="@color/card_border"
+            android:layout_marginBottom="2dp" />
+
+        <TextView
+            android:id="@+id/item_book_progress_text"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="阅读进度: 120 / 340 页 (35%)"
+            android:textSize="11sp"
+            android:textColor="@color/text_secondary" />
+    </LinearLayout>
+
+    <!-- 外借信息 -->
+    <TextView
+        android:id="@+id/item_book_lent_text"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="📤 外借人: 同事小张 (借出日期: 2026-08-10)"
+        android:textSize="12sp"
+        android:textStyle="bold"
+        android:textColor="@color/danger"
+        android:visibility="gone"
+        android:layout_marginBottom="4dp" />
+
+    <!-- 核心书摘与心得 -->
+    <TextView
+        android:id="@+id/item_book_notes"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="📝 书摘: 理解中国经济发展，需要理解地方政府的激励机制与行为逻辑。"
+        android:textSize="11sp"
+        android:textColor="@color/text_hint"
+        android:layout_marginBottom="8dp" />
+
+    <!-- 底部操作按钮栏 -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical">
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btn_item_update_progress"
+            style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+            android:layout_width="wrap_content"
+            android:layout_height="34dp"
+            android:text="📖 进度打卡"
+            android:textSize="11sp"
+            android:textColor="@color/primary"
+            app:strokeColor="@color/primary"
+            app:cornerRadius="8dp"
+            android:layout_marginEnd="6dp" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btn_item_toggle_lent"
+            style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+            android:layout_width="wrap_content"
+            android:layout_height="34dp"
+            android:text="📤 借出登记"
+            android:textSize="11sp"
+            android:textColor="@color/accent_dark"
+            app:strokeColor="@color/accent_dark"
+            app:cornerRadius="8dp"
+            android:layout_marginEnd="6dp" />
+
+        <View
+            android:layout_width="0dp"
+            android:layout_height="1dp"
+            android:layout_weight="1" />
+
+        <ImageButton
+            android:id="@+id/btn_item_edit_book"
+            android:layout_width="34dp"
+            android:layout_height="34dp"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:src="@android:drawable/ic_menu_edit"
+            app:tint="@color/text_secondary"
+            android:contentDescription="编辑" />
+
+        <ImageButton
+            android:id="@+id/btn_item_delete_book"
+            android:layout_width="34dp"
+            android:layout_height="34dp"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:src="@android:drawable/ic_menu_delete"
+            app:tint="@color/danger"
+            android:contentDescription="删除" />
+    </LinearLayout>
+
+</LinearLayout>

@@ -1,4 +1,4 @@
-package com.kfaino.diapertracker
+﻿package com.kfaino.diapertracker
 
 import android.app.Activity
 import android.content.ClipData
@@ -411,9 +411,8 @@ object ResaleCopilotHelper {
             if (idx != -1) {
                 all[idx] = item.copy(
                     isRetired = true,
-                    retiredAt = System.currentTimeMillis(),
+                    retiredDate = System.currentTimeMillis(),
                     retiredAction = "📦 挂闲鱼代售",
-                    retiredSoldPrice = sellVal,
                     currentValuation = sellVal
                 )
                 store.saveAll(all)
@@ -439,7 +438,7 @@ object ResaleCopilotHelper {
                 val actionName = if (text.isNotBlank()) "🎁 $text" else "🎁 赠送亲友"
                 all[idx] = item.copy(
                     isRetired = true,
-                    retiredAt = System.currentTimeMillis(),
+                    retiredDate = System.currentTimeMillis(),
                     retiredAction = actionName
                 )
                 store.saveAll(all)

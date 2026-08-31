@@ -1,4 +1,4 @@
-package com.kfaino.diapertracker
+﻿package com.kfaino.diapertracker
 
 import android.app.Activity
 import android.graphics.Color

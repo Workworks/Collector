@@ -333,4 +333,92 @@ object ModernDialogHelper {
         dialog.show()
         return dialog
     }
+
+    /** 统一现代化自定义内容 View 弹窗 */
+    fun showCustomViewDialog(
+        context: Context,
+        title: String,
+        customView: View,
+        emoji: String = "💎",
+        positiveText: String = "确认",
+        negativeText: String = "取消",
+        onConfirm: () -> Unit
+    ): AlertDialog {
+        val dp = { v: Int -> (v * context.resources.displayMetrics.density).toInt() }
+        val root = LinearLayout(context).apply {
+            orientation = LinearLayout.VERTICAL
+            setPadding(dp(20), dp(16), dp(20), dp(16))
+            background = ContextCompat.getDrawable(context, R.drawable.bg_dialog_card)
+        }
+
+        val header = LinearLayout(context).apply {
+            orientation = LinearLayout.VERTICAL
+            gravity = Gravity.CENTER_HORIZONTAL
+            setPadding(0, 0, 0, dp(12))
+        }
+
+        val emojiTv = TextView(context).apply {
+            text = emoji
+            textSize = 24f
+            gravity = Gravity.CENTER
+            background = ContextCompat.getDrawable(context, R.drawable.bg_icon_circle_soft)
+            layoutParams = LinearLayout.LayoutParams(dp(44), dp(44)).apply {
+                bottomMargin = dp(8)
+            }
+        }
+
+        val titleTv = TextView(context).apply {
+            text = title
+            textSize = 17f
+            paint.isFakeBoldText = true
+            setTextColor(ContextCompat.getColor(context, R.color.text_primary))
+            gravity = Gravity.CENTER
+        }
+
+        header.addView(emojiTv)
+        header.addView(titleTv)
+        root.addView(header)
+
+        root.addView(customView)
+
+        val btnRow = LinearLayout(context).apply {
+            orientation = LinearLayout.HORIZONTAL
+            setPadding(0, dp(14), 0, 0)
+        }
+
+        val btnNeg = Button(context).apply {
+            text = negativeText
+            setTextColor(ContextCompat.getColor(context, R.color.text_secondary))
+            setBackgroundResource(R.drawable.bg_btn_secondary)
+            layoutParams = LinearLayout.LayoutParams(0, dp(44), 1f).apply { marginEnd = dp(8) }
+        }
+
+        val btnPos = Button(context).apply {
+            text = positiveText
+            setTextColor(Color.WHITE)
+            setBackgroundResource(R.drawable.bg_btn_primary)
+            layoutParams = LinearLayout.LayoutParams(0, dp(44), 1f).apply { marginStart = dp(8) }
+        }
+
+        btnRow.addView(btnNeg)
+        btnRow.addView(btnPos)
+        root.addView(btnRow)
+
+        val dialog = MaterialAlertDialogBuilder(context)
+            .setView(root)
+            .setCancelable(true)
+            .create()
+
+        dialog.window?.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
+        dialog.window?.attributes?.windowAnimations = R.style.CustomDialogAnimation
+
+        btnNeg.setOnClickListener { dialog.dismiss() }
+        btnPos.setOnClickListener {
+            dialog.dismiss()
+            onConfirm()
+        }
+
+        dialog.show()
+        return dialog
+    }
 }

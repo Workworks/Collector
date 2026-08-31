@@ -1,0 +1,157 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:background="@drawable/bg_changelog_box"
+    android:padding="14dp"
+    android:layout_marginBottom="10dp">
+
+    <!-- 顶部徽章栏 -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:layout_marginBottom="6dp">
+
+        <TextView
+            android:id="@+id/item_beverage_category_badge"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="🍵 茶品干货"
+            android:textSize="11sp"
+            android:textStyle="bold"
+            android:textColor="@color/primary"
+            android:background="@drawable/bg_chip_inactive"
+            android:paddingHorizontal="8dp"
+            android:paddingVertical="2dp"
+            android:layout_marginEnd="6dp" />
+
+        <TextView
+            android:id="@+id/item_beverage_vintage_badge"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="📅 2018年产 · 陈化6年"
+            android:textSize="11sp"
+            android:textColor="@color/text_secondary"
+            android:background="@drawable/bg_chip_inactive"
+            android:paddingHorizontal="8dp"
+            android:paddingVertical="2dp"
+            android:layout_marginEnd="6dp" />
+
+        <View
+            android:layout_width="0dp"
+            android:layout_height="1dp"
+            android:layout_weight="1" />
+
+        <TextView
+            android:id="@+id/item_beverage_status_badge"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="✨ 适饮黄金期"
+            android:textSize="11sp"
+            android:textStyle="bold"
+            android:textColor="@color/accent_dark" />
+    </LinearLayout>
+
+    <!-- 佳酿品名与产地 -->
+    <TextView
+        android:id="@+id/item_beverage_name_origin"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="飞天茅台 53度 · 贵州茅台镇"
+        android:textSize="15sp"
+        android:textStyle="bold"
+        android:textColor="@color/text_primary"
+        android:fontFamily="sans-serif-medium"
+        android:layout_marginBottom="4dp" />
+
+    <!-- 存放位置与库存数量 -->
+    <TextView
+        android:id="@+id/item_beverage_location_qty"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="📍 存放于: 餐边柜恒温酒柜 #02 (库存: 2 瓶)"
+        android:textSize="12sp"
+        android:textColor="@color/text_secondary"
+        android:layout_marginBottom="4dp" />
+
+    <!-- 开瓶保鲜/时效状态 -->
+    <TextView
+        android:id="@+id/item_beverage_opened_info"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="🍷 已于 2026-08-15 开瓶品鉴 (开封保质 3 天)"
+        android:textSize="12sp"
+        android:textColor="@color/accent_dark"
+        android:visibility="gone"
+        android:layout_marginBottom="4dp" />
+
+    <!-- 风味特征、香气口感与冲泡/醒酒笔记 -->
+    <TextView
+        android:id="@+id/item_beverage_notes"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="📝 冲泡/风味: 酱香突出，幽雅细腻，回甘生津，空杯留香持久"
+        android:textSize="11sp"
+        android:textColor="@color/text_hint"
+        android:layout_marginBottom="8dp" />
+
+    <!-- 底部操作按钮栏 -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical">
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btn_item_open_beverage"
+            style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+            android:layout_width="wrap_content"
+            android:layout_height="34dp"
+            android:text="🍷 开瓶/拆封打卡"
+            android:textSize="11sp"
+            android:textColor="@color/accent_dark"
+            app:strokeColor="@color/accent_dark"
+            app:cornerRadius="8dp"
+            android:layout_marginEnd="6dp" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btn_item_consume_qty"
+            style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+            android:layout_width="wrap_content"
+            android:layout_height="34dp"
+            android:text="📉 消耗-1"
+            android:textSize="11sp"
+            android:textColor="@color/primary"
+            app:strokeColor="@color/primary"
+            app:cornerRadius="8dp"
+            android:layout_marginEnd="6dp" />
+
+        <View
+            android:layout_width="0dp"
+            android:layout_height="1dp"
+            android:layout_weight="1" />
+
+        <ImageButton
+            android:id="@+id/btn_item_edit_beverage"
+            android:layout_width="34dp"
+            android:layout_height="34dp"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:src="@android:drawable/ic_menu_edit"
+            app:tint="@color/text_secondary"
+            android:contentDescription="编辑" />
+
+        <ImageButton
+            android:id="@+id/btn_item_delete_beverage"
+            android:layout_width="34dp"
+            android:layout_height="34dp"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:src="@android:drawable/ic_menu_delete"
+            app:tint="@color/danger"
+            android:contentDescription="删除" />
+    </LinearLayout>
+
+</LinearLayout>

@@ -1,24 +1,60 @@
-# 📚 Collecter (资产与收纳管家) 项目文档中心
+﻿# Collecter 文档总目录与阅读指南 (Documentation Index)
 
-欢迎来到 **Collecter** 项目官方技术与维护文档中心。本项目采用原生 Kotlin 开发，专注于为用户提供轻量、极简、高颜值的全生命周期个人资产管理、空间寻物平面图与周期订阅追踪。
-
----
-
-## 🧭 文档快速导航
-
-| 文档名称 | 描述 | 适用读者 |
-| :--- | :--- | :--- |
-| 📖 [用户使用手册 (USER_MANUAL.md)](./USER_MANUAL.md) | 涵盖从资产录入、折旧保质期、平面图打点到导出备份的完整功能说明 | 最终用户、产品测试 |
-| 🏗️ [系统架构与模块设计 (ARCHITECTURE.md)](./ARCHITECTURE.md) | 应用整体架构、核心模块分工、离线私有沙盒设计与交互规范 | 核心开发者、代码维护者 |
-| 🗄️ [数据模型与存储协议 (DATA_MODELS.md)](./DATA_MODELS.md) | `Entry`、`HouseSpace`、`LocationMovement` 等数据结构与 JSON 序列化规范 | 开发者、数据对接者 |
-| 🛠️ [开发与编译部署指南 (DEVELOPMENT_GUIDE.md)](./DEVELOPMENT_GUIDE.md) | 本地环境搭建、Gradle 编译、调试、离线打包与热更新配置 | 开发工程师、CI/CD 运维 |
-| 🚀 [发版与签名指南 (RELEASE_GUIDE.md)](./RELEASE_GUIDE.md) | GitHub Releases 自动化发版、APK 签名与版本号管理规范 | 项目管理员、发版人员 |
-| 📋 [版本更新日志 (CHANGELOG.md)](./CHANGELOG.md) | 从 v1.0.0 到最新版本的全量功能演进历史与 Bug 修复记录 | 全体人员 |
+欢迎查阅 **Collecter (资产与收纳管家)** 的全景文档体系。
+本仓库文档已全面对齐 `capital-agent-system` 的工程治理与架构规范体系。
 
 ---
 
-## 🌟 项目设计原则
+## 🧭 快速导航
 
-1. **🔒 100% 离线与隐私优先**：数据完全留存于本地，照片与票据仅存应用沙盒，绝不上报云端。
-2. **⚡ 零冗余极简轻量**：坚持极低依赖开销，APK 体积极致控制在 5MB 左右，秒开秒退。
-3. **🎨 现代高质感视觉与微动效**：严格遵循 Material 3 设计语言，全场景注入线性马达触感震动反馈与缩放微动效。
+```
+docs/
+├── README.md                           # 本文件：文档总目录与阅读指南
+├── codex-skills.md                     # Agent 长期工程规范与门禁
+├── stage-current.md                    # 当前 Stage 快照与上下文
+├── TODO.md                             # 待办执行账本 (优先级/责任/下一动作)
+├── BLOCKERS.md                         # 外部阻塞项清单
+│
+├── design/                             # 架构与系统设计
+│   ├── 01-product-requirements.md      # 业务需求与第一性原理收纳体系
+│   ├── 02-system-architecture.md       # 系统总体架构设计
+│   ├── 03-data-models-design.md        # 数据模型与仓储设计
+│   ├── 04-security-compliance-design.md# 隐私安全与合规设计
+│   └── 05-desktop-standalone-architecture.md # 桌面单机版架构立项设计
+│
+├── development/                        # 开发与测试规程
+│   ├── 11-development-guide.md         # 核心开发与编码规范
+│   ├── 12-test-plan.md                 # 测试计划与门禁
+│   └── 33-spec-driven-development.md   # Spec 驱动开发指南
+│
+├── stages/                             # 阶段演化与交付报告
+│   ├── stage-roadmap.md                # 阶段路线图
+│   ├── stage-431.md                    # Stage 431 (v4.3.1) 交付报告
+│   └── stage-440-desktop.md            # Stage 440 (v4.4.0) 桌面端立项 Spec
+│
+├── manuals/                            # 用户手册与全景教程
+│   ├── 20-user-guide.md                # 完整功能用户使用手册
+│   └── 25-tutorial-dialog-guide.md     # 图文教程与跟手演练指引
+│
+├── bug/                                # 缺陷追踪账本
+│   └── bugList.md                      # 缺陷列表 (现象/根因/修复/验证)
+│
+└── aq/                                 # 架构问答账本
+    └── aq.md                           # 架构问答与决策背景
+```
+
+---
+
+## 📖 读者指引
+
+- **Coding Agent (AI 研发助手)**：
+  - 启动第一步：读取 [`../AGENTS.md`](../AGENTS.md) 或 [`../GEMINI.md`](../GEMINI.md)；
+  - 确定当前任务：读取 [`stage-current.md`](stage-current.md) 与 [`TODO.md`](TODO.md)；
+  - 遵循工程约束：读取 [`codex-skills.md`](codex-skills.md)；
+  - 交付前验证：执行 `pwsh .\tools\selfcheck.ps1`。
+- **开发者 / 架构师**：
+  - 了解系统设计：阅读 [`design/02-system-architecture.md`](design/02-system-architecture.md)；
+  - 桌面单机版立项：阅读 [`design/05-desktop-standalone-architecture.md`](design/05-desktop-standalone-architecture.md)；
+  - 编码规范：阅读 [`development/11-development-guide.md`](development/11-development-guide.md)。
+- **终端用户 / 产品维护**：
+  - 查阅所有功能：阅读 [`manuals/20-user-guide.md`](manuals/20-user-guide.md)。

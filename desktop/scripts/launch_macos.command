@@ -1,10 +1,10 @@
-#!/usr/bin/env bash
+﻿#!/usr/bin/env bash
 # Collecter macOS 双击直启脚本
 DIR="$(cd "$(dirname "$0")" && pwd)"
-JAR_FILE="$DIR/../libs/Collecter-Desktop-3.5.3.jar"
+JAR_FILE="$DIR/../libs/Collecter-Desktop-2.8.0.jar"
 
 if [ ! -f "$JAR_FILE" ]; then
-    JAR_FILE="$DIR/Collecter-Desktop-3.5.3.jar"
+    JAR_FILE="$DIR/Collecter-Desktop-2.8.0.jar"
 fi
 
 if ! command -v java &> /dev/null; then

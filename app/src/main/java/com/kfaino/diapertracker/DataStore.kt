@@ -321,4 +321,235 @@ class DataStore(private val ctx: Context) {
     fun addOrUpdateHonorCredential(honor: HonorCredential) = honorRepo.addOrUpdateHonorCredential(honor)
     fun deleteHonorCredential(honorId: String) = honorRepo.deleteHonorCredential(honorId)
 
+    // ---- 👗 换季衣橱与胶囊穿搭舱 (Wardrobe Vault) ----
+    private val wardrobeRepo = WardrobeVaultRepository(prefs)
+
+    fun getWardrobeRecords(): List<WardrobeRecord> = wardrobeRepo.getRecords()
+    fun saveWardrobeRecords(list: List<WardrobeRecord>) = wardrobeRepo.saveRecords(list)
+    fun addOrUpdateWardrobeRecord(record: WardrobeRecord) = wardrobeRepo.addOrUpdate(record)
+    fun deleteWardrobeRecord(id: String) = wardrobeRepo.delete(id)
+    fun markWardrobeWorn(id: String) {
+        val list = getWardrobeRecords().toMutableList()
+        val idx = list.indexOfFirst { it.id == id }
+        if (idx != -1) {
+            val old = list[idx]
+            list[idx] = old.copy(wearCount = old.wearCount + 1, lastWornAt = System.currentTimeMillis())
+            saveWardrobeRecords(list)
+        }
+    }
+    fun toggleWardrobeSealed(id: String, sealed: Boolean? = null) {
+        val list = getWardrobeRecords().toMutableList()
+        val idx = list.indexOfFirst { it.id == id }
+        if (idx != -1) {
+            val old = list[idx]
+            val targetSealed = sealed ?: !old.isSealed
+            list[idx] = old.copy(isSealed = targetSealed, sealedAt = if (targetSealed) System.currentTimeMillis() else 0L)
+            saveWardrobeRecords(list)
+        }
+    }
+
+    // ---- 🚨 家庭应急防灾与生命线舱 (Emergency Vault) ----
+    private val emergencyRepo = EmergencyVaultRepository(prefs)
+
+    fun getEmergencyRecords(): List<EmergencyItem> = emergencyRepo.getRecords()
+    fun getEmergencyItems(): List<EmergencyItem> = emergencyRepo.getRecords()
+    fun saveEmergencyRecords(list: List<EmergencyItem>) = emergencyRepo.saveRecords(list)
+    fun saveEmergencyItems(list: List<EmergencyItem>) = emergencyRepo.saveRecords(list)
+    fun addOrUpdateEmergencyRecord(record: EmergencyItem) = emergencyRepo.addOrUpdate(record)
+    fun addOrUpdateEmergencyItem(item: EmergencyItem) = addOrUpdateEmergencyRecord(item)
+    fun deleteEmergencyRecord(id: String) = emergencyRepo.delete(id)
+    fun deleteEmergencyItem(id: String) = deleteEmergencyRecord(id)
+    fun markEmergencyTested(id: String) {
+        val list = getEmergencyRecords().toMutableList()
+        val idx = list.indexOfFirst { it.id == id }
+        if (idx != -1) {
+            val old = list[idx]
+            list[idx] = old.copy(lastTestedAt = System.currentTimeMillis())
+            saveEmergencyRecords(list)
+        }
+    }
+    fun checkEmergencyItem(id: String) = markEmergencyTested(id)
+
+    // ---- 🔧 家庭工具五金与设备维保 (Tool & Maintenance Vault) ----
+    private val toolRepo = ToolVaultRepository(prefs)
+
+    fun getToolRecords(): List<ToolMaintenanceRecord> = toolRepo.getRecords()
+    fun saveToolRecords(list: List<ToolMaintenanceRecord>) = toolRepo.saveRecords(list)
+    fun addOrUpdateToolRecord(record: ToolMaintenanceRecord) = toolRepo.addOrUpdate(record)
+    fun deleteToolRecord(id: String) = toolRepo.delete(id)
+    fun markToolMaintained(id: String) {
+        val list = getToolRecords().toMutableList()
+        val idx = list.indexOfFirst { it.id == id }
+        if (idx != -1) {
+            val old = list[idx]
+            list[idx] = old.copy(lastMaintainedAt = System.currentTimeMillis())
+            saveToolRecords(list)
+        }
+    }
+    fun maintainTool(id: String) = markToolMaintained(id)
+
+    // ---- 🪴 家庭绿植花卉水肥养护 (Plant Care Vault) ----
+    private val plantRepo = PlantVaultRepository(prefs)
+
+    fun getPlantRecords(): List<PlantCareRecord> = plantRepo.getRecords()
+    fun savePlantRecords(list: List<PlantCareRecord>) = plantRepo.saveRecords(list)
+    fun addOrUpdatePlantRecord(record: PlantCareRecord) = plantRepo.addOrUpdate(record)
+    fun deletePlantRecord(id: String) = plantRepo.delete(id)
+    fun markPlantWatered(id: String) {
+        val list = getPlantRecords().toMutableList()
+        val idx = list.indexOfFirst { it.id == id }
+        if (idx != -1) {
+            val old = list[idx]
+            list[idx] = old.copy(lastWateredAt = System.currentTimeMillis())
+            savePlantRecords(list)
+        }
+    }
+    fun waterPlant(id: String) = markPlantWatered(id)
+
+    fun markPlantFertilized(id: String) {
+        val list = getPlantRecords().toMutableList()
+        val idx = list.indexOfFirst { it.id == id }
+        if (idx != -1) {
+            val old = list[idx]
+            list[idx] = old.copy(lastFertilizedAt = System.currentTimeMillis())
+            savePlantRecords(list)
+        }
+    }
+    fun fertilizePlant(id: String) = markPlantFertilized(id)
+
+    // ---- 🐾 家庭萌宠生活与健康档案 (Pet Care Vault) ----
+    private val petRepo = PetVaultRepository(prefs)
+
+    fun getPetRecords(): List<PetCareRecord> = petRepo.getRecords()
+    fun savePetRecords(list: List<PetCareRecord>) = petRepo.saveRecords(list)
+    fun addOrUpdatePetRecord(record: PetCareRecord) = petRepo.addOrUpdate(record)
+    fun deletePetRecord(id: String) = petRepo.delete(id)
+    fun markPetDewormed(id: String) {
+        val list = getPetRecords().toMutableList()
+        val idx = list.indexOfFirst { it.id == id }
+        if (idx != -1) {
+            val old = list[idx]
+            list[idx] = old.copy(lastDewormedAt = System.currentTimeMillis())
+            savePetRecords(list)
+        }
+    }
+    fun dewormPet(id: String) = markPetDewormed(id)
+
+    fun markPetVaccinated(id: String) {
+        val list = getPetRecords().toMutableList()
+        val idx = list.indexOfFirst { it.id == id }
+        if (idx != -1) {
+            val old = list[idx]
+            list[idx] = old.copy(lastVaccinatedAt = System.currentTimeMillis())
+            savePetRecords(list)
+        }
+    }
+    fun vaccinatePet(id: String) = markPetVaccinated(id)
+
+    // ---- 📚 家庭书房藏书与阅读 (Book Vault) ----
+    private val bookRepo = BookVaultRepository(prefs)
+
+    fun getBookRecords(): List<BookRecord> = bookRepo.getRecords()
+    fun saveBookRecords(list: List<BookRecord>) = bookRepo.saveRecords(list)
+    fun addOrUpdateBookRecord(record: BookRecord) = bookRepo.addOrUpdate(record)
+    fun deleteBookRecord(id: String) = bookRepo.delete(id)
+    fun updateBookProgress(id: String, currentPages: Int) {
+        val list = getBookRecords().toMutableList()
+        val idx = list.indexOfFirst { it.id == id }
+        if (idx != -1) {
+            val old = list[idx]
+            val status = if (old.totalPages > 0 && currentPages >= old.totalPages) "finished" else if (currentPages > 0) "reading" else "unread"
+            list[idx] = old.copy(currentPages = currentPages, readingStatus = status)
+            saveBookRecords(list)
+        }
+    }
+    fun updateBookReadingProgress(id: String, currentPages: Int, isFinished: Boolean = false) {
+        val list = getBookRecords().toMutableList()
+        val idx = list.indexOfFirst { it.id == id }
+        if (idx != -1) {
+            val old = list[idx]
+            val status = if (isFinished || (old.totalPages > 0 && currentPages >= old.totalPages)) "finished" else if (currentPages > 0) "reading" else "unread"
+            list[idx] = old.copy(currentPages = if (isFinished && old.totalPages > 0) old.totalPages else currentPages, readingStatus = status)
+            saveBookRecords(list)
+        }
+    }
+    fun returnLentBook(id: String) {
+        val list = getBookRecords().toMutableList()
+        val idx = list.indexOfFirst { it.id == id }
+        if (idx != -1) {
+            val old = list[idx]
+            list[idx] = old.copy(borrowerName = "", lentDate = 0L)
+            saveBookRecords(list)
+        }
+    }
+    fun markBookReturned(id: String) = returnLentBook(id)
+
+    fun markBookLent(id: String, borrowerName: String, lentDate: Long = System.currentTimeMillis()) {
+        val list = getBookRecords().toMutableList()
+        val idx = list.indexOfFirst { it.id == id }
+        if (idx != -1) {
+            val old = list[idx]
+            list[idx] = old.copy(borrowerName = borrowerName, lentDate = lentDate)
+            saveBookRecords(list)
+        }
+    }
+
+    // ---- 🍷 家庭茶窖与名酿适饮 (Beverage & Tea Vault) ----
+    private val beverageRepo = BeverageTeaVaultRepository(prefs)
+
+    fun getBeverageRecords(): List<BeverageTeaRecord> = beverageRepo.getRecords()
+    fun saveBeverageRecords(list: List<BeverageTeaRecord>) = beverageRepo.saveRecords(list)
+    fun addOrUpdateBeverageRecord(record: BeverageTeaRecord) = beverageRepo.addOrUpdate(record)
+    fun deleteBeverageRecord(id: String) = beverageRepo.delete(id)
+    fun markBeverageOpened(id: String) {
+        val list = getBeverageRecords().toMutableList()
+        val idx = list.indexOfFirst { it.id == id }
+        if (idx != -1) {
+            val old = list[idx]
+            list[idx] = old.copy(isOpened = true, openedAt = System.currentTimeMillis())
+            saveBeverageRecords(list)
+        }
+    }
+    fun openBeverage(id: String) = markBeverageOpened(id)
+
+    fun consumeBeverageQty(id: String, delta: Double = 1.0) {
+        val list = getBeverageRecords().toMutableList()
+        val idx = list.indexOfFirst { it.id == id }
+        if (idx != -1) {
+            val old = list[idx]
+            val newQty = (old.qty - delta).coerceAtLeast(0.0)
+            list[idx] = old.copy(qty = newQty)
+            saveBeverageRecords(list)
+        }
+    }
+
+    // ---- 💡 灵感想法舱 (Idea Vault) ----
+    private val ideaRepo = IdeaVaultRepository(prefs)
+
+    fun getIdeas(): List<IdeaRecord> = ideaRepo.getIdeas()
+    fun saveIdeas(list: List<IdeaRecord>) = ideaRepo.saveIdeas(list)
+    fun addOrUpdateIdea(idea: IdeaRecord) = ideaRepo.addOrUpdate(idea)
+    fun deleteIdea(id: String) = ideaRepo.delete(id)
+    fun toggleIdeaPin(id: String) {
+        val list = getIdeas().toMutableList()
+        val idx = list.indexOfFirst { it.id == id }
+        if (idx != -1) {
+            val old = list[idx]
+            list[idx] = old.copy(isPinned = !old.isPinned, updatedAt = System.currentTimeMillis())
+            saveIdeas(list)
+        }
+    }
+
+    // ---- 📰 智能剪藏与文章知识库 (Clipping Vault) ----
+    private val clippingRepo = ClippingVaultRepository(prefs)
+
+    fun getClippings(): List<ClippingRecord> = clippingRepo.getClippings()
+    fun saveClippings(list: List<ClippingRecord>) = clippingRepo.saveClippings(list)
+    fun addOrUpdateClipping(record: ClippingRecord) = clippingRepo.addOrUpdate(record)
+    fun deleteClipping(id: String) = clippingRepo.delete(id)
+
+    // ---- 📸 系统截图无感监听配置 ----
+    fun isScreenshotCaptureEnabled(): Boolean = prefs.getBoolean("cfg_screenshot_capture_enabled", true)
+    fun setScreenshotCaptureEnabled(enabled: Boolean) = prefs.edit().putBoolean("cfg_screenshot_capture_enabled", enabled).apply()
+
 }

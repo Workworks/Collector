@@ -1,4 +1,4 @@
-package com.kfaino.diapertracker
+﻿package com.kfaino.diapertracker
 
 import android.app.Activity
 import android.content.Context
@@ -39,9 +39,9 @@ object ExportManager {
 
         // 表头
         val headers = listOf(
-            "所属分类", "物品/品牌名称", "物品管理类型", "在库数量", "单位",
+            "所属分类", "物品/品牌名称", "在库数量", "单位",
             "购入单价(元)", "累计投入金额(元)", "当前二手估值(元)", "购入日期",
-            "拥有天数", "日均使用成本(元/天)", "生产日期", "到期保质期", "所属空间", "具体放置位置",
+            "拥有天数", "日均使用成本(元/天)", "所属空间", "具体放置位置",
             "所在房间", "重要关注物品", "在役状态", "退役渠道",
             "二手出掉回血(元)", "退役备注", "周期订阅资产", "订阅周期",
             "下次扣费日期", "记录时间", "备注说明"
@@ -51,15 +51,12 @@ object ExportManager {
         for (e in entries) {
             val totalSpent = e.qty * e.price
             val pDateStr = if (e.purchaseDate > 0) DAY_FORMAT.format(Date(e.purchaseDate)) else ""
-            val mfgStr = if (e.manufactureDate > 0) DAY_FORMAT.format(Date(e.manufactureDate)) else ""
-            val expStr = if (e.expiryDate > 0) DAY_FORMAT.format(Date(e.expiryDate)) else ""
             val tsStr = if (e.ts > 0) DATE_FORMAT.format(Date(e.ts)) else ""
             val nextSubStr = if (e.isSubscription && e.subNextBillingDate > 0) DAY_FORMAT.format(Date(e.subNextBillingDate)) else ""
 
             val row = listOf(
                 escapeCsv(e.category),
                 escapeCsv(e.brand),
-                escapeCsv(e.getAssetTypeDisplayName()),
                 escapeCsv(e.qty),
                 escapeCsv(e.unit),
                 escapeCsv(String.format(Locale.getDefault(), "%.2f", e.price)),
@@ -67,9 +64,7 @@ object ExportManager {
                 escapeCsv(String.format(Locale.getDefault(), "%.2f", e.currentValuation)),
                 escapeCsv(pDateStr),
                 escapeCsv(e.getDaysOwned()),
-                escapeCsv(if (e.assetType == "depreciating") String.format(Locale.getDefault(), "%.2f", e.getDailyCost()) else "-"),
-                escapeCsv(mfgStr),
-                escapeCsv(expStr),
+                escapeCsv(String.format(Locale.getDefault(), "%.2f", e.getDailyCost())),
                 escapeCsv(e.houseName),
                 escapeCsv(e.location),
                 escapeCsv(e.roomName),

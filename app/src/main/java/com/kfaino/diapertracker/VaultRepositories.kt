@@ -508,3 +508,656 @@ internal class HonorVaultRepository(private val prefs: SharedPreferences) {
         saveHonorCredentials(list)
     }
 }
+
+/** 06. 👗 换季衣橱仓储 */
+internal class WardrobeVaultRepository(private val prefs: SharedPreferences) {
+    private val key = "vault_wardrobe_v1"
+
+    fun getRecords(): List<WardrobeRecord> {
+        val raw = prefs.getString(key, null) ?: return emptyList()
+        return try {
+            val arr = JSONArray(raw)
+            val list = mutableListOf<WardrobeRecord>()
+            for (i in 0 until arr.length()) {
+                val o = arr.getJSONObject(i)
+                list.add(
+                    WardrobeRecord(
+                        id = o.optString("id", UUID.randomUUID().toString()),
+                        name = o.optString("name", ""),
+                        season = o.optString("season", "all"),
+                        category = o.optString("category", "top"),
+                        color = o.optString("color", ""),
+                        material = o.optString("material", ""),
+                        storageLocation = o.optString("loc", "主卧衣柜"),
+                        purchasePrice = o.optDouble("price", 0.0),
+                        purchaseDate = o.optLong("p_date", System.currentTimeMillis()),
+                        photoPath = o.optString("photo", ""),
+                        wearCount = o.optInt("w_cnt", 0),
+                        lastWornAt = o.optLong("w_at", 0L),
+                        isSealed = o.optBoolean("sealed", false),
+                        sealedAt = o.optLong("s_at", 0L),
+                        careNotes = o.optString("care", ""),
+                        notes = o.optString("notes", "")
+                    )
+                )
+            }
+            list
+        } catch (_: Exception) {
+            emptyList()
+        }
+    }
+
+    fun saveRecords(list: List<WardrobeRecord>) {
+        val arr = JSONArray()
+        for (w in list) {
+            arr.put(
+                JSONObject()
+                    .put("id", w.id)
+                    .put("name", w.name)
+                    .put("season", w.season)
+                    .put("category", w.category)
+                    .put("color", w.color)
+                    .put("material", w.material)
+                    .put("loc", w.storageLocation)
+                    .put("price", w.purchasePrice)
+                    .put("p_date", w.purchaseDate)
+                    .put("photo", w.photoPath)
+                    .put("w_cnt", w.wearCount)
+                    .put("w_at", w.lastWornAt)
+                    .put("sealed", w.isSealed)
+                    .put("s_at", w.sealedAt)
+                    .put("care", w.careNotes)
+                    .put("notes", w.notes)
+            )
+        }
+        prefs.edit().putString(key, arr.toString()).apply()
+    }
+
+    fun addOrUpdate(record: WardrobeRecord) {
+        val list = getRecords().toMutableList()
+        val idx = list.indexOfFirst { it.id == record.id }
+        if (idx != -1) list[idx] = record else list.add(0, record)
+        saveRecords(list)
+    }
+
+    fun delete(id: String) {
+        saveRecords(getRecords().filter { it.id != id })
+    }
+}
+
+/** 07. 🚨 应急物资仓储 */
+internal class EmergencyVaultRepository(private val prefs: SharedPreferences) {
+    private val key = "vault_emergency_v1"
+
+    fun getRecords(): List<EmergencyItem> {
+        val raw = prefs.getString(key, null) ?: return emptyList()
+        return try {
+            val arr = JSONArray(raw)
+            val list = mutableListOf<EmergencyItem>()
+            for (i in 0 until arr.length()) {
+                val o = arr.getJSONObject(i)
+                list.add(
+                    EmergencyItem(
+                        id = o.optString("id", UUID.randomUUID().toString()),
+                        name = o.optString("name", ""),
+                        kitType = o.optString("k_type", "earthquake"),
+                        category = o.optString("cat", "food"),
+                        qty = o.optDouble("qty", 1.0),
+                        unit = o.optString("unit", "件"),
+                        location = o.optString("loc", "玄关应急包"),
+                        expiryDate = o.optLong("exp_d", 0L),
+                        lastTestedAt = o.optLong("test_at", 0L),
+                        lastCheckedAt = o.optLong("chk_at", o.optLong("test_at", 0L)),
+                        rotationIntervalMonths = o.optInt("rot_m", 0),
+                        photoPath = o.optString("photo", ""),
+                        notes = o.optString("notes", ""),
+                        importanceLevel = o.optString("imp", "must_have")
+                    )
+                )
+            }
+            list
+        } catch (_: Exception) {
+            emptyList()
+        }
+    }
+
+    fun saveRecords(list: List<EmergencyItem>) {
+        val arr = JSONArray()
+        for (e in list) {
+            arr.put(
+                JSONObject()
+                    .put("id", e.id)
+                    .put("name", e.name)
+                    .put("k_type", e.kitType)
+                    .put("cat", e.category)
+                    .put("qty", e.qty)
+                    .put("unit", e.unit)
+                    .put("loc", e.location)
+                    .put("exp_d", e.expiryDate)
+                    .put("test_at", e.lastTestedAt)
+                    .put("chk_at", e.lastCheckedAt)
+                    .put("rot_m", e.rotationIntervalMonths)
+                    .put("photo", e.photoPath)
+                    .put("notes", e.notes)
+                    .put("imp", e.importanceLevel)
+            )
+        }
+        prefs.edit().putString(key, arr.toString()).apply()
+    }
+
+    fun addOrUpdate(record: EmergencyItem) {
+        val list = getRecords().toMutableList()
+        val idx = list.indexOfFirst { it.id == record.id }
+        if (idx != -1) list[idx] = record else list.add(0, record)
+        saveRecords(list)
+    }
+
+    fun delete(id: String) {
+        saveRecords(getRecords().filter { it.id != id })
+    }
+}
+
+/** 08. 🔧 工具设备维保仓储 */
+internal class ToolVaultRepository(private val prefs: SharedPreferences) {
+    private val key = "vault_tools_v1"
+
+    fun getRecords(): List<ToolMaintenanceRecord> {
+        val raw = prefs.getString(key, null) ?: return emptyList()
+        return try {
+            val arr = JSONArray(raw)
+            val list = mutableListOf<ToolMaintenanceRecord>()
+            for (i in 0 until arr.length()) {
+                val o = arr.getJSONObject(i)
+                list.add(
+                    ToolMaintenanceRecord(
+                        id = o.optString("id", UUID.randomUUID().toString()),
+                        name = o.optString("name", ""),
+                        spec = o.optString("spec", ""),
+                        category = o.optString("cat", "electric"),
+                        qty = o.optDouble("qty", 1.0),
+                        unit = o.optString("unit", "件"),
+                        location = o.optString("loc", "工具箱"),
+                        maintenanceIntervalDays = o.optInt("m_days", 0),
+                        lastMaintainedAt = o.optLong("m_at", 0L),
+                        photoPath = o.optString("photo", ""),
+                        notes = o.optString("notes", "")
+                    )
+                )
+            }
+            list
+        } catch (_: Exception) {
+            emptyList()
+        }
+    }
+
+    fun saveRecords(list: List<ToolMaintenanceRecord>) {
+        val arr = JSONArray()
+        for (t in list) {
+            arr.put(
+                JSONObject()
+                    .put("id", t.id)
+                    .put("name", t.name)
+                    .put("spec", t.spec)
+                    .put("cat", t.category)
+                    .put("qty", t.qty)
+                    .put("unit", t.unit)
+                    .put("loc", t.location)
+                    .put("m_days", t.maintenanceIntervalDays)
+                    .put("m_at", t.lastMaintainedAt)
+                    .put("photo", t.photoPath)
+                    .put("notes", t.notes)
+            )
+        }
+        prefs.edit().putString(key, arr.toString()).apply()
+    }
+
+    fun addOrUpdate(record: ToolMaintenanceRecord) {
+        val list = getRecords().toMutableList()
+        val idx = list.indexOfFirst { it.id == record.id }
+        if (idx != -1) list[idx] = record else list.add(0, record)
+        saveRecords(list)
+    }
+
+    fun delete(id: String) {
+        saveRecords(getRecords().filter { it.id != id })
+    }
+}
+
+/** 09. 🪴 绿植花卉水肥养护仓储 */
+internal class PlantVaultRepository(private val prefs: SharedPreferences) {
+    private val key = "vault_plants_v1"
+
+    fun getRecords(): List<PlantCareRecord> {
+        val raw = prefs.getString(key, null) ?: return emptyList()
+        return try {
+            val arr = JSONArray(raw)
+            val list = mutableListOf<PlantCareRecord>()
+            for (i in 0 until arr.length()) {
+                val o = arr.getJSONObject(i)
+                list.add(
+                    PlantCareRecord(
+                        id = o.optString("id", UUID.randomUUID().toString()),
+                        name = o.optString("name", ""),
+                        species = o.optString("species", ""),
+                        lightDemand = o.optString("light", "scattered"),
+                        location = o.optString("loc", "客厅阳台"),
+                        waterIntervalDays = o.optInt("w_days", 7),
+                        lastWateredAt = o.optLong("w_at", 0L),
+                        fertilizeIntervalDays = o.optInt("f_days", 30),
+                        lastFertilizedAt = o.optLong("f_at", 0L),
+                        photoPath = o.optString("photo", ""),
+                        careTips = o.optString("tips", ""),
+                        plantedAt = o.optLong("p_at", System.currentTimeMillis())
+                    )
+                )
+            }
+            list
+        } catch (_: Exception) {
+            emptyList()
+        }
+    }
+
+    fun saveRecords(list: List<PlantCareRecord>) {
+        val arr = JSONArray()
+        for (p in list) {
+            arr.put(
+                JSONObject()
+                    .put("id", p.id)
+                    .put("name", p.name)
+                    .put("species", p.species)
+                    .put("light", p.lightDemand)
+                    .put("loc", p.location)
+                    .put("w_days", p.waterIntervalDays)
+                    .put("w_at", p.lastWateredAt)
+                    .put("f_days", p.fertilizeIntervalDays)
+                    .put("f_at", p.lastFertilizedAt)
+                    .put("photo", p.photoPath)
+                    .put("tips", p.careTips)
+                    .put("p_at", p.plantedAt)
+            )
+        }
+        prefs.edit().putString(key, arr.toString()).apply()
+    }
+
+    fun addOrUpdate(record: PlantCareRecord) {
+        val list = getRecords().toMutableList()
+        val idx = list.indexOfFirst { it.id == record.id }
+        if (idx != -1) list[idx] = record else list.add(0, record)
+        saveRecords(list)
+    }
+
+    fun delete(id: String) {
+        saveRecords(getRecords().filter { it.id != id })
+    }
+}
+
+/** 10. 🐾 萌宠生活与健康档案仓储 */
+internal class PetVaultRepository(private val prefs: SharedPreferences) {
+    private val key = "vault_pets_v1"
+
+    fun getRecords(): List<PetCareRecord> {
+        val raw = prefs.getString(key, null) ?: return emptyList()
+        return try {
+            val arr = JSONArray(raw)
+            val list = mutableListOf<PetCareRecord>()
+            for (i in 0 until arr.length()) {
+                val o = arr.getJSONObject(i)
+                list.add(
+                    PetCareRecord(
+                        id = o.optString("id", UUID.randomUUID().toString()),
+                        name = o.optString("name", ""),
+                        species = o.optString("species", "cat"),
+                        breed = o.optString("breed", ""),
+                        weightKg = o.optDouble("weight", 0.0),
+                        chipNumber = o.optString("chip", ""),
+                        foodBrand = o.optString("food", ""),
+                        foodStorageLocation = o.optString("f_loc", ""),
+                        dewormIntervalDays = o.optInt("dw_days", 30),
+                        lastDewormedAt = o.optLong("dw_at", 0L),
+                        vaccineIntervalDays = o.optInt("vac_days", 365),
+                        lastVaccinatedAt = o.optLong("vac_at", 0L),
+                        photoPath = o.optString("photo", ""),
+                        notes = o.optString("notes", "")
+                    )
+                )
+            }
+            list
+        } catch (_: Exception) {
+            emptyList()
+        }
+    }
+
+    fun saveRecords(list: List<PetCareRecord>) {
+        val arr = JSONArray()
+        for (p in list) {
+            arr.put(
+                JSONObject()
+                    .put("id", p.id)
+                    .put("name", p.name)
+                    .put("species", p.species)
+                    .put("breed", p.breed)
+                    .put("weight", p.weightKg)
+                    .put("chip", p.chipNumber)
+                    .put("food", p.foodBrand)
+                    .put("f_loc", p.foodStorageLocation)
+                    .put("dw_days", p.dewormIntervalDays)
+                    .put("dw_at", p.lastDewormedAt)
+                    .put("vac_days", p.vaccineIntervalDays)
+                    .put("vac_at", p.lastVaccinatedAt)
+                    .put("photo", p.photoPath)
+                    .put("notes", p.notes)
+            )
+        }
+        prefs.edit().putString(key, arr.toString()).apply()
+    }
+
+    fun addOrUpdate(record: PetCareRecord) {
+        val list = getRecords().toMutableList()
+        val idx = list.indexOfFirst { it.id == record.id }
+        if (idx != -1) list[idx] = record else list.add(0, record)
+        saveRecords(list)
+    }
+
+    fun delete(id: String) {
+        saveRecords(getRecords().filter { it.id != id })
+    }
+}
+
+/** 11. 📚 书房藏书与阅读仓储 */
+internal class BookVaultRepository(private val prefs: SharedPreferences) {
+    private val key = "vault_books_v1"
+
+    fun getRecords(): List<BookRecord> {
+        val raw = prefs.getString(key, null) ?: return emptyList()
+        return try {
+            val arr = JSONArray(raw)
+            val list = mutableListOf<BookRecord>()
+            for (i in 0 until arr.length()) {
+                val o = arr.getJSONObject(i)
+                list.add(
+                    BookRecord(
+                        id = o.optString("id", UUID.randomUUID().toString()),
+                        title = o.optString("title", ""),
+                        author = o.optString("author", ""),
+                        category = o.optString("cat", "general"),
+                        totalPages = o.optInt("tot_p", 0),
+                        currentPages = o.optInt("cur_p", 0),
+                        bookshelfLocation = o.optString("loc", "书房书架"),
+                        rating = o.optDouble("rating", 5.0).toFloat(),
+                        borrowerName = o.optString("borrower", ""),
+                        lentDate = o.optLong("lent_d", 0L),
+                        summaryNotes = o.optString("notes", ""),
+                        coverPhotoPath = o.optString("photo", "")
+                    )
+                )
+            }
+            list
+        } catch (_: Exception) {
+            emptyList()
+        }
+    }
+
+    fun saveRecords(list: List<BookRecord>) {
+        val arr = JSONArray()
+        for (b in list) {
+            arr.put(
+                JSONObject()
+                    .put("id", b.id)
+                    .put("title", b.title)
+                    .put("author", b.author)
+                    .put("cat", b.category)
+                    .put("tot_p", b.totalPages)
+                    .put("cur_p", b.currentPages)
+                    .put("loc", b.bookshelfLocation)
+                    .put("rating", b.rating.toDouble())
+                    .put("borrower", b.borrowerName)
+                    .put("lent_d", b.lentDate)
+                    .put("notes", b.summaryNotes)
+                    .put("photo", b.coverPhotoPath)
+            )
+        }
+        prefs.edit().putString(key, arr.toString()).apply()
+    }
+
+    fun addOrUpdate(record: BookRecord) {
+        val list = getRecords().toMutableList()
+        val idx = list.indexOfFirst { it.id == record.id }
+        if (idx != -1) list[idx] = record else list.add(0, record)
+        saveRecords(list)
+    }
+
+    fun delete(id: String) {
+        saveRecords(getRecords().filter { it.id != id })
+    }
+}
+
+/** 12. 🍷 家庭茶窖与名酿适饮仓储 */
+internal class BeverageTeaVaultRepository(private val prefs: SharedPreferences) {
+    private val key = "vault_beverage_v1"
+
+    fun getRecords(): List<BeverageTeaRecord> {
+        val raw = prefs.getString(key, null) ?: return emptyList()
+        return try {
+            val arr = JSONArray(raw)
+            val list = mutableListOf<BeverageTeaRecord>()
+            for (i in 0 until arr.length()) {
+                val o = arr.getJSONObject(i)
+                list.add(
+                    BeverageTeaRecord(
+                        id = o.optString("id", UUID.randomUUID().toString()),
+                        name = o.optString("name", ""),
+                        category = o.optString("cat", "liquor"),
+                        vintageYear = o.optInt("vintage", 0),
+                        optimalAgingYear = o.optInt("aging", 0),
+                        qty = o.optDouble("qty", 1.0),
+                        unit = o.optString("unit", "瓶"),
+                        storageLocation = o.optString("loc", "恒温酒柜"),
+                        originRegion = o.optString("origin", ""),
+                        rating = o.optDouble("rating", 5.0).toFloat(),
+                        isOpened = o.optBoolean("opened", false),
+                        openedAt = o.optLong("open_at", 0L),
+                        openedPreserveDays = o.optInt("p_days", 0),
+                        photoPath = o.optString("photo", ""),
+                        tastingNotes = o.optString("notes", "")
+                    )
+                )
+            }
+            list
+        } catch (_: Exception) {
+            emptyList()
+        }
+    }
+
+    fun saveRecords(list: List<BeverageTeaRecord>) {
+        val arr = JSONArray()
+        for (b in list) {
+            arr.put(
+                JSONObject()
+                    .put("id", b.id)
+                    .put("name", b.name)
+                    .put("cat", b.category)
+                    .put("vintage", b.vintageYear)
+                    .put("aging", b.optimalAgingYear)
+                    .put("qty", b.qty)
+                    .put("unit", b.unit)
+                    .put("loc", b.storageLocation)
+                    .put("origin", b.originRegion)
+                    .put("rating", b.rating.toDouble())
+                    .put("opened", b.isOpened)
+                    .put("open_at", b.openedAt)
+                    .put("p_days", b.openedPreserveDays)
+                    .put("photo", b.photoPath)
+                    .put("notes", b.tastingNotes)
+            )
+        }
+        prefs.edit().putString(key, arr.toString()).apply()
+    }
+
+    fun addOrUpdate(record: BeverageTeaRecord) {
+        val list = getRecords().toMutableList()
+        val idx = list.indexOfFirst { it.id == record.id }
+        if (idx != -1) list[idx] = record else list.add(0, record)
+        saveRecords(list)
+    }
+
+    fun delete(id: String) {
+        saveRecords(getRecords().filter { it.id != id })
+    }
+}
+
+/** 💡 13. 灵感想法舱仓储 */
+internal class IdeaVaultRepository(private val prefs: SharedPreferences) {
+    private val key = "vault_ideas_v1"
+
+    fun getIdeas(): List<IdeaRecord> {
+        val raw = prefs.getString(key, null) ?: return emptyList()
+        return try {
+            val arr = JSONArray(raw)
+            val list = mutableListOf<IdeaRecord>()
+            for (i in 0 until arr.length()) {
+                val o = arr.getJSONObject(i)
+                val tagsArr = o.optJSONArray("tags") ?: JSONArray()
+                val tagsList = (0 until tagsArr.length()).map { tagsArr.getString(it) }
+                val linksArr = o.optJSONArray("links") ?: JSONArray()
+                val linksList = (0 until linksArr.length()).map { linksArr.getString(it) }
+
+                list.add(
+                    IdeaRecord(
+                        id = o.optString("id", UUID.randomUUID().toString()),
+                        content = o.optString("content", ""),
+                        tags = tagsList,
+                        moodEmoji = o.optString("emoji", "💡"),
+                        isPinned = o.optBoolean("pinned", false),
+                        colorHex = o.optString("color", "#10B981"),
+                        linkedAssetIds = linksList,
+                        createdAt = o.optLong("c_at", System.currentTimeMillis()),
+                        updatedAt = o.optLong("u_at", System.currentTimeMillis())
+                    )
+                )
+            }
+            list
+        } catch (_: Exception) {
+            emptyList()
+        }
+    }
+
+    fun saveIdeas(list: List<IdeaRecord>) {
+        val arr = JSONArray()
+        for (item in list) {
+            val tagsArr = JSONArray()
+            item.tags.forEach { tagsArr.put(it) }
+            val linksArr = JSONArray()
+            item.linkedAssetIds.forEach { linksArr.put(it) }
+
+            arr.put(
+                JSONObject()
+                    .put("id", item.id)
+                    .put("content", item.content)
+                    .put("tags", tagsArr)
+                    .put("emoji", item.moodEmoji)
+                    .put("pinned", item.isPinned)
+                    .put("color", item.colorHex)
+                    .put("links", linksArr)
+                    .put("c_at", item.createdAt)
+                    .put("u_at", item.updatedAt)
+            )
+        }
+        prefs.edit().putString(key, arr.toString()).apply()
+    }
+
+    fun addOrUpdate(idea: IdeaRecord) {
+        val list = getIdeas().toMutableList()
+        val idx = list.indexOfFirst { it.id == idea.id }
+        if (idx != -1) list[idx] = idea else list.add(0, idea)
+        saveIdeas(list)
+    }
+
+    fun delete(id: String) {
+        saveIdeas(getIdeas().filter { it.id != id })
+    }
+}
+
+/** 📰 14. 智能剪藏知识库仓储 */
+internal class ClippingVaultRepository(private val prefs: SharedPreferences) {
+    private val key = "vault_clippings_v1"
+
+    fun getClippings(): List<ClippingRecord> {
+        val raw = prefs.getString(key, null) ?: return emptyList()
+        return try {
+            val arr = JSONArray(raw)
+            val list = mutableListOf<ClippingRecord>()
+            for (i in 0 until arr.length()) {
+                val o = arr.getJSONObject(i)
+                val imgsArr = o.optJSONArray("imgs") ?: JSONArray()
+                val imgsList = (0 until imgsArr.length()).map { imgsArr.getString(it) }
+                val tagsArr = o.optJSONArray("tags") ?: JSONArray()
+                val tagsList = (0 until tagsArr.length()).map { tagsArr.getString(it) }
+                val linksArr = o.optJSONArray("links") ?: JSONArray()
+                val linksList = (0 until linksArr.length()).map { linksArr.getString(it) }
+
+                list.add(
+                    ClippingRecord(
+                        id = o.optString("id", UUID.randomUUID().toString()),
+                        title = o.optString("title", ""),
+                        originalUrl = o.optString("url", ""),
+                        sourcePlatform = o.optString("platform", "web"),
+                        fullMarkdown = o.optString("markdown", ""),
+                        ocrRawText = o.optString("ocr", ""),
+                        localImagePaths = imgsList,
+                        summary = o.optString("summary", ""),
+                        tags = tagsList,
+                        linkedAssetIds = linksList,
+                        isArchived = o.optBoolean("archived", false),
+                        capturedAt = o.optLong("cap_at", System.currentTimeMillis()),
+                        readProgressPercent = o.optInt("prog", 0)
+                    )
+                )
+            }
+            list
+        } catch (_: Exception) {
+            emptyList()
+        }
+    }
+
+    fun saveClippings(list: List<ClippingRecord>) {
+        val arr = JSONArray()
+        for (item in list) {
+            val imgsArr = JSONArray()
+            item.localImagePaths.forEach { imgsArr.put(it) }
+            val tagsArr = JSONArray()
+            item.tags.forEach { tagsArr.put(it) }
+            val linksArr = JSONArray()
+            item.linkedAssetIds.forEach { linksArr.put(it) }
+
+            arr.put(
+                JSONObject()
+                    .put("id", item.id)
+                    .put("title", item.title)
+                    .put("url", item.originalUrl)
+                    .put("platform", item.sourcePlatform)
+                    .put("markdown", item.fullMarkdown)
+                    .put("ocr", item.ocrRawText)
+                    .put("imgs", imgsArr)
+                    .put("summary", item.summary)
+                    .put("tags", tagsArr)
+                    .put("links", linksArr)
+                    .put("archived", item.isArchived)
+                    .put("cap_at", item.capturedAt)
+                    .put("prog", item.readProgressPercent)
+            )
+        }
+        prefs.edit().putString(key, arr.toString()).apply()
+    }
+
+    fun addOrUpdate(record: ClippingRecord) {
+        val list = getClippings().toMutableList()
+        val idx = list.indexOfFirst { it.id == record.id }
+        if (idx != -1) list[idx] = record else list.add(0, record)
+        saveClippings(list)
+    }
+
+    fun delete(id: String) {
+        saveClippings(getClippings().filter { it.id != id })
+    }
+}
+

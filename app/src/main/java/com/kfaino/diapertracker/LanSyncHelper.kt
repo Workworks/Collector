@@ -133,10 +133,9 @@ object LanSyncHelper {
                 val store = DataStore(context)
 
                 when {
-                    // 1. Web 网页端主控制台 HTML (优先读取热补丁版本)
+                    // 1. Web 网页端主控制台 HTML
                     method == "GET" && (path == "/" || path == "/index.html") -> {
-                        val patchedHtml = HotPatchEngine.getActiveWebDashboardHtml(context)
-                        val html = patchedHtml ?: buildWebDashboardHtml(store)
+                        val html = buildWebDashboardHtml(store)
                         sendHttpResponse(out, "text/html; charset=utf-8", html.toByteArray(StandardCharsets.UTF_8))
                     }
 
@@ -229,37 +228,6 @@ object LanSyncHelper {
                         val body = readBody()
                         (context as? Activity)?.runOnUiThread { onDataReceived(body) }
                         val resp = "{\"status\":\"ok\",\"message\":\"数据已接收并成功合并\"}".toByteArray(StandardCharsets.UTF_8)
-                        sendHttpResponse(out, "application/json; charset=utf-8", resp)
-                    }
-
-                    // 8. 电商订单/淘口令智能解析入库
-                    method == "POST" && path == "/api/ecommerce/parse" -> {
-                        val body = readBody()
-                        val json = JSONObject(body)
-                        val text = json.optString("text", "")
-                        val parsed = SmartIntakeHelper.parseNaturalLanguage(text)
-                        val newEntry = Entry(
-                            brand = parsed.brand,
-                            category = parsed.category,
-                            price = parsed.price,
-                            qty = parsed.qty,
-                            unit = parsed.unit,
-                            purchaseDate = parsed.purchaseDate,
-                            manufactureDate = parsed.mfgDate,
-                            expiryDate = parsed.expDate,
-                            assetType = parsed.assetType,
-                            notes = parsed.notes
-                        )
-                        val all = store.loadAll().toMutableList()
-                        all.add(0, newEntry)
-                        store.saveAll(all)
-                        (context as? Activity)?.runOnUiThread { onDataReceived("") }
-                        val resp = JSONObject().apply {
-                            put("status", "ok")
-                            put("brand", newEntry.brand)
-                            put("price", newEntry.price)
-                            put("category", newEntry.category)
-                        }.toString().toByteArray(StandardCharsets.UTF_8)
                         sendHttpResponse(out, "application/json; charset=utf-8", resp)
                     }
 
@@ -360,45 +328,47 @@ object LanSyncHelper {
         dialogView.addView(btnCopy)
         dialogView.addView(btnPullFromOther)
 
-        val mainDialog = MaterialAlertDialogBuilder(activity)
+        MaterialAlertDialogBuilder(activity)
             .setView(dialogView)
             .setPositiveButton("保持后台运行", null)
-            .create()
-
-        mainDialog.window?.attributes?.windowAnimations = R.style.CustomDialogAnimation
-        mainDialog.show()
+            .show()
     }
 
     private fun showPullFromOtherDialog(activity: Activity, store: DataStore, onSyncCompleted: () -> Unit) {
-        ModernDialogHelper.showInputDialog(
-            context = activity,
-            title = "从目标设备拉取数据",
-            subtitle = "输入另一台开启互传的手机或电脑局域网 IP 与端口：",
-            hint = "例如: 192.168.1.120:8848",
-            emoji = "📥",
-            positiveText = "开始极速拉取"
-        ) { target ->
-            if (target.isNotEmpty()) {
-                val fullUrl = if (!target.startsWith("http")) "http://$target/api/pull" else target
-                executor.execute {
-                    try {
-                        val conn = URI.create(fullUrl).toURL().openConnection() as HttpURLConnection
-                        conn.connectTimeout = 6000
-                        conn.readTimeout = 6000
-                        val json = conn.inputStream.bufferedReader(StandardCharsets.UTF_8).use { it.readText() }
-                        activity.runOnUiThread {
-                            val count = store.importBackupJson(json)
-                            Toast.makeText(activity, "🎉 拉取成功！已同步 $count 条记录", Toast.LENGTH_SHORT).show()
-                            onSyncCompleted()
-                        }
-                    } catch (e: Exception) {
-                        activity.runOnUiThread {
-                            Toast.makeText(activity, "⚠️ 拉取失败: ${e.localizedMessage}", Toast.LENGTH_LONG).show()
+        val input = EditText(activity).apply {
+            hint = "例如: 192.168.1.120:8848"
+            setPadding(36, 28, 36, 28)
+        }
+
+        MaterialAlertDialogBuilder(activity)
+            .setTitle("📥 从目标设备拉取数据")
+            .setMessage("输入另一台开启互传的手机或电脑 IP 地址：")
+            .setView(input)
+            .setPositiveButton("开始拉取") { _, _ ->
+                val target = input.text.toString().trim()
+                if (target.isNotEmpty()) {
+                    val fullUrl = if (!target.startsWith("http")) "http://$target/api/pull" else target
+                    executor.execute {
+                        try {
+                            val conn = URI.create(fullUrl).toURL().openConnection() as HttpURLConnection
+                            conn.connectTimeout = 6000
+                            conn.readTimeout = 6000
+                            val json = conn.inputStream.bufferedReader(StandardCharsets.UTF_8).use { it.readText() }
+                            activity.runOnUiThread {
+                                val count = store.importBackupJson(json)
+                                Toast.makeText(activity, "拉取成功！已同步 $count 条记录", Toast.LENGTH_SHORT).show()
+                                onSyncCompleted()
+                            }
+                        } catch (e: Exception) {
+                            activity.runOnUiThread {
+                                Toast.makeText(activity, "拉取失败: ${e.localizedMessage}", Toast.LENGTH_LONG).show()
+                            }
                         }
                     }
                 }
             }
-        }
+            .setNegativeButton("取消", null)
+            .show()
     }
 
     private fun generateQrCode(text: String, size: Int): Bitmap {
@@ -486,13 +456,6 @@ object LanSyncHelper {
     <div class="toolbar">
         <input type="text" class="search-input" id="searchBox" placeholder="🔍 搜索物品名称、分类、位置..." oninput="filterTable()">
         <div style="color: #94A3B8; font-size: 13px;">实时与手机双向互通 · 网页端操作毫秒级同步保存</div>
-    </div>
-
-    <!-- 🛒 电商订单与淘口令极速导入栏 -->
-    <div style="background: #1E293B; border: 1px solid #334155; border-radius: 12px; padding: 12px 16px; margin-bottom: 20px; display: flex; gap: 10px; align-items: center;">
-        <span style="font-size: 20px;">🛒</span>
-        <input type="text" id="ecommerceInput" class="form-control" style="flex: 1;" placeholder="粘贴淘宝/京东/拼多多商品口令、分享链接或订单详情文本...">
-        <button class="btn" onclick="parseEcommerceOrder()">✨ 智能解析入库</button>
     </div>
 
     <div class="batch-bar" id="batchBar">
@@ -674,27 +637,6 @@ object LanSyncHelper {
             closeAddModal();
             await loadEntries();
             alert('物品添加成功，已即时同步至手机！');
-        }
-
-        async function parseEcommerceOrder() {
-            const input = document.getElementById('ecommerceInput');
-            const text = input.value.trim();
-            if (!text) { alert('请先粘贴电商商品或订单文本！'); return; }
-            try {
-                const res = await fetch('/api/ecommerce/parse', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ text: text })
-                });
-                const data = await res.json();
-                if (data.status === 'ok') {
-                    input.value = '';
-                    await loadEntries();
-                    alert('🎉 电商解析入库成功！已添加【' + data.brand + '】(¥' + data.price + ')');
-                }
-            } catch (e) {
-                alert('解析异常: ' + e);
-            }
         }
 
         function exportCsv() {

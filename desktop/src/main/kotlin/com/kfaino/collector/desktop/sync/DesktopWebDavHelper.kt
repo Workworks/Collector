@@ -1,4 +1,4 @@
-package com.kfaino.collector.desktop.sync
+﻿package com.kfaino.collector.desktop.sync
 
 import com.kfaino.collector.desktop.storage.DesktopDataStore
 import java.io.ByteArrayOutputStream

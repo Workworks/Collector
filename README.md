@@ -7,7 +7,7 @@
 <p align="center">
   <img src="https://img.shields.io/badge/Platform-Android_8.0+-3DDC84?logo=android&logoColor=white" alt="Platform" />
   <img src="https://img.shields.io/badge/Language-Kotlin_1.9-7F52FF?logo=kotlin&logoColor=white" alt="Language" />
-  <img src="https://img.shields.io/badge/Version-v4.3.0-10B981" alt="Version" />
+  <img src="https://img.shields.io/badge/Version-v4.3.5-10B981" alt="Version" />
   <img src="https://img.shields.io/badge/License-MIT-blue" alt="License" />
 </p>
 
@@ -44,24 +44,6 @@
 - ☁️ **WebDAV 私有云安全同步**：支持坚果云、Nextcloud、群晖 Synology 等标准网盘，一键备份与多端还原。
 - 📊 **多格式数据备份与导出**：一键生成带 UTF-8 BOM 的 **Excel 兼容 CSV 资产总表与流水表**，完整 JSON 本地备份。
 - 🚀 **智能统一在线更新**：官方源直连优先，免重装热补丁秒级生效与全量 APK 智能回退。
-
----
-
-## 📱 平台支持与能力边界对照
-
-| 功能模块 / 能力 | Android 移动主力端 (`:app`) | Desktop 独立轻量端 (`:desktop`) |
-| :--- | :---: | :---: |
-| **定位** | 全功能第一性原理全维度收纳管家 | 独立轻量桌面端（Swing + FlatLaf） |
-| **基础物品出入库与分类** | ✅ 支持 | ✅ 支持 |
-| **空间平面图与图钉** | ✅ 支持 (Canvas 脉冲光晕) | ✅ 支持 (基础网格) |
-| **日均折旧精算与闲置雷达** | ✅ 支持 | ✅ 支持 |
-| **时效权益 / 证照 / 药箱 / 生鲜 / 勋章馆** | ✅ 独占 (全维度 8 大收纳馆) | ⬜ 未支持 (轻量端保持精简) |
-| **实物时光胶囊与 1080P 画册海报** | ✅ 独占 | ⬜ 未支持 |
-| **AI 智能管家 / 发票 OCR / 剪贴板桥接** | ✅ 独占 | ⬜ 未支持 |
-| **离线二维码标签 / 蓝牙热敏直印 / NFC** | ✅ 独占 | ⬜ 未支持 |
-| **局域网免装 Web 网页大屏控制台** | ✅ 独占 (8848 端口大屏服务) | ⬜ 未支持 |
-| **极速热补丁与全量升级** | ✅ 独占 (安全验签免重装热更) | ⬜ 未支持 |
-
 
 ---
 

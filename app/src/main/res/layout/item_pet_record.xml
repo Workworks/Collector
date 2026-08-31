@@ -1,0 +1,188 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:background="@drawable/bg_changelog_box"
+    android:padding="14dp"
+    android:layout_marginBottom="10dp">
+
+    <!-- 顶部徽章栏 -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:layout_marginBottom="6dp">
+
+        <TextView
+            android:id="@+id/item_pet_species_badge"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="🐱 猫咪"
+            android:textSize="11sp"
+            android:textStyle="bold"
+            android:textColor="@color/primary"
+            android:background="@drawable/bg_chip_inactive"
+            android:paddingHorizontal="8dp"
+            android:paddingVertical="2dp"
+            android:layout_marginEnd="6dp" />
+
+        <TextView
+            android:id="@+id/item_pet_weight_badge"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="⚖️ 4.5 kg"
+            android:textSize="11sp"
+            android:textColor="@color/text_secondary"
+            android:background="@drawable/bg_chip_inactive"
+            android:paddingHorizontal="8dp"
+            android:paddingVertical="2dp"
+            android:layout_marginEnd="6dp" />
+
+        <View
+            android:layout_width="0dp"
+            android:layout_height="1dp"
+            android:layout_weight="1" />
+
+        <TextView
+            android:id="@+id/item_pet_deworm_status_badge"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="💊 需驱虫"
+            android:textSize="11sp"
+            android:textStyle="bold"
+            android:textColor="@color/accent_dark"
+            android:visibility="gone"
+            android:layout_marginEnd="4dp" />
+
+        <TextView
+            android:id="@+id/item_pet_vax_status_badge"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="💉 需打疫苗"
+            android:textSize="11sp"
+            android:textStyle="bold"
+            android:textColor="@color/danger"
+            android:visibility="gone" />
+    </LinearLayout>
+
+    <!-- 萌宠名称 -->
+    <TextView
+        android:id="@+id/item_pet_name"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="咪咪"
+        android:textSize="15sp"
+        android:textStyle="bold"
+        android:textColor="@color/text_primary"
+        android:fontFamily="sans-serif-medium"
+        android:layout_marginBottom="4dp" />
+
+    <!-- 芯片号 / 电子身份 (支持一键复制) -->
+    <LinearLayout
+        android:id="@+id/layout_pet_chip"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:clickable="true"
+        android:focusable="true"
+        android:layout_marginBottom="4dp">
+
+        <TextView
+            android:id="@+id/item_pet_chip_text"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="🆔 芯片号: 900215000123456 (点击复制)"
+            android:textSize="12sp"
+            android:textColor="@color/text_secondary" />
+    </LinearLayout>
+
+    <!-- 驱虫与疫苗排期 -->
+    <TextView
+        android:id="@+id/item_pet_schedule_text"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="💊 驱虫: 每 30 天 (下次: 2026-08-25) · 💉 疫苗: 2027-02-15"
+        android:textSize="12sp"
+        android:textColor="@color/text_secondary"
+        android:layout_marginBottom="3dp" />
+
+    <!-- 主粮品牌与收纳位置 -->
+    <TextView
+        android:id="@+id/item_pet_food_text"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="🥣 主粮: 渴望全肉粮 · 阳台储粮桶 #01"
+        android:textSize="12sp"
+        android:textColor="@color/text_secondary"
+        android:layout_marginBottom="3dp" />
+
+    <!-- 健康禁忌与病历备忘 -->
+    <TextView
+        android:id="@+id/item_pet_notes"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="📝 备忘: 绝育已做，对牛肉轻度过敏"
+        android:textSize="11sp"
+        android:textColor="@color/text_hint"
+        android:layout_marginBottom="8dp" />
+
+    <!-- 底部操作按钮栏 -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical">
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btn_item_deworm_pet"
+            style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+            android:layout_width="wrap_content"
+            android:layout_height="34dp"
+            android:text="💊 驱虫打卡"
+            android:textSize="11sp"
+            android:textColor="@color/accent_dark"
+            app:strokeColor="@color/accent_dark"
+            app:cornerRadius="8dp"
+            android:layout_marginEnd="6dp" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btn_item_vax_pet"
+            style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+            android:layout_width="wrap_content"
+            android:layout_height="34dp"
+            android:text="💉 疫苗打卡"
+            android:textSize="11sp"
+            android:textColor="@color/primary"
+            app:strokeColor="@color/primary"
+            app:cornerRadius="8dp"
+            android:layout_marginEnd="6dp" />
+
+        <View
+            android:layout_width="0dp"
+            android:layout_height="1dp"
+            android:layout_weight="1" />
+
+        <ImageButton
+            android:id="@+id/btn_item_edit_pet"
+            android:layout_width="34dp"
+            android:layout_height="34dp"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:src="@android:drawable/ic_menu_edit"
+            app:tint="@color/text_secondary"
+            android:contentDescription="编辑" />
+
+        <ImageButton
+            android:id="@+id/btn_item_delete_pet"
+            android:layout_width="34dp"
+            android:layout_height="34dp"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:src="@android:drawable/ic_menu_delete"
+            app:tint="@color/danger"
+            android:contentDescription="删除" />
+    </LinearLayout>
+
+</LinearLayout>

@@ -72,13 +72,16 @@ data class Entry(
     // 3. 物品在役 / 退役与待办归置系统
     val isRetired: Boolean = false,                 // false=在役, true=已退役 (如闲鱼代售、封存)
     val retiredAt: Long = 0L,                       // 退役时间戳
+    val retiredDate: Long = 0L,                     // 退役时间戳别名
     val retiredAction: String = "",                 // 待办归置渠道 (如 "挂闲鱼代售", "挂转转代售", "赠送亲友", "封箱入库", "环保回收", "报废")
     val retiredSoldPrice: Double = 0.0,             // 二手出掉回血金额 (如有)
     val retiredNote: String = "",                   // 退役归置备注
 
     // 2. 按期订阅型资产体系 (如 iCloud, ChatGPT, Netflix, 宽带, 健身年卡)
     val isSubscription: Boolean = false,            // 是否为订阅型资产
+    val subPrice: Double = price,                   // 订阅价格
     val subCycle: String = "按月",                  // 订阅周期: "按月", "按年", "按季", "按周"
+    val subStartDate: Long = purchaseDate,          // 订阅起始日
     val subNextBillingDate: Long = 0L,              // 下次扣费日期
     val subAutoRenew: Boolean = true,               // 是否自动续费
 
@@ -450,7 +453,8 @@ data class MedicineRecord(
     val openedAt: Long = 0L,                        // 开封时间戳
     val openedValidityDays: Int = 0,                // 开封后有效期天数 (如滴眼液开封 28 天到期, 0表示按原保质期)
     val photoPath: String = "",                     // 包装盒/说明书照片
-    val contraindications: String = ""              // 禁忌与注意事项 (如 "服药期间严禁饮酒")
+    val contraindications: String = "",             // 禁忌与注意事项 (如 "服药期间严禁饮酒")
+    val notes: String = ""                          // 备忘
 ) {
     /** 计算实际有效截止时间戳 (综合原保质期与开封后时效) */
     fun getEffectiveExpiryDate(): Long {
@@ -459,6 +463,13 @@ data class MedicineRecord(
             return if (expiryDate > 0L) Math.min(expiryDate, openedExpire) else openedExpire
         }
         return expiryDate
+    }
+
+    val symptom: String get() = category
+
+    fun isExpiringSoon(): Boolean {
+        val eff = getEffectiveExpiryDate()
+        return eff > 0L && (eff - System.currentTimeMillis()) in 0..(30L * 24 * 3600 * 1000)
     }
 
     /** 是否已过期 */
@@ -629,3 +640,343 @@ data class HonorCredential(
         }
     }
 }
+
+// =========================================================================
+// 👗 06. 换季衣橱与胶囊穿搭舱模型 (Wardrobe Record)
+// =========================================================================
+
+data class WardrobeRecord(
+    val id: String = UUID.randomUUID().toString(),
+    val name: String = "",
+    val season: String = "all",
+    val category: String = "top",
+    val color: String = "",
+    val material: String = "",
+    val storageLocation: String = "主卧衣柜",
+    val purchasePrice: Double = 0.0,
+    val purchaseDate: Long = System.currentTimeMillis(),
+    val photoPath: String = "",
+    val wearCount: Int = 0,
+    val lastWornAt: Long = 0L,
+    val isSealed: Boolean = false,
+    val sealedAt: Long = 0L,
+    val careNotes: String = "",
+    val notes: String = ""
+) {
+    val price: Double get() = purchasePrice
+    fun getCostPerWear(): Double = if (wearCount > 0) purchasePrice / wearCount else purchasePrice
+    fun isSleeping(): Boolean = !isSealed && (System.currentTimeMillis() - if (lastWornAt > 0L) lastWornAt else purchaseDate) > (180L * 24 * 3600 * 1000)
+    fun getSeasonDisplayName(): String = when (season) {
+        "spring" -> "🌸 春季"
+        "summer" -> "☀️ 夏季"
+        "autumn" -> "🍁 秋季"
+        "winter" -> "❄️ 冬季"
+        else -> "🌈 四季通用"
+    }
+    fun getCategoryDisplayName(): String = when (category) {
+        "top" -> "上装"
+        "bottom" -> "下装"
+        "outerwear" -> "外套"
+        "dress" -> "裙装"
+        "shoes" -> "鞋靴"
+        "bag" -> "箱包"
+        "accessory" -> "配饰"
+        else -> "其他"
+    }
+}
+
+// =========================================================================
+// 🚨 07. 家庭应急防灾与生命线舱模型 (Emergency Item)
+// =========================================================================
+
+data class EmergencyItem(
+    val id: String = UUID.randomUUID().toString(),
+    val name: String = "",
+    val kitType: String = "earthquake",
+    val category: String = "food",
+    val qty: Double = 1.0,
+    val unit: String = "件",
+    val location: String = "玄关应急包",
+    val expiryDate: Long = 0L,
+    val lastTestedAt: Long = 0L,
+    val lastCheckedAt: Long = lastTestedAt,
+    val rotationIntervalMonths: Int = 0,
+    val photoPath: String = "",
+    val notes: String = "",
+    val importanceLevel: String = "must_have"
+) {
+    fun isExpired(): Boolean = expiryDate > 0L && System.currentTimeMillis() > expiryDate
+    fun isExpiringSoon(): Boolean = expiryDate > 0L && (expiryDate - System.currentTimeMillis()) in 0..(30L * 24 * 3600 * 1000)
+    fun isNeedsCheck(): Boolean {
+        if (rotationIntervalMonths <= 0) return false
+        val last = if (lastCheckedAt > 0L) lastCheckedAt else lastTestedAt
+        return (System.currentTimeMillis() - last) > (rotationIntervalMonths.toLong() * 30L * 24 * 3600 * 1000)
+    }
+    fun getKitTypeDisplayName(): String = when (kitType) {
+        "earthquake" -> "🏚️ 地震防灾"
+        "fire" -> "🔥 消防逃生"
+        "medical" -> "🩹 急救医疗"
+        "flood" -> "🌊 防汛暴雨"
+        else -> "🚨 应急物资"
+    }
+    fun getCategoryDisplayName(): String = when (category) {
+        "food" -> "🥫 应急口粮与水"
+        "tool" -> "🔦 工具照明"
+        "medical" -> "🩹 急救消炎"
+        "protect" -> "🦺 防护保暖"
+        else -> "📦 应急物资"
+    }
+}
+
+// =========================================================================
+// 🔧 08. 家庭工具五金与设备维保模型 (Tool Maintenance)
+// =========================================================================
+
+data class ToolMaintenanceRecord(
+    val id: String = UUID.randomUUID().toString(),
+    val name: String = "",
+    val spec: String = "",
+    val category: String = "electric",
+    val qty: Double = 1.0,
+    val unit: String = "件",
+    val location: String = "工具箱",
+    val maintenanceIntervalDays: Int = 0,
+    val lastMaintainedAt: Long = 0L,
+    val photoPath: String = "",
+    val notes: String = ""
+) {
+    fun getNextMaintenanceDate(): Long = if (maintenanceIntervalDays > 0 && lastMaintainedAt > 0L) lastMaintainedAt + (maintenanceIntervalDays.toLong() * 24 * 3600 * 1000) else 0L
+    fun isMaintenanceDue(): Boolean {
+        if (maintenanceIntervalDays <= 0 || lastMaintainedAt <= 0L) return false
+        val next = getNextMaintenanceDate()
+        return next > 0L && System.currentTimeMillis() >= next
+    }
+    fun isMaintenanceDueSoon(): Boolean {
+        val next = getNextMaintenanceDate()
+        return next > 0L && (next - System.currentTimeMillis()) in 0..(15L * 24 * 3600 * 1000)
+    }
+    fun getCategoryDisplayName(): String = when (category) {
+        "electric" -> "⚡ 电动工具"
+        "manual" -> "🔨 手工五金"
+        "hardware" -> "🔩 螺丝紧固"
+        "maintenance" -> "🚰 设备耗材"
+        else -> "🔧 工具配件"
+    }
+}
+
+// =========================================================================
+// 🪴 09. 家庭绿植花卉水肥养护模型 (Plant Care)
+// =========================================================================
+
+data class PlantCareRecord(
+    val id: String = UUID.randomUUID().toString(),
+    val name: String = "",
+    val species: String = "",
+    val lightDemand: String = "scattered",
+    val location: String = "客厅阳台",
+    val waterIntervalDays: Int = 7,
+    val lastWateredAt: Long = 0L,
+    val fertilizeIntervalDays: Int = 30,
+    val lastFertilizedAt: Long = 0L,
+    val photoPath: String = "",
+    val careTips: String = "",
+    val plantedAt: Long = System.currentTimeMillis()
+) {
+    fun getNextWaterDate(): Long = if (waterIntervalDays > 0 && lastWateredAt > 0L) lastWateredAt + (waterIntervalDays.toLong() * 24 * 3600 * 1000) else 0L
+    fun isWateringDue(): Boolean = isWaterDue()
+    fun isWaterDue(): Boolean {
+        if (waterIntervalDays <= 0 || lastWateredAt <= 0L) return false
+        val next = getNextWaterDate()
+        return next > 0L && System.currentTimeMillis() >= next
+    }
+    fun isWaterDueSoon(): Boolean {
+        val next = getNextWaterDate()
+        return next > 0L && (next - System.currentTimeMillis()) in 0..(2L * 24 * 3600 * 1000)
+    }
+
+    fun getNextFertilizeDate(): Long = if (fertilizeIntervalDays > 0 && lastFertilizedAt > 0L) lastFertilizedAt + (fertilizeIntervalDays.toLong() * 24 * 3600 * 1000) else 0L
+    fun isFertilizeDue(): Boolean {
+        if (fertilizeIntervalDays <= 0 || lastFertilizedAt <= 0L) return false
+        val next = getNextFertilizeDate()
+        return next > 0L && System.currentTimeMillis() >= next
+    }
+    fun getLightDemandDisplayName(): String = when (lightDemand) {
+        "direct" -> "☀️ 全日照直射"
+        "scattered" -> "🌤️ 明亮散射光"
+        "shade" -> "🌥️ 耐阴避光"
+        else -> "🌿 常规光照"
+    }
+}
+
+// =========================================================================
+// 🐾 10. 家庭萌宠生活与健康档案模型 (Pet Care)
+// =========================================================================
+
+data class PetCareRecord(
+    val id: String = UUID.randomUUID().toString(),
+    val name: String = "",
+    val species: String = "cat",
+    val breed: String = "",
+    val birthDate: Long = 0L,
+    val weightKg: Double = 0.0,
+    val chipNumber: String = "",
+    val microchipId: String = chipNumber,
+    val foodBrand: String = "",
+    val foodStorageLocation: String = "",
+    val dewormIntervalDays: Int = 30,
+    val lastDewormedAt: Long = 0L,
+    val vaccineIntervalDays: Int = 365,
+    val lastVaccinatedAt: Long = 0L,
+    val photoPath: String = "",
+    val notes: String = ""
+) {
+    fun getNextDewormDate(): Long = if (dewormIntervalDays > 0 && lastDewormedAt > 0L) lastDewormedAt + (dewormIntervalDays.toLong() * 24 * 3600 * 1000) else 0L
+    fun isDewormDue(): Boolean {
+        if (dewormIntervalDays <= 0 || lastDewormedAt <= 0L) return false
+        val next = getNextDewormDate()
+        return next > 0L && System.currentTimeMillis() >= next
+    }
+    fun isDewormDueSoon(): Boolean {
+        val next = getNextDewormDate()
+        return next > 0L && (next - System.currentTimeMillis()) in 0..(7L * 24 * 3600 * 1000)
+    }
+
+    fun getNextVaccineDate(): Long = if (vaccineIntervalDays > 0 && lastVaccinatedAt > 0L) lastVaccinatedAt + (vaccineIntervalDays.toLong() * 24 * 3600 * 1000) else 0L
+    fun isVaccineDue(): Boolean {
+        if (vaccineIntervalDays <= 0 || lastVaccinatedAt <= 0L) return false
+        val next = getNextVaccineDate()
+        return next > 0L && System.currentTimeMillis() >= next
+    }
+    fun isVaccineDueSoon(): Boolean {
+        val next = getNextVaccineDate()
+        return next > 0L && (next - System.currentTimeMillis()) in 0..(14L * 24 * 3600 * 1000)
+    }
+}
+
+// =========================================================================
+// 📚 11. 家庭书房藏书与阅读流转模型 (Book Record)
+// =========================================================================
+
+data class BookRecord(
+    val id: String = UUID.randomUUID().toString(),
+    val title: String = "",
+    val author: String = "",
+    val category: String = "general",
+    val totalPages: Int = 0,
+    val currentPages: Int = 0,
+    val bookshelfLocation: String = "书房书架",
+    val rating: Float = 5.0f,
+    val borrowerName: String = "",
+    val lentDate: Long = 0L,
+    val summaryNotes: String = "",
+    val notes: String = summaryNotes,
+    val coverPhotoPath: String = "",
+    val readingStatus: String = if (totalPages > 0 && currentPages >= totalPages) "finished" else if (currentPages > 0) "reading" else "unread"
+) {
+    fun isLent(): Boolean = borrowerName.isNotBlank() && lentDate > 0L
+    fun isReadFinished(): Boolean = totalPages > 0 && currentPages >= totalPages
+    fun isFinished(): Boolean = isReadFinished() || readingStatus == "finished"
+    fun isReading(): Boolean = !isFinished() && !isLent() && (currentPages > 0 || readingStatus == "reading")
+    fun getProgressPercent(): Int = if (totalPages > 0) (currentPages * 100 / totalPages).coerceIn(0, 100) else 0
+    fun getStatusDisplayName(): String = when {
+        isLent() -> "📤 已借出 ($borrowerName)"
+        isFinished() -> "🏁 已读完"
+        isReading() -> "📖 阅读中 (${getProgressPercent()}%)"
+        else -> "📚 待阅读"
+    }
+}
+
+// =========================================================================
+// 🍷 12. 家庭茶窖与名酿适饮时效模型 (Beverage & Tea)
+// =========================================================================
+
+data class BeverageTeaRecord(
+    val id: String = UUID.randomUUID().toString(),
+    val name: String = "",
+    val category: String = "liquor",
+    val vintageYear: Int = 0,
+    val optimalAgingYear: Int = 0,
+    val bestDrinkingYear: Int = optimalAgingYear,
+    val qty: Double = 1.0,
+    val unit: String = "瓶",
+    val storageLocation: String = "恒温酒柜",
+    val originRegion: String = "",
+    val rating: Float = 5.0f,
+    val isOpened: Boolean = false,
+    val openedAt: Long = 0L,
+    val openedPreserveDays: Int = 0,
+    val openShelfLifeDays: Int = openedPreserveDays,
+    val photoPath: String = "",
+    val tastingNotes: String = "",
+    val notes: String = tastingNotes
+) {
+    fun isOpenExpired(): Boolean = isOpenedPreserveExpired()
+    fun isOpenedPreserveExpired(): Boolean {
+        if (isOpened && (openedPreserveDays > 0 || openShelfLifeDays > 0) && openedAt > 0L) {
+            val days = if (openedPreserveDays > 0) openedPreserveDays else openShelfLifeDays
+            val expire = openedAt + (days.toLong() * 24 * 3600 * 1000)
+            return System.currentTimeMillis() > expire
+        }
+        return false
+    }
+    fun getAgingYears(): Int {
+        if (vintageYear <= 0) return 0
+        val currentYear = java.util.Calendar.getInstance().get(java.util.Calendar.YEAR)
+        return (currentYear - vintageYear).coerceAtLeast(0)
+    }
+    fun isPeakDrinkingNow(): Boolean {
+        if (vintageYear <= 0 || optimalAgingYear <= 0) return false
+        val currentYear = java.util.Calendar.getInstance().get(java.util.Calendar.YEAR)
+        return currentYear >= (vintageYear + optimalAgingYear)
+    }
+    fun getStatusDisplayName(): String = when {
+        isOpenExpired() -> "⚠️ 开瓶超期"
+        isOpened -> "🍷 已开瓶"
+        isPeakDrinkingNow() -> "✨ 黄金适饮期"
+        else -> "🍾 封存陈化中"
+    }
+}
+
+// =========================================================================
+// 💡 13. 灵感想法收纳舱模型 (Idea Record)
+// =========================================================================
+
+data class IdeaRecord(
+    val id: String = UUID.randomUUID().toString(),
+    val content: String = "",
+    val tags: List<String> = emptyList(),
+    val moodEmoji: String = "💡",
+    val isPinned: Boolean = false,
+    val colorHex: String = "#10B981",
+    val linkedAssetIds: List<String> = emptyList(),
+    val createdAt: Long = System.currentTimeMillis(),
+    val updatedAt: Long = System.currentTimeMillis()
+) {
+    fun getPreview(maxLen: Int = 40): String {
+        val clean = content.replace("\n", " ").trim()
+        return if (clean.length > maxLen) "${clean.take(maxLen)}..." else clean
+    }
+}
+
+// =========================================================================
+// 📰 14. 智能剪藏与知识库模型 (Clipping Record)
+// =========================================================================
+
+data class ClippingRecord(
+    val id: String = UUID.randomUUID().toString(),
+    val title: String = "",
+    val originalUrl: String = "",
+    val sourcePlatform: String = "web",
+    val fullMarkdown: String = "",
+    val ocrRawText: String = "",
+    val localImagePaths: List<String> = emptyList(),
+    val summary: String = "",
+    val tags: List<String> = emptyList(),
+    val linkedAssetIds: List<String> = emptyList(),
+    val isArchived: Boolean = false,
+    val capturedAt: Long = System.currentTimeMillis(),
+    val readProgressPercent: Int = 0
+) {
+    fun getSearchableContent(): String = "$title $summary $fullMarkdown $ocrRawText ${tags.joinToString(" ")}"
+}
+

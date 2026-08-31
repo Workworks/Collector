@@ -1,4 +1,4 @@
-package com.kfaino.diapertracker
+﻿package com.kfaino.diapertracker
 
 import android.app.Activity
 import android.app.DatePickerDialog
@@ -154,6 +154,7 @@ object SubscriptionManagerDialog {
                 subCycle = cycle,
                 subNextBillingDate = selectedNextBillingDate,
                 subAutoRenew = autoRenew,
+                subStartDate = editEntry?.subStartDate ?: System.currentTimeMillis(),
                 purchaseDate = editEntry?.purchaseDate ?: System.currentTimeMillis(),
                 notes = finalNotes,
                 location = "云端订阅",

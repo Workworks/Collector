@@ -4,7 +4,7 @@ plugins {
 }
 
 group = "com.kfaino.collector"
-version = "4.2.0"
+version = "4.3.5"
 
 application {
     mainClass.set("com.kfaino.collector.desktop.MainKt")
@@ -15,6 +15,9 @@ dependencies {
     implementation("org.json:json:20231013")
     implementation("com.formdev:flatlaf:3.4.1")
     implementation("com.formdev:flatlaf-extras:3.4.1")
+
+    testImplementation(kotlin("test"))
+    testImplementation("junit:junit:4.13.2")
 }
 
 tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile> {
@@ -37,5 +40,5 @@ tasks.jar {
     })
     archiveBaseName.set("Collecter-Desktop")
     archiveClassifier.set("")
-    archiveVersion.set(project.version.toString())
+    archiveVersion.set("2.8.0")
 }

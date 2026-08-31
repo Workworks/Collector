@@ -1,4 +1,4 @@
-package com.kfaino.collector.desktop
+﻿package com.kfaino.collector.desktop
 
 import com.formdev.flatlaf.FlatDarkLaf
 import com.kfaino.collector.desktop.storage.DesktopDataStore

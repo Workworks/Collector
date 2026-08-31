@@ -1,4 +1,4 @@
-# 🚀 Collecter - 版本发布与热更新操作手册 (RELEASE_GUIDE.md)
+﻿# 🚀 Collecter - 版本发布与热更新操作手册 (RELEASE_GUIDE.md)
 
 本手册详细介绍了如何为 **Collecter** 应用打包、发布新版本以及通过 GitHub Releases 实现客户端一键在线热更新。
 

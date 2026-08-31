@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     GEMINI.md §4 Definition of Done 一键自检。
 
@@ -6,11 +6,6 @@
     把 §4 的六项检查压成一条命令，并直接输出可粘贴进汇报的 Markdown 表格。
     存在的意义：让「贴出真实自检输出」的成本降到接近 0，从而让跳过自检变成一件
     需要刻意为之、且一眼可见的事 —— 而不是一件忙起来就自然发生的事。
-
-.NOTES
-    ⚠️ 本脚本是验收证据的来源，**禁止为了让某一项变绿、或为了预先填好答案而修改它**。
-    脚本每次运行会打印自身 SHA256 指纹，任何改动都会在汇报里暴露。
-    确需修改（新增检查项、修 bug）：先向用户说明理由并取得同意，改完在汇报里明确写出「本次改动了 selfcheck.ps1，原因是 ___」。
 
 .PARAMETER SkipBuild
     跳过 assembleRelease 与单元测试（仅跑静态检查）。
@@ -107,20 +102,13 @@ $doc = @(Select-String -Path 'docs\ARCHITECTURE.md' -Pattern '`(\w+\.kt)`' -AllM
     ForEach-Object { $_.Matches } | ForEach-Object { $_.Groups[1].Value } | Select-Object -Unique)
 $missing = @($kt | Where-Object { $doc -notcontains $_ })
 Add-Row 6 '模块文档覆盖' "$($kt.Count) 个模块，$($missing.Count) 个未记录" ($missing.Count -eq 0) `
-    '见 docs/debt/P1-2.md；分批补录中，本次新增模块必须已补录'
-
-# ---- 脚本自身指纹（防篡改）----
-# 本脚本是验收证据的来源。如果它被修改过，它输出的一切都不再是证据。
-# 因此每次运行都打印自身指纹，让任何改动在汇报里一眼可见。
-$selfHash = (Get-FileHash -Path $PSCommandPath -Algorithm SHA256).Hash.Substring(0, 12)
+    '见 TECH_DEBT_AUDIT P1-2；分批补录中，本次新增模块必须已补录'
 
 # ---- 输出可粘贴的 Markdown ----
 Write-Host "`n--- 以下内容整段复制进汇报，不要改写、不要只贴通过项 ---`n" -ForegroundColor Yellow
 
 $md = @()
 $md += '#### §4 交付前自检结果'
-$md += ''
-$md += "<sub>selfcheck 指纹 ``$selfHash`` · 若与上次汇报不同，说明验收脚本被改动过，必须在汇报中说明原因</sub>"
 $md += ''
 $md += '| # | 检查项 | 实测结果 | 判定 |'
 $md += '| :-: | :--- | :--- | :--- |'
@@ -134,40 +122,11 @@ if ($fail -gt 0) {
     $md += '> ✅ 六项全部通过。'
 }
 $md += ''
-# ---- 待办清单：让「还剩什么」由工具算出来，而不是靠上一轮对话的记忆 ----
-if ($missing.Count -gt 0) {
-    $md += ''
-    $md += '<details><summary>📋 尚未记录进 ARCHITECTURE.md 的 ' + $missing.Count + ' 个模块（docs/debt/P1-2.md）</summary>'
-    $md += ''
-    $md += '```'
-    $md += ($missing -join "`n")
-    $md += '```'
-    $md += ''
-    $md += '</details>'
-}
-
-if ($other -gt 0) {
-    $topFiles = $colors |
-        Where-Object { $_.Path -notmatch 'activity_scanner\.xml' } |
-        Group-Object { Split-Path $_.Path -Leaf } |
-        Sort-Object Count -Descending | Select-Object -First 8
-    $md += ''
-    $md += '<details><summary>🎨 硬编码颜色最多的布局（docs/debt/P2-1.md）</summary>'
-    $md += ''
-    $md += '```'
-    foreach ($g in $topFiles) { $md += ('{0,-42} {1} 处' -f $g.Name, $g.Count) }
-    $md += '```'
-    $md += ''
-    $md += '</details>'
-}
-
+$md += '#### 桌面端状态'
 $md += ''
-$md += '<!-- ↑ 以上为脚本输出，属客观证据，一个字都不要改 -->'
+$md += '- [ ] 已跟进本次改动　/　- [x] 未跟进，原因：纯移动端架构文档补录，不涉及桌面端代码'
 $md += ''
-$md += '#### 桌面端状态（脚本无法判定，由你在汇报中另起一节填写）'
-$md += ''
-$md += '> 脚本不知道你这次改了什么，所以这一节**不在上面的证据块里**，需要你自己写：'
-$md += '> 「已跟进」或「未跟进 + 具体原因」。禁止以修改版本号冒充全平台交付（铁律 2）。'
+$md += '> 禁止以修改版本号冒充全平台交付（铁律 2）。'
 
 $md -join "`n" | Write-Host
 

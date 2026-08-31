@@ -1,4 +1,4 @@
-param(
+﻿param(
     [string]$PatchVersion = "3.0.1",
     [string]$TargetBase = "3.0.0"
 )

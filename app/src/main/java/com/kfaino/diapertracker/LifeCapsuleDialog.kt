@@ -209,7 +209,7 @@ object LifeCapsuleDialog {
                         clipToOutline = true
                         setImageURI(Uri.fromFile(realPFile))
                         setOnClickListener {
-                            PhotoPreviewDialog.show(activity, "${entry.brand} · 回忆照片", moment.photoPath)
+                            PhotoPreviewDialog.show(activity, moment.title.ifBlank { "回忆瞬间" }, moment.photoPath)
                         }
                     }
                     cardLayout.addView(iv)
@@ -303,7 +303,7 @@ object LifeCapsuleDialog {
 
         binding.tvMomentDatePicker.text = "📅 " + dateFormat.format(Date(selectedDate))
         binding.tvMomentDatePicker.setOnClickListener {
-            ModernDatePickerDialog.show(activity, selectedDate, "选择回忆发生日期") { timeMs ->
+            ModernDatePickerDialog.show(activity, selectedDate, "选择回忆日期") { timeMs ->
                 selectedDate = timeMs
                 binding.tvMomentDatePicker.text = "📅 " + dateFormat.format(Date(selectedDate))
             }
@@ -396,7 +396,7 @@ object LifeCapsuleDialog {
                 ) {
                     val shareIntent = Intent(Intent.ACTION_SEND).apply {
                         type = "image/jpeg"
-                        putExtra(Intent.EXTRA_STREAM, uri as android.os.Parcelable)
+                        putExtra(Intent.EXTRA_STREAM, uri)
                         addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
                     }
                     activity.startActivity(Intent.createChooser(shareIntent, "分享【${entry.brand}】时光画册海报"))
