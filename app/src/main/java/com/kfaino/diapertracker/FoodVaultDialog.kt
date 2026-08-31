@@ -41,8 +41,7 @@ object FoodVaultDialog {
             .setView(binding.root)
             .create()
 
-        dialog.window?.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
-        dialog.window?.attributes?.windowAnimations = R.style.CustomDialogAnimation
+        VaultUiHelper.setupVaultWindow(dialog)
 
         var currentZoneFilter = "all" // "all", "expiring", "freezer", "fridge", "pantry", "room"
         var currentSearchKeyword = ""
@@ -98,7 +97,7 @@ object FoodVaultDialog {
                 },
                 onOpenClick = { food ->
                     store.markFoodOpened(food.id)
-                    Toast.makeText(activity, "📦 已标记【${food.name}】为已开封！", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(activity, "✨ 已标记【${food.name}】开封", Toast.LENGTH_SHORT).show()
                     reloadList()
                     onDataChanged()
                 },
@@ -112,13 +111,14 @@ object FoodVaultDialog {
                     ModernDialogHelper.showConfirmDialog(
                         context = activity,
                         title = "移出食材",
-                        message = "确认从鲜度库移出【${food.name}】？",
+                        message = "确认将【${food.name}】彻底移出食材库？",
                         emoji = "🗑️",
-                        positiveText = "确认移出",
-                        negativeText = "取消"
+                        positiveText = "移出",
+                        negativeText = "取消",
+                        isDestructive = true
                     ) {
                         store.deleteFood(food.id)
-                        Toast.makeText(activity, "已移出【${food.name}】", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(activity, "已移出食材记录", Toast.LENGTH_SHORT).show()
                         reloadList()
                         onDataChanged()
                     }
@@ -140,15 +140,10 @@ object FoodVaultDialog {
             }
             reloadList()
         }
-
-        binding.etSearchFood.addTextChangedListener(object : TextWatcher {
-            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
-            override fun onTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {
-                currentSearchKeyword = s?.toString()?.trim() ?: ""
-                reloadList()
-            }
-            override fun afterTextChanged(s: Editable?) {}
-        })
+        VaultUiHelper.bindSearchWatcher(binding.etSearchFood) {
+            currentSearchKeyword = it
+            reloadList()
+        }
 
         binding.btnAddFood.applyPressScaleAnimation(0.92f)
         binding.btnAddFood.setOnClickListener {
@@ -178,8 +173,7 @@ object FoodVaultDialog {
             .setView(view)
             .create()
 
-        dialog.window?.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
-        dialog.window?.attributes?.windowAnimations = R.style.CustomDialogAnimation
+        VaultUiHelper.setupVaultWindow(dialog)
 
         val tvTitle = view.findViewById<TextView>(R.id.tv_dialog_title)
         val etName = view.findViewById<EditText>(R.id.et_food_name)
@@ -196,11 +190,10 @@ object FoodVaultDialog {
         val btnSave = view.findViewById<MaterialButton>(R.id.btn_save_food)
 
         var selectedExpiryDate = editingFood?.expiryDate ?: 0L
-        val sdf = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
 
         fun updateExpiryUi() {
             if (selectedExpiryDate > 0L) {
-                tvExpiryText.text = "📅 保质截止: ${sdf.format(Date(selectedExpiryDate))}"
+                tvExpiryText.text = "📅 保质截止: ${VaultUiHelper.standardDateFormat.format(Date(selectedExpiryDate))}"
                 tvExpiryText.setTextColor(activity.getColor(R.color.primary))
             } else {
                 tvExpiryText.text = "📅 设为长期在库 / 暂不设限"
@@ -233,21 +226,10 @@ object FoodVaultDialog {
         }
 
         btnPickExpiry.setOnClickListener {
-            val cal = Calendar.getInstance()
-            if (selectedExpiryDate > 0L) cal.timeInMillis = selectedExpiryDate
-            DatePickerDialog(
-                activity,
-                { _, y, m, d ->
-                    val pickCal = Calendar.getInstance().apply {
-                        set(y, m, d, 23, 59, 59)
-                    }
-                    selectedExpiryDate = pickCal.timeInMillis
-                    updateExpiryUi()
-                },
-                cal.get(Calendar.YEAR),
-                cal.get(Calendar.MONTH),
-                cal.get(Calendar.DAY_OF_MONTH)
-            ).show()
+            VaultUiHelper.showDatePicker(activity, selectedExpiryDate) { time, _ ->
+                selectedExpiryDate = time
+                updateExpiryUi()
+            }
         }
 
         btnCancel.setOnClickListener { dialog.dismiss() }

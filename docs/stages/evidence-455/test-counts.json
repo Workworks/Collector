@@ -1,0 +1,20 @@
+[
+  {
+    "module": "app",
+    "tests": 45,
+    "failures": 0,
+    "skipped": 0
+  },
+  {
+    "module": "shared",
+    "tests": 22,
+    "failures": 0,
+    "skipped": 0
+  },
+  {
+    "module": "desktop",
+    "tests": 17,
+    "failures": 0,
+    "skipped": 2
+  }
+]

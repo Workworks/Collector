@@ -32,6 +32,7 @@ import java.util.concurrent.Executors
 object LanSyncHelper {
 
     const val DEFAULT_PORT = 8848
+    private var accessToken = com.kfaino.collecter.core.LanHttp.token()
     private var serverSocket: ServerSocket? = null
     private var isRunning = false
     private val executor = Executors.newCachedThreadPool()
@@ -50,8 +51,9 @@ object LanSyncHelper {
             for (intf in interfaces) {
                 val addrs = Collections.list(intf.inetAddresses)
                 for (addr in addrs) {
-                    if (!addr.isLoopbackAddress && addr.hostAddress.indexOf(':') < 0) {
-                        return addr.hostAddress ?: "127.0.0.1"
+                    val host = addr.hostAddress
+                    if (!addr.isLoopbackAddress && host != null && !host.contains(':')) {
+                        return host
                     }
                 }
             }
@@ -66,8 +68,14 @@ object LanSyncHelper {
         if (isRunning && serverSocket != null) return DEFAULT_PORT
 
         try {
+            accessToken = com.kfaino.collecter.core.LanHttp.token()
             serverSocket = ServerSocket(DEFAULT_PORT)
             isRunning = true
+
+            LanPeerDiscovery.startAnnouncer(
+                deviceName = "${Build.MANUFACTURER} ${Build.MODEL}",
+                httpPort = DEFAULT_PORT
+            )
 
             executor.execute {
                 while (isRunning && serverSocket != null) {
@@ -89,6 +97,7 @@ object LanSyncHelper {
     @Synchronized
     fun stopServer() {
         isRunning = false
+        LanPeerDiscovery.stopAnnouncer()
         try {
             serverSocket?.close()
             serverSocket = null
@@ -100,35 +109,18 @@ object LanSyncHelper {
     private fun handleClient(client: Socket, context: Context, onDataReceived: (String) -> Unit) {
         executor.execute {
             try {
-                val reader = BufferedReader(InputStreamReader(client.getInputStream(), StandardCharsets.UTF_8))
+                client.soTimeout = 15000
+                val input = client.getInputStream()
+                val request = com.kfaino.collecter.core.LanHttp.readHeaders(input)
                 val out: OutputStream = client.getOutputStream()
-
-                val requestLine = reader.readLine() ?: return@execute
-                val parts = requestLine.split(" ")
-                if (parts.size < 2) return@execute
-                val method = parts[0]
-                val path = parts[1]
-
-                var contentLength = 0
-                var line: String?
-                while (reader.readLine().also { line = it } != null) {
-                    if (line!!.isEmpty()) break
-                    if (line!!.lowercase().startsWith("content-length:")) {
-                        contentLength = line!!.substring(15).trim().toIntOrNull() ?: 0
-                    }
+                if (!com.kfaino.collecter.core.LanHttp.authorize(request, accessToken)) {
+                    out.write(com.kfaino.collecter.core.LanHttp.UNAUTHORIZED.toByteArray())
+                    out.flush()
+                    return@execute
                 }
-
-                fun readBody(): String {
-                    if (contentLength <= 0) return ""
-                    val buffer = CharArray(contentLength)
-                    var read = 0
-                    while (read < contentLength) {
-                        val r = reader.read(buffer, read, contentLength - read)
-                        if (r == -1) break
-                        read += r
-                    }
-                    return String(buffer)
-                }
+                val method = request.method
+                val path = request.path
+                fun readBody() = com.kfaino.collecter.core.LanHttp.readBody(input, request.length)
 
                 val store = DataStore(context)
 
@@ -224,6 +216,22 @@ object LanSyncHelper {
                         sendHttpResponse(out, "application/json; charset=utf-8", json.toByteArray(StandardCharsets.UTF_8))
                     }
 
+                    // 6.1 P2P 双机增量对撞合并端点
+                    method == "POST" && (path == "/api/v1/sync/merge" || path == "/api/merge") -> {
+                        val body = readBody()
+                        val report = LanSyncMergeEngine.merge(store, body)
+                        (context as? Activity)?.runOnUiThread { onDataReceived("") }
+                        val resp = JSONObject().apply {
+                            put("status", if (report.success) "ok" else "error")
+                            put("inserted", report.insertedEntries)
+                            put("updated", report.updatedEntries)
+                            put("preserved", report.preservedEntries)
+                            put("mergedVaults", report.mergedVaultItems)
+                            put("message", report.summary())
+                        }.toString().toByteArray(StandardCharsets.UTF_8)
+                        sendHttpResponse(out, "application/json; charset=utf-8", resp)
+                    }
+
                     // 7. 接收远程推送数据
                     method == "POST" && (path == "/api/push" || path == "/sync") -> {
                         val body = readBody()
@@ -282,7 +290,7 @@ object LanSyncHelper {
     }
 
     private fun sendHttpResponse(out: OutputStream, contentType: String, data: ByteArray) {
-        val header = "HTTP/1.1 200 OK\r\nContent-Type: $contentType\r\nContent-Length: ${data.size}\r\nAccess-Control-Allow-Origin: *\r\nConnection: close\r\n\r\n"
+        val header = "HTTP/1.1 200 OK\r\nContent-Type: $contentType\r\nContent-Length: ${data.size}\r\nCache-Control: no-store\r\nX-Content-Type-Options: nosniff\r\nConnection: close\r\n\r\n"
         out.write(header.toByteArray(StandardCharsets.UTF_8))
         out.write(data)
         out.flush()
@@ -309,7 +317,7 @@ object LanSyncHelper {
         }
 
         val titleTv = TextView(activity).apply {
-            text = "⚡ 局域网免密极速互传 & Web 大屏"
+            text = "局域网配对互传与 Web 大屏"
             textSize = 18f
             setTextColor(Color.WHITE)
             paint.isFakeBoldText = true
@@ -330,11 +338,49 @@ object LanSyncHelper {
         }
 
         val ipTv = TextView(activity).apply {
-            text = "🌐 Web 控制台: $webUrl"
+            text = "Web 控制台: $webUrl\n用户名：collecter\n本次访问密钥：$accessToken\n仅在可信局域网使用，关闭窗口后停止共享。"
+            setTextIsSelectable(true)
             textSize = 14f
             setTextColor(Color.parseColor("#10B981"))
             paint.isFakeBoldText = true
             setPadding(0, 16, 0, 8)
+        }
+
+        val peersLayout = LinearLayout(activity).apply {
+            orientation = LinearLayout.VERTICAL
+            setPadding(0, 12, 0, 12)
+        }
+
+        val peersTitle = TextView(activity).apply {
+            text = "📡 附近在线设备 (自动发现中...)"
+            textSize = 13f
+            setTextColor(Color.parseColor("#34D399"))
+            paint.isFakeBoldText = true
+            setPadding(0, 4, 0, 8)
+        }
+        peersLayout.addView(peersTitle)
+
+        // 异步寻找局域网在线设备
+        LanPeerDiscovery.findPeers(timeoutMs = 2500) { peer ->
+            activity.runOnUiThread {
+                peersTitle.text = "📡 发现附近在线设备 (点击一键对撞):"
+                val peerCard = TextView(activity).apply {
+                    val icon = if (peer.isDesktop) "🖥️" else "📱"
+                    text = "$icon ${peer.name} (${peer.ip}:${peer.port})\n   ➔ 点击发起双向增量对撞合并"
+                    textSize = 12f
+                    setTextColor(Color.WHITE)
+                    setBackgroundColor(Color.parseColor("#1E293B"))
+                    setPadding(24, 16, 24, 16)
+                    layoutParams = LinearLayout.LayoutParams(
+                        LinearLayout.LayoutParams.MATCH_PARENT,
+                        LinearLayout.LayoutParams.WRAP_CONTENT
+                    ).apply { setMargins(0, 8, 0, 8) }
+                    setOnClickListener {
+                        performP2PMerge(activity, store, "${peer.ip}:${peer.port}", onSyncCompleted)
+                    }
+                }
+                peersLayout.addView(peerCard)
+            }
         }
 
         val btnCopy = Button(activity).apply {
@@ -346,10 +392,10 @@ object LanSyncHelper {
             }
         }
 
-        val btnPullFromOther = Button(activity).apply {
-            text = "📥 从其他设备 IP 拉取数据"
+        val btnManualMerge = Button(activity).apply {
+            text = "🔄 手动输入 IP 发起对撞合并"
             setOnClickListener {
-                showPullFromOtherDialog(activity, store, onSyncCompleted)
+                showManualMergeDialog(activity, store, onSyncCompleted)
             }
         }
 
@@ -357,8 +403,9 @@ object LanSyncHelper {
         dialogView.addView(descTv)
         dialogView.addView(qrIv)
         dialogView.addView(ipTv)
+        dialogView.addView(peersLayout)
         dialogView.addView(btnCopy)
-        dialogView.addView(btnPullFromOther)
+        dialogView.addView(btnManualMerge)
 
         val mainDialog = MaterialAlertDialogBuilder(activity)
             .setView(dialogView)
@@ -369,33 +416,92 @@ object LanSyncHelper {
         mainDialog.show()
     }
 
-    private fun showPullFromOtherDialog(activity: Activity, store: DataStore, onSyncCompleted: () -> Unit) {
+    private fun showManualMergeDialog(activity: Activity, store: DataStore, onSyncCompleted: () -> Unit) {
         ModernDialogHelper.showInputDialog(
             context = activity,
-            title = "从目标设备拉取数据",
-            subtitle = "输入另一台开启互传的手机或电脑局域网 IP 与端口：",
+            title = "手动双向增量对撞",
+            subtitle = "输入目标手机或电脑局域网 IP 与端口：",
             hint = "例如: 192.168.1.120:8848",
-            emoji = "📥",
-            positiveText = "开始极速拉取"
+            emoji = "🔄",
+            positiveText = "开始对撞合并"
         ) { target ->
-            if (target.isNotEmpty()) {
-                val fullUrl = if (!target.startsWith("http")) "http://$target/api/pull" else target
-                executor.execute {
-                    try {
-                        val conn = URI.create(fullUrl).toURL().openConnection() as HttpURLConnection
-                        conn.connectTimeout = 6000
-                        conn.readTimeout = 6000
-                        val json = conn.inputStream.bufferedReader(StandardCharsets.UTF_8).use { it.readText() }
-                        activity.runOnUiThread {
-                            val count = store.importBackupJson(json)
-                            Toast.makeText(activity, "🎉 拉取成功！已同步 $count 条记录", Toast.LENGTH_SHORT).show()
-                            onSyncCompleted()
+            if (target.isNotBlank()) {
+                performP2PMerge(activity, store, target, onSyncCompleted)
+            }
+        }
+    }
+
+    fun performP2PMerge(activity: Activity, store: DataStore, targetHostPort: String, onSyncCompleted: () -> Unit) {
+        val field = EditText(activity).apply { hint = "粘贴对端显示的访问密钥" }
+        MaterialAlertDialogBuilder(activity).setTitle("与对端配对").setView(field)
+            .setNegativeButton("取消", null).setPositiveButton("同步") { _, _ ->
+                val token = field.text.toString().trim()
+                if (token.length < 32) Toast.makeText(activity, "访问密钥不完整", Toast.LENGTH_LONG).show()
+                else performAuthenticatedMerge(activity, store, targetHostPort, token, onSyncCompleted)
+            }.show()
+    }
+
+    private fun performAuthenticatedMerge(activity: Activity, store: DataStore, targetHostPort: String, token: String, onSyncCompleted: () -> Unit) {
+        val baseUrl = if (targetHostPort.startsWith("http")) targetHostPort.trimEnd('/') else "http://${targetHostPort.trimEnd('/')}"
+        val pullUrl = "$baseUrl/api/pull"
+        val mergeUrl = "$baseUrl/api/v1/sync/merge"
+
+        Toast.makeText(activity, "⚡ 正在连接 $targetHostPort 进行双向对撞合并...", Toast.LENGTH_SHORT).show()
+
+        executor.execute {
+            try {
+                // 1. 从目标端拉取全量数据
+                val connPull = URI.create(pullUrl).toURL().openConnection() as HttpURLConnection
+                connPull.setRequestProperty("Authorization", "Bearer $token")
+                connPull.connectTimeout = 6000
+                connPull.readTimeout = 6000
+                val targetJson = try {
+                    connPull.inputStream.use { input ->
+                        val output = java.io.ByteArrayOutputStream()
+                        val buffer = ByteArray(8192)
+                        while (true) {
+                            val count = input.read(buffer)
+                            if (count < 0) break
+                            require(output.size() + count <= com.kfaino.collecter.core.BackupDocument.MAX_BYTES) { "远端备份超过上限" }
+                            output.write(buffer, 0, count)
                         }
-                    } catch (e: Exception) {
-                        activity.runOnUiThread {
-                            Toast.makeText(activity, "⚠️ 拉取失败: ${e.localizedMessage}", Toast.LENGTH_LONG).show()
-                        }
+                        output.toString("UTF-8")
                     }
+                } finally { connPull.disconnect() }
+
+                // 2. 本地执行对撞合并
+                val report = LanSyncMergeEngine.merge(store, targetJson)
+                check(report.success) { report.message }
+
+                // 3. 将本地最新数据双向推回目标端
+                val localJson = store.exportBackupJson()
+                val connPush = URI.create(mergeUrl).toURL().openConnection() as HttpURLConnection
+                connPush.setRequestProperty("Authorization", "Bearer $token")
+                connPush.requestMethod = "POST"
+                connPush.doOutput = true
+                connPush.connectTimeout = 6000
+                connPush.readTimeout = 6000
+                connPush.setRequestProperty("Content-Type", "application/json; charset=utf-8")
+                connPush.outputStream.use { it.write(localJson.toByteArray(StandardCharsets.UTF_8)) }
+                val respCode = try { connPush.responseCode } finally { connPush.disconnect() }
+
+                activity.runOnUiThread {
+                    if (report.success && respCode in 200..299) {
+                        ModernDialogHelper.showInfoDialog(
+                            context = activity,
+                            title = "双向增量对撞完成",
+                            message = "${report.summary()}\n\n✅ 双向请求已完成；请查看冲突报告，不能据此替代逐项验收。",
+                            emoji = "🔄"
+                        )
+                        onSyncCompleted()
+                    } else {
+                        Toast.makeText(activity, "合并部分完成: ${report.message}", Toast.LENGTH_LONG).show()
+                        onSyncCompleted()
+                    }
+                }
+            } catch (e: Exception) {
+                activity.runOnUiThread {
+                    Toast.makeText(activity, "⚠️ 双向对撞失败: ${e.localizedMessage}", Toast.LENGTH_LONG).show()
                 }
             }
         }
@@ -576,17 +682,17 @@ object LanSyncHelper {
             tbody.innerHTML = '';
             list.filter(e => e.isIn && !e.isRetired).forEach(e => {
                 const tr = document.createElement('tr');
-                tr.innerHTML = `
-                    <td><input type="checkbox" value="${'$'}{e.id}" onchange="toggleItemSelect('${'$'}{e.id}', this.checked)"></td>
-                    <td style="font-weight: bold;">${'$'}{e.brand}</td>
-                    <td><span class="cat-chip">${'$'}{e.category}</span></td>
-                    <td>${'$'}{e.qty} ${'$'}{e.unit}</td>
-                    <td>¥${'$'}{e.price.toFixed(2)}</td>
-                    <td style="font-weight: bold; color: #10B981;">¥${'$'}{(e.price * e.qty).toFixed(2)}</td>
-                    <td>${'$'}{e.location || '未设定'}</td>
-                    <td>¥${'$'}{e.dailyCost.toFixed(2)}/天</td>
-                    <td><span style="color: #10B981;">🟢 在役</span></td>
-                `;
+                const checkboxCell = document.createElement('td');
+                const checkbox = document.createElement('input');
+                checkbox.type = 'checkbox'; checkbox.value = e.id;
+                checkbox.addEventListener('change', () => toggleItemSelect(e.id, checkbox.checked));
+                checkboxCell.appendChild(checkbox); tr.appendChild(checkboxCell);
+                const values = [e.brand, e.category, String(e.qty) + ' ' + e.unit,
+                    Number(e.price).toFixed(2), (Number(e.price) * Number(e.qty)).toFixed(2),
+                    e.location || '未设定', Number(e.dailyCost).toFixed(2) + '/天', '在役'];
+                values.forEach(value => {
+                    const cell = document.createElement('td'); cell.textContent = String(value); tr.appendChild(cell);
+                });
                 tbody.appendChild(tr);
             });
             updateBatchBar();

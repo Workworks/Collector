@@ -98,7 +98,7 @@ class SpaceRepository(private val prefs: SharedPreferences) {
                     .put("is_def", h.isDefault)
             )
         }
-        prefs.edit().putString(KEY_HOUSES, arr.toString()).apply()
+        JsonCollectionWriter.save(prefs, KEY_HOUSES, arr)
     }
 
     fun addHouse(name: String, type: String = "住宅"): HouseSpace {

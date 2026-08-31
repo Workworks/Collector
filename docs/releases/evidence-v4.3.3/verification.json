@@ -1,0 +1,22 @@
+{
+  "status": "BLOCKED_SIGNING_KEY",
+  "versionName": "4.3.3",
+  "versionCode": 40,
+  "applicationId": "com.kfaino.diapertracker",
+  "sha256": "6a1c2e782a7611b29c8e0ae137d84f36e7ec0044b9bdc0efd8d419a42caaf6f9",
+  "tests": {
+    "Android": {
+      "tests": 45,
+      "failures": 0
+    },
+    "shared": {
+      "tests": 12,
+      "failures": 0
+    },
+    "desktop": {
+      "tests": 12,
+      "failures": 0
+    }
+  },
+  "publicReleaseCreated": false
+}

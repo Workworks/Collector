@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="com.kfaino.collector.desktop.server.FamilyAccessTest" tests="1" skipped="0" failures="0" errors="0" timestamp="2026-08-31T07:31:13" hostname="KFAINO" time="0.825">
+  <properties/>
+  <testcase name="actualHttpEnforcesScopeRolesRevocationAndAudit" classname="com.kfaino.collector.desktop.server.FamilyAccessTest" time="0.825"/>
+  <system-out><![CDATA[Collecter Embedded Server started on http://127.0.0.1:10621/ (local only)
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

@@ -267,7 +267,7 @@ class EntryRepository(private val prefs: SharedPreferences) {
                     .put("maint_note", e.maintenanceNotes)
             )
         }
-        prefs.edit().putString(keyEntries, arr.toString()).apply()
+        JsonCollectionWriter.save(prefs, keyEntries, arr)
         onSaved()
     }
 
@@ -335,7 +335,7 @@ class EntryRepository(private val prefs: SharedPreferences) {
     }
 
     fun clearAllData(keyEntries: String) {
-        prefs.edit().remove(keyEntries).apply()
+        JsonCollectionWriter.save(prefs, keyEntries, JSONArray())
     }
 
     fun getLastUsedUnit(): String = prefs.getString(KEY_LAST_USED_UNIT, "件") ?: "件"

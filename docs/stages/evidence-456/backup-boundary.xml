@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="com.kfaino.collecter.core.BackupBoundary456Test" tests="2" skipped="0" failures="0" errors="0" timestamp="2026-08-31T15:24:48" hostname="KFAINO" time="32.286">
+  <properties/>
+  <testcase name="exactUtf8LimitAcceptedAndOneByteOverRejected" classname="com.kfaino.collecter.core.BackupBoundary456Test" time="5.595"/>
+  <testcase name="repeatedBatchOperationsPreserveUnknownFieldsAndHistory" classname="com.kfaino.collecter.core.BackupBoundary456Test" time="26.69"/>
+  <system-out><![CDATA[BOUNDARY: exact 64 MiB accepted; 64 MiB+1 rejected (JVM parser only)
+PRESSURE: records=1000 batches=100 totalUpdated=1000 elapsedMs=26645 JVM only
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

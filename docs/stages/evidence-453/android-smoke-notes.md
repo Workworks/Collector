@@ -1,0 +1,1 @@
+记录：2026-08-30，在隔离 emulator-5556 上执行 `adb -s emulator-5556 logcat -d -s AndroidRuntime:E`，工具输出为空。原空输出管道未生成文件，故在此记录观察结果；不表示全部场景均无崩溃。图片分享首次无有效 URI 授权时曾记录 CollectShare SecurityException，并被应用捕获提示，原记录保留；有效授权后成功。QA 模拟器已由本任务停止。

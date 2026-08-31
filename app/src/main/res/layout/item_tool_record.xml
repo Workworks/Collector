@@ -1,0 +1,143 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:background="@drawable/bg_changelog_box"
+    android:padding="14dp"
+    android:layout_marginBottom="10dp">
+
+    <!-- 顶部徽章栏 -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:layout_marginBottom="6dp">
+
+        <TextView
+            android:id="@+id/item_tool_category_badge"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="⚡ 电动工具"
+            android:textSize="11sp"
+            android:textStyle="bold"
+            android:textColor="@color/primary"
+            android:background="@drawable/bg_chip_inactive"
+            android:paddingHorizontal="8dp"
+            android:paddingVertical="2dp"
+            android:layout_marginEnd="6dp" />
+
+        <View
+            android:layout_width="0dp"
+            android:layout_height="1dp"
+            android:layout_weight="1" />
+
+        <TextView
+            android:id="@+id/item_tool_status_badge"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="🔴 维保已逾期"
+            android:textSize="11sp"
+            android:textStyle="bold"
+            android:textColor="@color/danger"
+            android:visibility="gone" />
+    </LinearLayout>
+
+    <!-- 工具名称与数量 -->
+    <TextView
+        android:id="@+id/item_tool_name"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="博世 12V 锂电冲击钻"
+        android:textSize="15sp"
+        android:textStyle="bold"
+        android:textColor="@color/text_primary"
+        android:fontFamily="sans-serif-medium"
+        android:layout_marginBottom="4dp" />
+
+    <!-- 规格型号与搭配参数 -->
+    <TextView
+        android:id="@+id/item_tool_spec"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="🔩 规格参数: 12V 锂电 / 10mm 夹头 (配8mm钻头)"
+        android:textSize="12sp"
+        android:textColor="@color/text_secondary"
+        android:layout_marginBottom="3dp" />
+
+    <!-- 存放位置 -->
+    <TextView
+        android:id="@+id/item_tool_location"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="📍 存放位置: 阳台五金收纳柜 #01"
+        android:textSize="12sp"
+        android:textColor="@color/text_secondary"
+        android:layout_marginBottom="3dp" />
+
+    <!-- 周期维保与排期 -->
+    <TextView
+        android:id="@+id/item_tool_maintenance_text"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="🛠️ 维保排期: 每 180 天更换滤芯 · 下次排期: 2026-09-01"
+        android:textSize="12sp"
+        android:textColor="@color/text_secondary"
+        android:layout_marginBottom="3dp" />
+
+    <!-- 使用技巧与备忘 -->
+    <TextView
+        android:id="@+id/item_tool_notes"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="📝 技巧: 钻水泥墙切记切换为冲击档"
+        android:textSize="11sp"
+        android:textColor="@color/text_hint"
+        android:layout_marginBottom="8dp" />
+
+    <!-- 底部操作栏 -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical">
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btn_item_maintain_tool"
+            style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+            android:layout_width="wrap_content"
+            android:layout_height="34dp"
+            android:text="🔧 维保/更换打卡"
+            android:textSize="11sp"
+            android:textColor="@color/primary"
+            app:strokeColor="@color/primary"
+            app:cornerRadius="8dp"
+            android:layout_marginEnd="6dp" />
+
+        <View
+            android:layout_width="0dp"
+            android:layout_height="1dp"
+            android:layout_weight="1" />
+
+        <ImageButton
+            android:id="@+id/btn_item_edit_tool"
+            android:layout_width="34dp"
+            android:layout_height="34dp"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:src="@android:drawable/ic_menu_edit"
+            app:tint="@color/text_secondary"
+            android:contentDescription="编辑" />
+
+        <ImageButton
+            android:id="@+id/btn_item_delete_tool"
+            android:layout_width="34dp"
+            android:layout_height="34dp"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:src="@android:drawable/ic_menu_delete"
+            app:tint="@color/danger"
+            android:contentDescription="删除" />
+    </LinearLayout>
+
+</LinearLayout>

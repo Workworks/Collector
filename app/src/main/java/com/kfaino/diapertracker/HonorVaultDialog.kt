@@ -49,8 +49,7 @@ object HonorVaultDialog {
             .setView(binding.root)
             .create()
 
-        dialog.window?.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
-        dialog.window?.attributes?.windowAnimations = R.style.CustomDialogAnimation
+        VaultUiHelper.setupVaultWindow(dialog)
 
         var currentMemberFilter = "all"
         var currentCategoryFilter = "all"
@@ -84,13 +83,12 @@ object HonorVaultDialog {
                 activity = activity,
                 list = filtered,
                 onCopyClick = { honor ->
-                    if (honor.certNumber.isNotEmpty()) {
-                        val cm = activity.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
-                        cm.setPrimaryClip(ClipData.newPlainText("Cert Number", honor.certNumber))
-                        Toast.makeText(activity, "📋 已复制完整证书编号到剪贴板！", Toast.LENGTH_SHORT).show()
-                    } else {
-                        Toast.makeText(activity, "该荣誉未记录证书编号", Toast.LENGTH_SHORT).show()
-                    }
+                    VaultUiHelper.copyToClipboard(
+                        context = activity,
+                        label = "Cert Number",
+                        text = honor.certNumber,
+                        successMessage = "📋 已复制完整证书编号到剪贴板！"
+                    )
                 },
                 onItemClick = { honor ->
                     showAddOrEditHonorDialog(activity, store, honor) {
@@ -142,14 +140,10 @@ object HonorVaultDialog {
             reloadList()
         }
 
-        binding.etSearchHonor.addTextChangedListener(object : TextWatcher {
-            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
-            override fun onTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {
-                currentSearchKeyword = s?.toString()?.trim() ?: ""
-                reloadList()
-            }
-            override fun afterTextChanged(s: Editable?) {}
-        })
+        VaultUiHelper.bindSearchWatcher(binding.etSearchHonor) {
+            currentSearchKeyword = it
+            reloadList()
+        }
 
         binding.btnAddHonor.applyPressScaleAnimation(0.92f)
         binding.btnAddHonor.setOnClickListener {
@@ -189,8 +183,7 @@ object HonorVaultDialog {
             .setView(view)
             .create()
 
-        dialog.window?.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
-        dialog.window?.attributes?.windowAnimations = R.style.CustomDialogAnimation
+        VaultUiHelper.setupVaultWindow(dialog)
 
         val tvTitle = view.findViewById<TextView>(R.id.tv_dialog_honor_title)
         val chipGroupMember = view.findViewById<ChipGroup>(R.id.chip_group_honor_member_edit)
@@ -209,12 +202,11 @@ object HonorVaultDialog {
 
         var selectedIssueDate = editingHonor?.issueDate ?: System.currentTimeMillis()
         var selectedExpiryDate = editingHonor?.expiryDate ?: 0L
-        val sdf = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
 
         fun updateDatesUi() {
-            tvIssueDateText.text = "📅 获得发证时间: ${sdf.format(Date(selectedIssueDate))}"
+            tvIssueDateText.text = "📅 获得发证时间: ${VaultUiHelper.standardDateFormat.format(Date(selectedIssueDate))}"
             if (selectedExpiryDate > 0L) {
-                tvExpiryDateText.text = "📅 有效期/复审至: ${sdf.format(Date(selectedExpiryDate))}"
+                tvExpiryDateText.text = "📅 有效期/复审至: ${VaultUiHelper.standardDateFormat.format(Date(selectedExpiryDate))}"
                 tvExpiryDateText.setTextColor(activity.getColor(R.color.primary))
             } else {
                 tvExpiryDateText.text = "📅 设为终身有效 / 长期"
@@ -251,35 +243,17 @@ object HonorVaultDialog {
         }
 
         btnPickIssueDate.setOnClickListener {
-            val cal = Calendar.getInstance()
-            if (selectedIssueDate > 0L) cal.timeInMillis = selectedIssueDate
-            DatePickerDialog(
-                activity,
-                { _, y, m, d ->
-                    val pickCal = Calendar.getInstance().apply { set(y, m, d, 12, 0, 0) }
-                    selectedIssueDate = pickCal.timeInMillis
-                    updateDatesUi()
-                },
-                cal.get(Calendar.YEAR),
-                cal.get(Calendar.MONTH),
-                cal.get(Calendar.DAY_OF_MONTH)
-            ).show()
+            VaultUiHelper.showDatePicker(activity, selectedIssueDate) { time, _ ->
+                selectedIssueDate = time
+                updateDatesUi()
+            }
         }
 
         btnPickExpiryDate.setOnClickListener {
-            val cal = Calendar.getInstance()
-            if (selectedExpiryDate > 0L) cal.timeInMillis = selectedExpiryDate
-            DatePickerDialog(
-                activity,
-                { _, y, m, d ->
-                    val pickCal = Calendar.getInstance().apply { set(y, m, d, 23, 59, 59) }
-                    selectedExpiryDate = pickCal.timeInMillis
-                    updateDatesUi()
-                },
-                cal.get(Calendar.YEAR),
-                cal.get(Calendar.MONTH),
-                cal.get(Calendar.DAY_OF_MONTH)
-            ).show()
+            VaultUiHelper.showDatePicker(activity, selectedExpiryDate) { time, _ ->
+                selectedExpiryDate = time
+                updateDatesUi()
+            }
         }
 
         btnCancel.setOnClickListener { dialog.dismiss() }

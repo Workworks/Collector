@@ -21,6 +21,10 @@ object SingleFeatureTours {
         val store = DataStore(activity)
 
         when (featureKey) {
+            "workbench" -> {
+                onStop()
+                activity.startActivity(android.content.Intent(activity,WorkbenchActivity::class.java))
+            }
             "life_capsule" -> {
                 activity.navigateToTab(0)
                 activity.binding.root.postDelayed({
@@ -273,6 +277,357 @@ object SingleFeatureTours {
                 }, 200)
             }
 
+            "wardrobe_vault" -> {
+                activity.navigateToTab(0)
+                activity.binding.root.postDelayed({
+                    val toolsBar = activity.findViewById<View>(R.id.layout_tools_bar)
+                    toolsBar?.visibility = View.VISIBLE
+                    val target = activity.findViewById<View>(R.id.btn_wardrobe_vault_top) ?: activity.binding.navHome
+
+                    val demoWardrobeId = "demo_wardrobe_tour_" + System.currentTimeMillis()
+                    val demoWardrobe = WardrobeRecord(
+                        id = demoWardrobeId,
+                        name = "波司登极寒鹅绒羽绒服 (教程示例)",
+                        season = "winter",
+                        category = "coat",
+                        color = "米白色",
+                        material = "90%白鹅绒 蓬松度800+",
+                        storageLocation = "主卧大衣柜上层 · 真空压缩袋 #03",
+                        purchasePrice = 1299.0,
+                        purchaseDate = System.currentTimeMillis(),
+                        wearCount = 6,
+                        lastWornAt = System.currentTimeMillis(),
+                        careNotes = "仅限专业干洗 · 不可烘干",
+                        notes = "保暖御寒神器 (演练结束自动删除)"
+                    )
+                    TourSandbox.registerDemoWardrobe(demoWardrobeId)
+                    store.addOrUpdateWardrobeRecord(demoWardrobe)
+
+                    overlay.showStep(
+                        stepIndex = 1,
+                        totalSteps = 1,
+                        title = "👗 换季衣橱与四季穿搭舱",
+                        desc = "点击「👗 换季衣橱」进入衣橱收纳舱！四季胶囊衣橱分舱、真空压缩袋顶柜定位、穿着打卡与次均成本精算，科学管理换季与断舍离！",
+                        actionHint = "👉 请点击「👗 换季衣橱」进入体验",
+                        targetView = target,
+                        onNext = {
+                            onStop()
+                            WardrobeVaultDialog.show(activity, store) {}
+                        },
+                        onExit = { onStop() },
+                        onTargetClick = {
+                            Handler(Looper.getMainLooper()).postDelayed({
+                                onStop()
+                                WardrobeVaultDialog.show(activity, store) {}
+                            }, 300)
+                        }
+                    )
+                }, 200)
+            }
+
+            "emergency_vault" -> {
+                activity.navigateToTab(0)
+                activity.binding.root.postDelayed({
+                    val toolsBar = activity.findViewById<View>(R.id.layout_tools_bar)
+                    toolsBar?.visibility = View.VISIBLE
+                    val target = activity.findViewById<View>(R.id.btn_emergency_vault_top) ?: activity.binding.navHome
+
+                    val demoEmergencyId = "demo_emergency_tour_" + System.currentTimeMillis()
+                    val demoItem = EmergencyItem(
+                        id = demoEmergencyId,
+                        name = "手摇发电多波段收音机+强光手电 (教程示例)",
+                        kitType = "earthquake",
+                        category = "tool",
+                        qty = 1.0,
+                        unit = "台",
+                        location = "玄关防盗门后收纳挂架 #01",
+                        expiryDate = 0L,
+                        rotationIntervalMonths = 6,
+                        lastCheckedAt = System.currentTimeMillis(),
+                        notes = "拔出安全插销，手摇发电 1 分钟可照明 15 分钟 (演练结束自动删除)"
+                    )
+                    TourSandbox.registerDemoEmergency(demoEmergencyId)
+                    store.addOrUpdateEmergencyItem(demoItem)
+
+                    overlay.showStep(
+                        stepIndex = 1,
+                        totalSteps = 1,
+                        title = "🚨 家庭应急防灾与生命线舱",
+                        desc = "点击「🚨 应急防灾」进入生命线舱！四大应急专包（地震/火灾/车载/暴雨）、黄金动线存放定位与物资时效轮换点检打卡！",
+                        actionHint = "👉 请点击「🚨 应急防灾」进入体验",
+                        targetView = target,
+                        onNext = {
+                            onStop()
+                            EmergencyVaultDialog.show(activity, store) {}
+                        },
+                        onExit = { onStop() },
+                        onTargetClick = {
+                            Handler(Looper.getMainLooper()).postDelayed({
+                                onStop()
+                                EmergencyVaultDialog.show(activity, store) {}
+                            }, 300)
+                        }
+                    )
+                }, 200)
+            }
+
+            "universal_vault_center" -> {
+                activity.navigateToTab(0)
+                activity.binding.root.postDelayed({
+                    val toolsBar = activity.findViewById<View>(R.id.layout_tools_bar)
+                    toolsBar?.visibility = View.VISIBLE
+                    val target = activity.findViewById<View>(R.id.btn_universal_vault_center_top) ?: activity.binding.navHome
+
+                    overlay.showStep(
+                        stepIndex = 1,
+                        totalSteps = 1,
+                        title = "🏛️ 全维度收纳大厅与生命线总控看板",
+                        desc = "点击「🏛️ 全景收纳大厅」进入家庭总控看板！7 大专业收纳馆直通、全家临期与失效时效红绿灯雷达与 100 分制健康指数！",
+                        actionHint = "👉 请点击「🏛️ 全景收纳大厅」进入体验",
+                        targetView = target,
+                        onNext = {
+                            onStop()
+                            UniversalVaultCenterDialog.show(activity, store) {}
+                        },
+                        onExit = { onStop() },
+                        onTargetClick = {
+                            Handler(Looper.getMainLooper()).postDelayed({
+                                onStop()
+                                UniversalVaultCenterDialog.show(activity, store) {}
+                            }, 300)
+                        }
+                    )
+                }, 200)
+            }
+
+            "tool_maintenance_vault" -> {
+                activity.navigateToTab(0)
+                activity.binding.root.postDelayed({
+                    val toolsBar = activity.findViewById<View>(R.id.layout_tools_bar)
+                    toolsBar?.visibility = View.VISIBLE
+                    val target = activity.findViewById<View>(R.id.btn_tool_vault_top) ?: activity.binding.navHome
+
+                    val demoToolId = "demo_tool_tour_" + System.currentTimeMillis()
+                    val demoTool = ToolMaintenanceRecord(
+                        id = demoToolId,
+                        name = "博世 12V 锂电冲击钻 (教程示例)",
+                        category = "power_tool",
+                        spec = "12V 锂电 / 10mm 夹头 (配8mm钻头)",
+                        qty = 1.0,
+                        unit = "套",
+                        location = "阳台工具收纳柜 #01",
+                        maintenanceIntervalDays = 180,
+                        lastMaintainedAt = System.currentTimeMillis(),
+                        notes = "钻水泥墙需切换为冲击档；演练结束后自动清理"
+                    )
+                    TourSandbox.registerDemoTool(demoToolId)
+                    store.addOrUpdateToolRecord(demoTool)
+
+                    overlay.showStep(
+                        stepIndex = 1,
+                        totalSteps = 1,
+                        title = "🔧 家庭工具五金与设备维保配件舱",
+                        desc = "点击「🔧 工具五金」进入配件舱！电动/手工工具分类、螺丝五金与钻头规格速查、净水新风耗材维保排期与一键打卡！",
+                        actionHint = "👉 请点击「🔧 工具五金」进入体验",
+                        targetView = target,
+                        onNext = {
+                            onStop()
+                            ToolMaintenanceDialog.show(activity, store) {}
+                        },
+                        onExit = { onStop() },
+                        onTargetClick = {
+                            Handler(Looper.getMainLooper()).postDelayed({
+                                onStop()
+                                ToolMaintenanceDialog.show(activity, store) {}
+                            }, 300)
+                        }
+                    )
+                }, 200)
+            }
+
+            "plant_care_vault" -> {
+                activity.navigateToTab(0)
+                activity.binding.root.postDelayed({
+                    val toolsBar = activity.findViewById<View>(R.id.layout_tools_bar)
+                    toolsBar?.visibility = View.VISIBLE
+                    val target = activity.findViewById<View>(R.id.btn_plant_vault_top) ?: activity.binding.navHome
+
+                    val demoPlantId = "demo_plant_tour_" + System.currentTimeMillis()
+                    val demoPlant = PlantCareRecord(
+                        id = demoPlantId,
+                        name = "南阳台白锦龟背竹 (教程示例)",
+                        species = "龟背竹 (Monstera Borsigiana)",
+                        location = "南阳台花架 #02",
+                        lightDemand = "semi_shade",
+                        waterIntervalDays = 7,
+                        lastWateredAt = System.currentTimeMillis(),
+                        fertilizeIntervalDays = 30,
+                        lastFertilizedAt = System.currentTimeMillis(),
+                        careTips = "喜明亮散光，表土干透浇透；演练结束后自动清理"
+                    )
+                    TourSandbox.registerDemoPlant(demoPlantId)
+                    store.addOrUpdatePlantRecord(demoPlant)
+
+                    overlay.showStep(
+                        stepIndex = 1,
+                        totalSteps = 1,
+                        title = "🪴 家庭绿植花卉与水肥养护舱",
+                        desc = "点击「🪴 绿植水肥」进入绿植水肥日历！光照习性档案、浇水施肥倒计时排期与一键养护打卡！",
+                        actionHint = "👉 请点击「🪴 绿植水肥」进入体验",
+                        targetView = target,
+                        onNext = {
+                            onStop()
+                            PlantCareDialog.show(activity, store) {}
+                        },
+                        onExit = { onStop() },
+                        onTargetClick = {
+                            Handler(Looper.getMainLooper()).postDelayed({
+                                onStop()
+                                PlantCareDialog.show(activity, store) {}
+                            }, 300)
+                        }
+                    )
+                }, 200)
+            }
+
+            "pet_care_vault" -> {
+                activity.navigateToTab(0)
+                activity.binding.root.postDelayed({
+                    val toolsBar = activity.findViewById<View>(R.id.layout_tools_bar)
+                    toolsBar?.visibility = View.VISIBLE
+                    val target = activity.findViewById<View>(R.id.btn_pet_vault_top) ?: activity.binding.navHome
+
+                    val demoPetId = "demo_pet_tour_" + System.currentTimeMillis()
+                    val demoPet = PetCareRecord(
+                        id = demoPetId,
+                        name = "布丁 (教程示例)",
+                        species = "英短银渐层",
+                        birthDate = System.currentTimeMillis() - 365L * 24 * 3600 * 1000,
+                        weightKg = 4.2,
+                        microchipId = "900215000987654",
+                        dewormIntervalDays = 30,
+                        lastDewormedAt = System.currentTimeMillis(),
+                        vaccineIntervalDays = 365,
+                        lastVaccinatedAt = System.currentTimeMillis(),
+                        foodBrand = "渴望鸡肉猫粮 · 阳台储粮桶 #01",
+                        notes = "已绝育；演练结束后自动清理"
+                    )
+                    TourSandbox.registerDemoPet(demoPetId)
+                    store.addOrUpdatePetRecord(demoPet)
+
+                    overlay.showStep(
+                        stepIndex = 1,
+                        totalSteps = 1,
+                        title = "🐾 家庭萌宠档案与健康耗材舱",
+                        desc = "点击「🐾 家庭萌宠生活与疫苗驱虫舱」进入！物种档案、芯片号脱敏速查、驱虫疫苗倒计时与一键打卡！",
+                        actionHint = "👉 请点击「🐾 家庭萌宠生活与疫苗驱虫舱」进入体验",
+                        targetView = target,
+                        onNext = {
+                            onStop()
+                            PetCareDialog.show(activity, store) {}
+                        },
+                        onExit = { onStop() },
+                        onTargetClick = {
+                            Handler(Looper.getMainLooper()).postDelayed({
+                                onStop()
+                                PetCareDialog.show(activity, store) {}
+                            }, 300)
+                        }
+                    )
+                }, 200)
+            }
+
+            "book_vault" -> {
+                activity.navigateToTab(0)
+                activity.binding.root.postDelayed({
+                    val toolsBar = activity.findViewById<View>(R.id.layout_tools_bar)
+                    toolsBar?.visibility = View.VISIBLE
+                    val target = activity.findViewById<View>(R.id.btn_book_vault_top) ?: activity.binding.navHome
+
+                    val demoBookId = "demo_book_tour_" + System.currentTimeMillis()
+                    val demoBook = BookRecord(
+                        id = demoBookId,
+                        title = "置身事内 (教程示例)",
+                        author = "兰小欢",
+                        category = "社科人文",
+                        bookshelfLocation = "书房A柜第2层",
+                        totalPages = 340,
+                        currentPages = 120,
+                        readingStatus = "reading",
+                        rating = 5.0f,
+                        summaryNotes = "理解中国经济发展的微观基础与地方政府行为激励；演练结束后自动清理"
+                    )
+                    TourSandbox.registerDemoBook(demoBookId)
+                    store.addOrUpdateBookRecord(demoBook)
+
+                    overlay.showStep(
+                        stepIndex = 1,
+                        totalSteps = 1,
+                        title = "📚 书房藏书与阅读收纳舱",
+                        desc = "点击「📚 书房藏书」进入！藏书格子定位、阅读进度百分比计算、外借流转与书摘评分！",
+                        actionHint = "👉 请点击「📚 书房藏书」进入体验",
+                        targetView = target,
+                        onNext = {
+                            onStop()
+                            BookVaultDialog.show(activity, store) {}
+                        },
+                        onExit = { onStop() },
+                        onTargetClick = {
+                            Handler(Looper.getMainLooper()).postDelayed({
+                                onStop()
+                                BookVaultDialog.show(activity, store) {}
+                            }, 300)
+                        }
+                    )
+                }, 200)
+            }
+
+            "beverage_vault" -> {
+                activity.navigateToTab(0)
+                activity.binding.root.postDelayed({
+                    val toolsBar = activity.findViewById<View>(R.id.layout_tools_bar)
+                    toolsBar?.visibility = View.VISIBLE
+                    val target = activity.findViewById<View>(R.id.btn_beverage_vault_top) ?: activity.binding.navHome
+
+                    val demoBevId = "demo_bev_tour_" + System.currentTimeMillis()
+                    val demoBev = BeverageTeaRecord(
+                        id = demoBevId,
+                        name = "飞天茅台 53度 (教程示例)",
+                        category = "烈酒名酿",
+                        vintageYear = 2018,
+                        originRegion = "贵州茅台镇",
+                        storageLocation = "餐边柜恒温酒柜 #02",
+                        qty = 2,
+                        unit = "瓶",
+                        bestDrinkingYear = 2028,
+                        rating = 5.0f,
+                        tastingNotes = "酱香幽雅，空杯留香；教程演练结束后自动安全清理"
+                    )
+                    TourSandbox.registerDemoBeverage(demoBevId)
+                    store.addOrUpdateBeverageRecord(demoBev)
+
+                    overlay.showStep(
+                        stepIndex = 1,
+                        totalSteps = 1,
+                        title = "🍷 茶窖珍藏与适饮时效舱",
+                        desc = "点击「🍷 茶窖名酿」进入！名茶名酒陈化年份精算、最佳适饮黄金期、开瓶保鲜与库存打卡！",
+                        actionHint = "👉 请点击「🍷 茶窖名酿」进入体验",
+                        targetView = target,
+                        onNext = {
+                            onStop()
+                            BeverageTeaDialog.show(activity, store) {}
+                        },
+                        onExit = { onStop() },
+                        onTargetClick = {
+                            Handler(Looper.getMainLooper()).postDelayed({
+                                onStop()
+                                BeverageTeaDialog.show(activity, store) {}
+                            }, 300)
+                        }
+                    )
+                }, 200)
+            }
+
             "ai_concierge" -> {
                 activity.navigateToTab(0)
                 activity.binding.root.postDelayed({
@@ -446,8 +801,8 @@ object SingleFeatureTours {
                     overlay.showStep(
                         stepIndex = 1,
                         totalSteps = 1,
-                        title = "🌐 局域网免装 Web 网页大屏控制台",
-                        desc = "点击启动局域网微服务，电脑或 iPad 浏览器直接输入提示的 IP 网址（8848端口），即可进入黑曜石大屏控制台，支持大屏表格、批量操作与电商导入！",
+                        title = "🌐 局域网 Web 大屏与双机 P2P 增量对撞",
+                        desc = "点击启动局域网微服务，电脑或 iPad 浏览器直接输入提示的 IP 网址（8848端口），进入大屏控制台；同一 Wi-Fi 下还能自动发现附近手机与桌面端设备，一键发起双向增量对撞合并！",
                         actionHint = "👉 请点击「局域网大屏」启动微服务",
                         targetView = target,
                         onNext = {
@@ -639,6 +994,110 @@ object SingleFeatureTours {
                         onExit = { onStop() }
                     )
                 }, 250)
+            }
+
+            "global_search" -> {
+                activity.navigateToTab(0)
+                activity.binding.root.postDelayed({
+                    val target = activity.findViewById<View>(R.id.btn_search_items) ?: activity.binding.navHome
+                    overlay.showStep(
+                        stepIndex = 1,
+                        totalSteps = 1,
+                        title = "🔍 全库与 12 馆跨维极速联合检索",
+                        desc = "点击右上角搜索图标，输入任意关键词即可秒级穿透资产主库及全部 12 个专业收纳馆（卡券、证照、药箱、食材、应急物资、工具、绿植、宠物等）！",
+                        actionHint = "👉 点击放大镜图标体验全库联合检索",
+                        targetView = target,
+                        onNext = {
+                            onStop()
+                            GlobalSearchDialog.show(activity, store)
+                        },
+                        onExit = { onStop() },
+                        onTargetClick = {
+                            Handler(Looper.getMainLooper()).postDelayed({
+                                onStop()
+                                GlobalSearchDialog.show(activity, store)
+                            }, 300)
+                        }
+                    )
+                }, 200)
+            }
+
+            "today_alerts" -> {
+                activity.navigateToTab(0)
+                activity.binding.root.postDelayed({
+                    val toolsBar = activity.findViewById<View>(R.id.layout_tools_bar)
+                    toolsBar?.visibility = View.VISIBLE
+                    val target = activity.findViewById<View>(R.id.card_today_alerts_banner)
+                        ?: activity.findViewById<View>(R.id.btn_universal_vault_center_top)
+                        ?: activity.binding.navHome
+                    overlay.showStep(
+                        stepIndex = 1,
+                        totalSteps = 1,
+                        title = "⚠️ 今日时效待办与 12 馆生命线看板",
+                        desc = "首页动态聚合全家临期卡券、到期药品、冷冻生鲜鲜度、绿植水肥与萌宠驱虫排期，最紧迫事项自动置顶提醒，点击卡片一秒直达全景收纳大厅！",
+                        actionHint = "👉 点击体验今日时效看板与收纳大厅",
+                        targetView = target,
+                        onNext = {
+                            onStop()
+                            UniversalVaultCenterDialog.show(activity, store) {}
+                        },
+                        onExit = { onStop() }
+                    )
+                }, 200)
+            }
+
+            "all_vaults_export" -> {
+                activity.navigateToTab(3)
+                activity.binding.root.postDelayed({
+                    val target = activity.findViewById<View>(R.id.btn_backup_restore) ?: activity.binding.navProfile
+                    overlay.showStep(
+                        stepIndex = 1,
+                        totalSteps = 1,
+                        title = "📊 12 馆时效物资联合报表导出",
+                        desc = "在「数据备份与多格式导出」中点击「导出【12 馆时效联合报表】」，系统瞬间汇总全部 12 馆物资生成带 UTF-8 BOM 的标准 CSV 表格，微信一键分享！",
+                        actionHint = "👉 点击「数据备份与导出」了解联合导出",
+                        targetView = target,
+                        onNext = { onStop() },
+                        onExit = { onStop() }
+                    )
+                }, 250)
+            }
+
+            "storage_cleanup" -> {
+                activity.navigateToTab(3)
+                activity.binding.root.postDelayed({
+                    val target = activity.findViewById<View>(R.id.btn_backup_restore) ?: activity.binding.navProfile
+                    overlay.showStep(
+                        stepIndex = 1,
+                        totalSteps = 1,
+                        title = "🧹 图片沙盒孤立文件清理与批量重压缩",
+                        desc = "自动扫描未被任何物品引用的孤立废弃图片一键清理，更提供后台无损批量重压缩引擎，为全量图片减重 15%~20% 释放手机空间！",
+                        actionHint = "👉 点击体验存储空间管理",
+                        targetView = target,
+                        onNext = {
+                            onStop()
+                            StorageCleanupDialog.show(activity, store)
+                        },
+                        onExit = { onStop() }
+                    )
+                }, 250)
+            }
+
+            "vault_alert_widget" -> {
+                activity.navigateToTab(0)
+                activity.binding.root.postDelayed({
+                    val target = activity.binding.navHome
+                    overlay.showStep(
+                        stepIndex = 1,
+                        totalSteps = 1,
+                        title = "📱 12 馆时效预警桌面小组件 (2×2)",
+                        desc = "长按手机桌面空白处添加「⚠️ 今日待处理」小组件，无需打开 App 即可一眼查看最紧急的 4 条待办提醒（临期卡券、到期药品、缺水绿植等），随数据变更自动秒级同步！",
+                        actionHint = "👉 点击完成了解桌面小组件",
+                        targetView = target,
+                        onNext = { onStop() },
+                        onExit = { onStop() }
+                    )
+                }, 200)
             }
 
             else -> {

@@ -104,6 +104,45 @@
         android:visibility="gone"
         android:background="@color/background">
 
+        <!-- 🏛️ 全维度全景收纳大厅总入口 Banner -->
+        <LinearLayout
+            android:id="@+id/btn_universal_vault_center_top"
+            android:layout_width="match_parent"
+            android:layout_height="40dp"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:background="@drawable/bg_changelog_box"
+            android:paddingHorizontal="12dp"
+            android:layout_marginBottom="8dp"
+            android:clickable="true"
+            android:focusable="true">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="🏛️"
+                android:textSize="16sp" />
+
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:layout_marginStart="8dp"
+                android:text="全景收纳大厅与时效生命线看板"
+                android:textSize="12sp"
+                android:textStyle="bold"
+                android:textColor="@color/primary"
+                android:fontFamily="sans-serif-medium" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="7馆总览 ➔"
+                android:textSize="11sp"
+                android:textStyle="bold"
+                android:textColor="@color/text_secondary" />
+        </LinearLayout>
+
         <!-- 第一行：智能管家、装备套装、扫码寻物 -->
         <LinearLayout
             android:layout_width="match_parent"
@@ -485,6 +524,7 @@
                 android:orientation="horizontal"
                 android:gravity="center"
                 android:paddingHorizontal="6dp"
+                android:layout_marginEnd="6dp"
                 android:background="@drawable/bg_chip_inactive"
                 android:backgroundTint="@color/input_bg"
                 android:clickable="true"
@@ -501,6 +541,236 @@
                     android:layout_height="wrap_content"
                     android:layout_marginStart="4dp"
                     android:text="荣誉勋章馆"
+                    android:textSize="12sp"
+                    android:textColor="@color/text_primary"
+                    android:fontFamily="sans-serif-medium" />
+            </LinearLayout>
+
+            <!-- 👗 换季衣橱 -->
+            <LinearLayout
+                android:id="@+id/btn_wardrobe_vault_top"
+                android:layout_width="0dp"
+                android:layout_height="38dp"
+                android:layout_weight="1"
+                android:orientation="horizontal"
+                android:gravity="center"
+                android:paddingHorizontal="6dp"
+                android:background="@drawable/bg_chip_inactive"
+                android:backgroundTint="@color/input_bg"
+                android:clickable="true"
+                android:focusable="true">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="👗"
+                    android:textSize="14sp" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="4dp"
+                    android:text="换季衣橱"
+                    android:textSize="12sp"
+                    android:textColor="@color/text_primary"
+                    android:fontFamily="sans-serif-medium" />
+            </LinearLayout>
+        </LinearLayout>
+
+        <!-- 第五行 (第一性原理全维度收纳)：应急防灾、工具五金、绿植水肥 -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_marginTop="6dp">
+
+            <!-- 🚨 应急防灾 -->
+            <LinearLayout
+                android:id="@+id/btn_emergency_vault_top"
+                android:layout_width="0dp"
+                android:layout_height="38dp"
+                android:layout_weight="1"
+                android:orientation="horizontal"
+                android:gravity="center"
+                android:paddingHorizontal="6dp"
+                android:layout_marginEnd="6dp"
+                android:background="@drawable/bg_chip_inactive"
+                android:backgroundTint="@color/input_bg"
+                android:clickable="true"
+                android:focusable="true">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="🚨"
+                    android:textSize="14sp" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="4dp"
+                    android:text="应急防灾"
+                    android:textSize="12sp"
+                    android:textColor="@color/text_primary"
+                    android:fontFamily="sans-serif-medium" />
+            </LinearLayout>
+
+            <!-- 🔧 工具五金 -->
+            <LinearLayout
+                android:id="@+id/btn_tool_vault_top"
+                android:layout_width="0dp"
+                android:layout_height="38dp"
+                android:layout_weight="1"
+                android:orientation="horizontal"
+                android:gravity="center"
+                android:paddingHorizontal="6dp"
+                android:layout_marginEnd="6dp"
+                android:background="@drawable/bg_chip_inactive"
+                android:backgroundTint="@color/input_bg"
+                android:clickable="true"
+                android:focusable="true">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="🔧"
+                    android:textSize="14sp" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="4dp"
+                    android:text="工具五金"
+                    android:textSize="12sp"
+                    android:textColor="@color/text_primary"
+                    android:fontFamily="sans-serif-medium" />
+            </LinearLayout>
+
+            <!-- 🪴 绿植水肥 -->
+            <LinearLayout
+                android:id="@+id/btn_plant_vault_top"
+                android:layout_width="0dp"
+                android:layout_height="38dp"
+                android:layout_weight="1"
+                android:orientation="horizontal"
+                android:gravity="center"
+                android:paddingHorizontal="6dp"
+                android:background="@drawable/bg_chip_inactive"
+                android:backgroundTint="@color/input_bg"
+                android:clickable="true"
+                android:focusable="true">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="🪴"
+                    android:textSize="14sp" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="4dp"
+                    android:text="绿植水肥"
+                    android:textSize="12sp"
+                    android:textColor="@color/text_primary"
+                    android:fontFamily="sans-serif-medium" />
+            </LinearLayout>
+        </LinearLayout>
+
+        <!-- 第六行 (第一性原理全维度收纳)：萌宠生活 / 书房藏书 / 茶窖名酿 -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_marginTop="6dp">
+
+            <!-- 🐾 萌宠健康 -->
+            <LinearLayout
+                android:id="@+id/btn_pet_vault_top"
+                android:layout_width="0dp"
+                android:layout_height="38dp"
+                android:layout_weight="1"
+                android:orientation="horizontal"
+                android:gravity="center"
+                android:paddingHorizontal="6dp"
+                android:layout_marginEnd="6dp"
+                android:background="@drawable/bg_chip_inactive"
+                android:backgroundTint="@color/input_bg"
+                android:clickable="true"
+                android:focusable="true">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="🐾"
+                    android:textSize="14sp" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="4dp"
+                    android:text="萌宠健康"
+                    android:textSize="12sp"
+                    android:textColor="@color/text_primary"
+                    android:fontFamily="sans-serif-medium" />
+            </LinearLayout>
+
+            <!-- 📚 书房藏书 -->
+            <LinearLayout
+                android:id="@+id/btn_book_vault_top"
+                android:layout_width="0dp"
+                android:layout_height="38dp"
+                android:layout_weight="1"
+                android:orientation="horizontal"
+                android:gravity="center"
+                android:paddingHorizontal="6dp"
+                android:layout_marginEnd="6dp"
+                android:background="@drawable/bg_chip_inactive"
+                android:backgroundTint="@color/input_bg"
+                android:clickable="true"
+                android:focusable="true">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="📚"
+                    android:textSize="14sp" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="4dp"
+                    android:text="书房藏书"
+                    android:textSize="12sp"
+                    android:textColor="@color/text_primary"
+                    android:fontFamily="sans-serif-medium" />
+            </LinearLayout>
+
+            <!-- 🍷 茶窖名酿 -->
+            <LinearLayout
+                android:id="@+id/btn_beverage_vault_top"
+                android:layout_width="0dp"
+                android:layout_height="38dp"
+                android:layout_weight="1"
+                android:orientation="horizontal"
+                android:gravity="center"
+                android:paddingHorizontal="6dp"
+                android:background="@drawable/bg_chip_inactive"
+                android:backgroundTint="@color/input_bg"
+                android:clickable="true"
+                android:focusable="true">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="🍷"
+                    android:textSize="14sp" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="4dp"
+                    android:text="茶窖名酿"
                     android:textSize="12sp"
                     android:textColor="@color/text_primary"
                     android:fontFamily="sans-serif-medium" />
@@ -575,6 +845,77 @@
                     android:clickable="true"
                     android:focusable="true" />
             </LinearLayout>
+
+            <!-- 🔔 今日待办与临期时效看板 (动态显示) -->
+            <com.google.android.material.card.MaterialCardView
+                android:id="@+id/card_today_alerts_banner"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="14dp"
+                android:visibility="gone"
+                app:cardCornerRadius="16dp"
+                app:cardElevation="0dp"
+                app:cardBackgroundColor="@color/card"
+                app:strokeColor="@color/accent"
+                app:strokeWidth="1dp"
+                android:clickable="true"
+                android:focusable="true"
+                android:foreground="?attr/selectableItemBackground">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="16dp">
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical">
+
+                        <TextView
+                            android:id="@+id/tv_today_alerts_title"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:text="⚠️ 今日时效待办与预警"
+                            android:textSize="15sp"
+                            android:textStyle="bold"
+                            android:textColor="@color/text_primary" />
+
+                        <TextView
+                            android:id="@+id/tv_today_alerts_badge"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="0 项"
+                            android:textSize="12sp"
+                            android:textStyle="bold"
+                            android:textColor="@color/accent"
+                            android:background="@drawable/bg_chip_inactive"
+                            android:backgroundTint="@color/input_bg"
+                            android:paddingHorizontal="8dp"
+                            android:paddingVertical="2dp" />
+                    </LinearLayout>
+
+                    <LinearLayout
+                        android:id="@+id/layout_today_alerts_container"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical"
+                        android:layout_marginTop="8dp" />
+
+                    <TextView
+                        android:id="@+id/tv_today_alerts_footer"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="点击查看全部 12 馆时效清单 ➔"
+                        android:textSize="11sp"
+                        android:textColor="@color/primary"
+                        android:textStyle="bold"
+                        android:layout_marginTop="6dp" />
+                </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
 
             <!-- 建议备份数据提示卡片 (可关闭) -->
             <com.google.android.material.card.MaterialCardView

@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="com.kfaino.collector.desktop.storage.WorkbenchStorageTest" tests="2" skipped="0" failures="0" errors="0" timestamp="2026-08-31T15:22:53" hostname="KFAINO" time="6.493">
+  <properties/>
+  <testcase name="failedImportRemovesOnlyNewCopiesAndPreservesExistingRecords" classname="com.kfaino.collector.desktop.storage.WorkbenchStorageTest" time="0.288"/>
+  <testcase name="fileImportAndEncryptedRestorePreserveAttachmentAndWorkflow" classname="com.kfaino.collector.desktop.storage.WorkbenchStorageTest" time="6.205"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

@@ -19,6 +19,7 @@ object WebDavSyncHelper {
 
     private fun getTargetUrl(baseUrl: String): String {
         val trimmed = baseUrl.trim().trimEnd('/')
+        com.kfaino.collecter.core.FamilyEndpoint.requireTrustedTransport(URL(trimmed))
         return if (trimmed.endsWith(BACKUP_FILENAME)) trimmed else "$trimmed/$BACKUP_FILENAME"
     }
 
@@ -33,7 +34,9 @@ object WebDavSyncHelper {
             val targetUrl = getTargetUrl(serverUrl)
             val url = URL(targetUrl)
             val conn = (url.openConnection() as HttpURLConnection).apply {
-                requestMethod = "PROPFIND"
+                instanceFollowRedirects = false
+                // Android HttpURLConnection 不接受 PROPFIND；HEAD 可验证认证与目标可达性。
+                requestMethod = "HEAD"
                 connectTimeout = 8000
                 readTimeout = 8000
                 setRequestProperty("Authorization", createAuthHeader(username, password))
@@ -55,18 +58,37 @@ object WebDavSyncHelper {
         }
     }
 
-    /** 将本地 JSON 备份包上传同步至 WebDAV */
+    /**
+     * 将本地 JSON 备份包上传同步至 WebDAV（含 1 次自动重试）
+     * @return Pair<成功与否, 提示消息>
+     */
     fun uploadBackup(serverUrl: String, username: String, password: String, jsonContent: String): Pair<Boolean, String> {
+        return uploadOnce(serverUrl, username, password, jsonContent).let { result ->
+            if (!result.first) {
+                // 等待 1500ms 后重试一次
+                try { Thread.sleep(1500) } catch (ie: InterruptedException) { Thread.currentThread().interrupt() }
+                val retry = uploadOnce(serverUrl, username, password, jsonContent)
+                if (!retry.first) Pair(false, "${retry.second}（已重试 1 次）") else retry
+            } else {
+                result
+            }
+        }
+    }
+
+    private fun uploadOnce(serverUrl: String, username: String, password: String, jsonContent: String): Pair<Boolean, String> {
         return try {
             val targetUrl = getTargetUrl(serverUrl)
+            val condition = com.kfaino.collecter.core.WebDavRevisionGuard.prepare(targetUrl, username, createAuthHeader(username, password))
             val url = URL(targetUrl)
             val conn = (url.openConnection() as HttpURLConnection).apply {
+                instanceFollowRedirects = false
                 requestMethod = "PUT"
                 doOutput = true
-                connectTimeout = 10000
-                readTimeout = 10000
+                connectTimeout = 15000
+                readTimeout = 20000
                 setRequestProperty("Authorization", createAuthHeader(username, password))
                 setRequestProperty("Content-Type", "application/json; charset=utf-8")
+                condition?.let { setRequestProperty(it.first, it.second) }
             }
 
             OutputStreamWriter(conn.outputStream, Charsets.UTF_8).use { writer ->
@@ -75,6 +97,7 @@ object WebDavSyncHelper {
             }
 
             val code = conn.responseCode
+            if (code in 200..299) com.kfaino.collecter.core.WebDavRevisionGuard.remember(targetUrl, username, conn)
             conn.disconnect()
 
             if (code in 200..299 || code == 201 || code == 204) {
@@ -87,38 +110,47 @@ object WebDavSyncHelper {
         }
     }
 
-    /** 从 WebDAV 云端下载并恢复 JSON 备份包 */
-    fun downloadBackup(serverUrl: String, username: String, password: String): Pair<Boolean, String> {
+    /**
+     * 从 WebDAV 云端下载 JSON 备份包
+     * @return Triple<成功与否, 提示消息, JSON内容字符串（失败时为空串）>
+     */
+    fun downloadBackup(serverUrl: String, username: String, password: String): Triple<Boolean, String, String> {
         return try {
             val targetUrl = getTargetUrl(serverUrl)
             val url = URL(targetUrl)
             val conn = (url.openConnection() as HttpURLConnection).apply {
+                instanceFollowRedirects = false
                 requestMethod = "GET"
-                connectTimeout = 10000
-                readTimeout = 10000
+                connectTimeout = 15000
+                readTimeout = 20000
                 setRequestProperty("Authorization", createAuthHeader(username, password))
             }
 
             val code = conn.responseCode
             if (code in 200..299) {
-                val reader = BufferedReader(InputStreamReader(conn.inputStream, Charsets.UTF_8))
-                val sb = StringBuilder()
-                var line: String?
-                while (reader.readLine().also { line = it } != null) {
-                    sb.append(line)
+                val bytes = conn.inputStream.use { input ->
+                    val output = java.io.ByteArrayOutputStream()
+                    val buffer = ByteArray(8192)
+                    while (true) {
+                        val count = input.read(buffer)
+                        if (count < 0) break
+                        require(output.size().toLong() + count <= com.kfaino.collecter.core.BackupDocument.MAX_BYTES) { "备份超过大小限制" }
+                        output.write(buffer, 0, count)
+                    }
+                    output.toByteArray()
                 }
-                reader.close()
+                com.kfaino.collecter.core.WebDavRevisionGuard.remember(targetUrl, username, conn)
                 conn.disconnect()
-                Pair(true, sb.toString())
+                Triple(true, "云端备份下载成功", String(bytes, Charsets.UTF_8))
             } else if (code == 404) {
                 conn.disconnect()
-                Pair(false, "云端未找到备份文件 ($BACKUP_FILENAME)，请先在原设备上传备份")
+                Triple(false, "云端未找到备份文件 ($BACKUP_FILENAME)，请先在原设备上传备份", "")
             } else {
                 conn.disconnect()
-                Pair(false, "下载失败 (HTTP $code)")
+                Triple(false, "下载失败 (HTTP $code)", "")
             }
         } catch (e: Exception) {
-            Pair(false, "下载失败: ${e.localizedMessage}")
+            Triple(false, "下载失败: ${e.localizedMessage}", "")
         }
     }
 }

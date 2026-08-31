@@ -6,6 +6,10 @@ import java.net.HttpURLConnection
 import java.net.URI
 import java.nio.charset.StandardCharsets
 import java.util.Base64
+import java.net.http.HttpClient
+import java.net.http.HttpRequest
+import java.net.http.HttpResponse
+import java.time.Duration
 
 /**
  * 跨平台桌面端原生 WebDAV 云同步引擎
@@ -13,8 +17,7 @@ import java.util.Base64
  */
 object DesktopWebDavHelper {
 
-    private const val REMOTE_DIR_NAME = "CollectorBackup"
-    private const val REMOTE_FILE_NAME = "collector_cloud_backup.json"
+    private val client = HttpClient.newBuilder().connectTimeout(Duration.ofSeconds(8)).build()
 
     data class SyncResult(
         val isSuccess: Boolean,
@@ -29,28 +32,20 @@ object DesktopWebDavHelper {
 
     private fun getFullRemoteFileUrl(store: DesktopDataStore): String {
         var base = store.getWebDavUrl().trim()
+        com.kfaino.collecter.core.FamilyEndpoint.requireTrustedTransport(java.net.URL(base))
         if (!base.endsWith("/")) base += "/"
-        return "$base$REMOTE_DIR_NAME/$REMOTE_FILE_NAME"
-    }
-
-    private fun getRemoteDirUrl(store: DesktopDataStore): String {
-        var base = store.getWebDavUrl().trim()
-        if (!base.endsWith("/")) base += "/"
-        return "$base$REMOTE_DIR_NAME/"
+        return if (base.trimEnd('/').endsWith("Collecter_Backup.json")) base.trimEnd('/') else "${base}Collecter_Backup.json"
     }
 
     fun testConnection(store: DesktopDataStore): SyncResult {
         return try {
-            val url = URI.create(store.getWebDavUrl()).toURL()
-            val conn = url.openConnection() as HttpURLConnection
-            conn.requestMethod = "PROPFIND"
-            conn.setRequestProperty("Authorization", getAuthHeader(store))
-            conn.setRequestProperty("Depth", "0")
-            conn.connectTimeout = 8000
-            conn.readTimeout = 8000
-
-            val code = conn.responseCode
-            conn.disconnect()
+            com.kfaino.collecter.core.FamilyEndpoint.requireTrustedTransport(java.net.URL(store.getWebDavUrl().trim()))
+            val request = HttpRequest.newBuilder(URI.create(store.getWebDavUrl().trim()))
+                .timeout(Duration.ofSeconds(8))
+                .header("Authorization", getAuthHeader(store))
+                .header("Depth", "0")
+                .method("PROPFIND", HttpRequest.BodyPublishers.noBody()).build()
+            val code = client.send(request, HttpResponse.BodyHandlers.discarding()).statusCode()
 
             if (code in 200..299 || code == 207) {
                 SyncResult(true, "WebDAV 服务器连接成功！(HTTP $code)")
@@ -62,35 +57,20 @@ object DesktopWebDavHelper {
         }
     }
 
-    private fun ensureRemoteDirectoryExists(store: DesktopDataStore) {
-        try {
-            val dirUrl = URI.create(getRemoteDirUrl(store)).toURL()
-            val conn = dirUrl.openConnection() as HttpURLConnection
-            conn.requestMethod = "MKCOL"
-            conn.setRequestProperty("Authorization", getAuthHeader(store))
-            conn.connectTimeout = 6000
-            conn.readTimeout = 6000
-            conn.responseCode
-            conn.disconnect()
-        } catch (e: Exception) {
-            // Directory might already exist
-        }
-    }
-
     fun uploadBackup(store: DesktopDataStore): SyncResult {
         return try {
             if (store.getWebDavUsername().isBlank() || store.getWebDavPassword().isBlank()) {
                 return SyncResult(false, "请先在设置中填写 WebDAV 用户名与独立应用密码！")
             }
 
-            ensureRemoteDirectoryExists(store)
-
             val jsonContent = store.exportJson()
             val fileUrl = URI.create(getFullRemoteFileUrl(store)).toURL()
+            val condition = com.kfaino.collecter.core.WebDavRevisionGuard.prepare(fileUrl.toString(), store.getWebDavUsername(), getAuthHeader(store))
             val conn = fileUrl.openConnection() as HttpURLConnection
             conn.requestMethod = "PUT"
             conn.setRequestProperty("Authorization", getAuthHeader(store))
             conn.setRequestProperty("Content-Type", "application/json; charset=utf-8")
+            condition?.let { conn.setRequestProperty(it.first, it.second) }
             conn.doOutput = true
             conn.connectTimeout = 10000
             conn.readTimeout = 10000
@@ -101,6 +81,7 @@ object DesktopWebDavHelper {
             }
 
             val code = conn.responseCode
+            if (code in 200..299) com.kfaino.collecter.core.WebDavRevisionGuard.remember(fileUrl.toString(), store.getWebDavUsername(), conn)
             conn.disconnect()
 
             if (code in 200..299 || code == 201 || code == 204) {
@@ -113,7 +94,7 @@ object DesktopWebDavHelper {
         }
     }
 
-    fun downloadAndRestore(store: DesktopDataStore): SyncResult {
+    fun downloadAndRestore(store: DesktopDataStore, confirm: (String) -> Boolean = { false }): SyncResult {
         return try {
             if (store.getWebDavUsername().isBlank() || store.getWebDavPassword().isBlank()) {
                 return SyncResult(false, "请先在设置中填写 WebDAV 用户名与独立应用密码！")
@@ -137,14 +118,18 @@ object DesktopWebDavHelper {
             val buffer = ByteArray(4096)
             var len: Int
             while (stream.read(buffer).also { len = it } != -1) {
+                require(baos.size().toLong() + len <= com.kfaino.collecter.core.BackupDocument.MAX_BYTES) { "备份超过大小限制" }
                 baos.write(buffer, 0, len)
             }
             conn.disconnect()
 
             val jsonStr = baos.toString(StandardCharsets.UTF_8)
+            val preview = com.kfaino.collecter.core.BackupDocument.preview(jsonStr)
+            if (!confirm(preview)) return SyncResult(false, "已取消恢复，原数据未改变")
             val success = store.importJson(jsonStr)
 
             if (success) {
+                com.kfaino.collecter.core.WebDavRevisionGuard.remember(fileUrl.toString(), store.getWebDavUsername(), conn)
                 SyncResult(true, "已成功从 WebDAV 云端恢复数据并即时生效！")
             } else {
                 SyncResult(false, "解析云端备份失败，数据格式可能已损坏。")

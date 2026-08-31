@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:background="@drawable/bg_widget_vault_alert"
+    android:padding="12dp">
+
+    <!-- 标题 -->
+    <TextView
+        android:id="@+id/tv_widget_vault_alert_title"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="⚠️ 今日待处理"
+        android:textColor="@color/white"
+        android:textSize="13sp"
+        android:textStyle="bold"
+        android:paddingBottom="6dp" />
+
+    <!-- 最多展示 4 条预警 -->
+    <TextView
+        android:id="@+id/tv_vault_alert_1"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:textColor="@color/white"
+        android:textSize="11sp"
+        android:singleLine="true"
+        android:ellipsize="end"
+        android:paddingBottom="2dp"
+        android:visibility="gone" />
+
+    <TextView
+        android:id="@+id/tv_vault_alert_2"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:textColor="@color/white"
+        android:textSize="11sp"
+        android:singleLine="true"
+        android:ellipsize="end"
+        android:paddingBottom="2dp"
+        android:visibility="gone" />
+
+    <TextView
+        android:id="@+id/tv_vault_alert_3"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:textColor="@color/white"
+        android:textSize="11sp"
+        android:singleLine="true"
+        android:ellipsize="end"
+        android:paddingBottom="2dp"
+        android:visibility="gone" />
+
+    <TextView
+        android:id="@+id/tv_vault_alert_4"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:textColor="@color/white"
+        android:textSize="11sp"
+        android:singleLine="true"
+        android:ellipsize="end"
+        android:paddingBottom="2dp"
+        android:visibility="gone" />
+
+    <!-- 超出 4 条时显示 "+N 项更多" -->
+    <TextView
+        android:id="@+id/tv_vault_alert_more"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:textColor="@color/white"
+        android:textSize="10sp"
+        android:alpha="0.8"
+        android:layout_marginTop="4dp"
+        android:visibility="gone" />
+
+    <!-- 无预警时显示 -->
+    <TextView
+        android:id="@+id/tv_vault_alert_empty"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="✅ 今日无待处理事项"
+        android:textColor="@color/white"
+        android:textSize="11sp"
+        android:gravity="center"
+        android:layout_gravity="center"
+        android:layout_marginTop="12dp"
+        android:visibility="gone" />
+
+</LinearLayout>

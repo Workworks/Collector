@@ -1,0 +1,2885 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Collecter (资产与收纳管家) - 全景功能能力地图与演化矩阵</title>
+  <style>
+    :root {
+      --bg-primary: #0f172a;
+      --bg-secondary: #1e293b;
+      --bg-card: rgba(30, 41, 59, 0.85);
+      --bg-card-hover: rgba(51, 65, 85, 0.95);
+      --bg-card-planned: rgba(30, 41, 59, 0.45);
+      --text-primary: #f8fafc;
+      --text-secondary: #94a3b8;
+      --text-muted: #64748b;
+      --accent: #38bdf8;
+      --accent-glow: rgba(56, 189, 248, 0.25);
+      --border-color: rgba(148, 163, 184, 0.15);
+      --border-planned: rgba(148, 163, 184, 0.1);
+      --tag-bg: rgba(56, 189, 248, 0.12);
+      --tag-border: rgba(56, 189, 248, 0.3);
+      --success: #34d399;
+      --warning: #fbbf24;
+      --danger: #f87171;
+      --purple: #c084fc;
+      --indigo: #818cf8;
+      --font-sans: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background-color: var(--bg-primary);
+      color: var(--text-primary);
+      font-family: var(--font-sans);
+      line-height: 1.6;
+      min-height: 100vh;
+      padding: 32px 24px;
+      background-image: 
+        radial-gradient(at 0% 0%, rgba(56, 189, 248, 0.08) 0px, transparent 50%),
+        radial-gradient(at 100% 100%, rgba(192, 132, 252, 0.08) 0px, transparent 50%);
+      background-attachment: fixed;
+    }
+
+    .container {
+      max-width: 1440px;
+      margin: 0 auto;
+    }
+
+    /* 头部横幅 */
+    .header {
+      text-align: center;
+      margin-bottom: 36px;
+      padding: 36px 24px;
+      background: linear-gradient(135deg, rgba(30, 41, 59, 0.75), rgba(15, 23, 42, 0.95));
+      backdrop-filter: blur(16px);
+      border: 1px solid var(--border-color);
+      border-radius: 24px;
+      box-shadow: 0 20px 40px -15px rgba(0, 0, 0, 0.5);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .header::before {
+      content: '';
+      position: absolute;
+      top: -50%;
+      left: -50%;
+      width: 200%;
+      height: 200%;
+      background: radial-gradient(circle, rgba(56, 189, 248, 0.06) 0%, transparent 60%);
+      pointer-events: none;
+    }
+
+    .logo-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 16px;
+      border-radius: 9999px;
+      background: var(--tag-bg);
+      border: 1px solid var(--tag-border);
+      color: var(--accent);
+      font-size: 0.875rem;
+      font-weight: 600;
+      margin-bottom: 16px;
+    }
+
+    .title {
+      font-size: 2.75rem;
+      font-weight: 800;
+      letter-spacing: -0.025em;
+      background: linear-gradient(135deg, #ffffff 30%, #94a3b8 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      margin-bottom: 12px;
+    }
+
+    .subtitle {
+      font-size: 1.125rem;
+      color: var(--text-secondary);
+      max-width: 820px;
+      margin: 0 auto 20px;
+    }
+
+    /* 顶部统计卡片 */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+      gap: 16px;
+      margin-bottom: 32px;
+    }
+
+    .stat-card {
+      background: var(--bg-card);
+      backdrop-filter: blur(12px);
+      border: 1px solid var(--border-color);
+      padding: 18px;
+      border-radius: 16px;
+      text-align: center;
+      transition: transform 0.2s ease, border-color 0.2s ease;
+    }
+
+    .stat-card:hover {
+      transform: translateY(-2px);
+      border-color: var(--accent);
+    }
+
+    .stat-number {
+      font-size: 2rem;
+      font-weight: 800;
+      color: var(--accent);
+      line-height: 1.2;
+    }
+
+    .stat-label {
+      font-size: 0.85rem;
+      color: var(--text-secondary);
+      margin-top: 4px;
+    }
+
+    /* 控制栏：搜索、分类与状态过滤 */
+    .controls {
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      background: var(--bg-card);
+      backdrop-filter: blur(12px);
+      border: 1px solid var(--border-color);
+      padding: 20px;
+      border-radius: 20px;
+      margin-bottom: 32px;
+    }
+
+    .search-wrapper {
+      position: relative;
+      width: 100%;
+    }
+
+    .search-input {
+      width: 100%;
+      padding: 14px 20px 14px 48px;
+      background: rgba(15, 23, 42, 0.6);
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      color: #fff;
+      font-size: 1rem;
+      outline: none;
+      transition: all 0.2s ease;
+    }
+
+    .search-input:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px var(--accent-glow);
+    }
+
+    .search-icon {
+      position: absolute;
+      left: 16px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--text-muted);
+      font-size: 1.2rem;
+    }
+
+    .filter-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+
+    .filter-pills {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .filter-btn {
+      background: rgba(15, 23, 42, 0.6);
+      border: 1px solid var(--border-color);
+      color: var(--text-secondary);
+      padding: 7px 14px;
+      border-radius: 9999px;
+      font-size: 0.8125rem;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      user-select: none;
+    }
+
+    .filter-btn:hover {
+      background: rgba(51, 65, 85, 0.8);
+      color: #fff;
+    }
+
+    .filter-btn.active {
+      background: var(--accent);
+      color: #0f172a;
+      border-color: var(--accent);
+      font-weight: 600;
+    }
+
+    .status-toggle-group {
+      display: flex;
+      background: rgba(15, 23, 42, 0.6);
+      border: 1px solid var(--border-color);
+      border-radius: 10px;
+      padding: 3px;
+      gap: 2px;
+    }
+
+    .status-toggle-btn {
+      background: transparent;
+      border: none;
+      color: var(--text-secondary);
+      padding: 6px 12px;
+      border-radius: 8px;
+      font-size: 0.8125rem;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .status-toggle-btn.active {
+      background: rgba(56, 189, 248, 0.2);
+      color: var(--accent);
+      font-weight: 600;
+    }
+
+    /* 模块大类区块 */
+    .section-group {
+      margin-bottom: 48px;
+    }
+
+    .section-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 20px;
+      padding-bottom: 12px;
+      border-bottom: 1px solid var(--border-color);
+    }
+
+    .section-title {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-size: 1.45rem;
+      font-weight: 700;
+      color: #fff;
+    }
+
+    .section-badge {
+      font-size: 0.8125rem;
+      padding: 3px 10px;
+      border-radius: 9999px;
+      background: rgba(255, 255, 255, 0.08);
+      color: var(--text-secondary);
+    }
+
+    /* 功能卡片网格 */
+    .cards-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+      gap: 20px;
+    }
+
+    /* 普通活跃卡片 */
+    .feature-card {
+      background: var(--bg-card);
+      backdrop-filter: blur(12px);
+      border: 1px solid var(--border-color);
+      border-radius: 18px;
+      padding: 22px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .feature-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 3px;
+      background: linear-gradient(90deg, var(--accent), transparent);
+      opacity: 0;
+      transition: opacity 0.2s ease;
+    }
+
+    .feature-card:hover {
+      background: var(--bg-card-hover);
+      transform: translateY(-4px);
+      border-color: rgba(56, 189, 248, 0.4);
+      box-shadow: 0 16px 32px -8px rgba(0, 0, 0, 0.4);
+    }
+
+    .feature-card:hover::before {
+      opacity: 1;
+    }
+
+    /* 未实现/演化中卡片（置灰样式） */
+    .feature-card.planned {
+      background: var(--bg-card-planned);
+      border-color: var(--border-planned);
+      opacity: 0.68;
+      border-style: dashed;
+    }
+
+    .feature-card.planned:hover {
+      opacity: 0.95;
+      background: rgba(30, 41, 59, 0.85);
+      border-color: rgba(148, 163, 184, 0.4);
+      transform: translateY(-3px);
+    }
+
+    .feature-card.planned::before {
+      background: linear-gradient(90deg, #94a3b8, transparent);
+    }
+
+    .card-top {
+      margin-bottom: 14px;
+    }
+
+    .card-title-row {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 8px;
+      margin-bottom: 10px;
+    }
+
+    .card-title {
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: #fff;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .card-state-tag {
+      font-size: 0.725rem;
+      padding: 2px 7px;
+      border-radius: 6px;
+      font-weight: 600;
+      white-space: nowrap;
+    }
+
+    .card-state-tag.done {
+      background: rgba(52, 211, 153, 0.15);
+      color: var(--success);
+      border: 1px solid rgba(52, 211, 153, 0.3);
+    }
+
+    .card-state-tag.evo {
+      background: rgba(148, 163, 184, 0.15);
+      color: #cbd5e1;
+      border: 1px solid rgba(148, 163, 184, 0.25);
+    }
+
+    .card-desc {
+      font-size: 0.8875rem;
+      color: var(--text-secondary);
+      line-height: 1.55;
+    }
+
+    .card-highlights {
+      margin-top: 12px;
+      padding: 10px 12px;
+      background: rgba(15, 23, 42, 0.5);
+      border-radius: 10px;
+      font-size: 0.8125rem;
+      color: var(--text-primary);
+      border-left: 2px solid var(--accent);
+    }
+
+    .feature-card.planned .card-highlights {
+      border-left-color: #94a3b8;
+      background: rgba(15, 23, 42, 0.35);
+    }
+
+    .card-highlights ul {
+      list-style-type: none;
+      padding-left: 0;
+    }
+
+    .card-highlights li {
+      margin-bottom: 4px;
+      display: flex;
+      align-items: baseline;
+      gap: 6px;
+    }
+
+    .card-highlights li:last-child {
+      margin-bottom: 0;
+    }
+
+    .card-highlights li::before {
+      content: '•';
+      color: var(--accent);
+      font-weight: bold;
+    }
+
+    .feature-card.planned .card-highlights li::before {
+      color: #94a3b8;
+    }
+
+    .card-bottom {
+      margin-top: 16px;
+      padding-top: 14px;
+      border-top: 1px solid rgba(255, 255, 255, 0.06);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .platform-tags {
+      display: flex;
+      gap: 6px;
+    }
+
+    .platform-badge {
+      font-size: 0.725rem;
+      padding: 2px 8px;
+      border-radius: 6px;
+      font-weight: 500;
+      background: rgba(255, 255, 255, 0.05);
+      color: var(--text-muted);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+    }
+
+    .platform-badge.android {
+      color: #4ade80;
+      border-color: rgba(74, 222, 128, 0.3);
+      background: rgba(74, 222, 128, 0.08);
+    }
+
+    .platform-badge.desktop {
+      color: #60a5fa;
+      border-color: rgba(96, 165, 250, 0.3);
+      background: rgba(96, 165, 250, 0.08);
+    }
+
+    .platform-badge.web {
+      color: #f472b6;
+      border-color: rgba(244, 114, 182, 0.3);
+      background: rgba(244, 114, 182, 0.08);
+    }
+
+    .platform-badge.future {
+      color: #a78bfa;
+      border-color: rgba(167, 139, 250, 0.3);
+      background: rgba(167, 139, 250, 0.08);
+    }
+
+    .code-ref {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      font-size: 0.725rem;
+      color: var(--text-muted);
+    }
+
+    /* 文档知识库全景 Hub */
+    .docs-hub {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 24px;
+      padding: 28px;
+      margin-top: 48px;
+      margin-bottom: 48px;
+    }
+
+    .docs-hub-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 20px;
+      padding-bottom: 14px;
+      border-bottom: 1px solid var(--border-color);
+    }
+
+    .docs-hub-title {
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: #fff;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .docs-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 16px;
+    }
+
+    .doc-group-card {
+      background: rgba(15, 23, 42, 0.6);
+      border: 1px solid var(--border-color);
+      border-radius: 14px;
+      padding: 16px;
+    }
+
+    .doc-group-title {
+      font-size: 0.95rem;
+      font-weight: 700;
+      color: var(--accent);
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .doc-links-list {
+      list-style-type: none;
+    }
+
+    .doc-links-list li {
+      margin-bottom: 8px;
+    }
+
+    .doc-links-list li:last-child {
+      margin-bottom: 0;
+    }
+
+    .doc-link-item {
+      display: flex;
+      flex-direction: column;
+      text-decoration: none;
+      padding: 6px 10px;
+      border-radius: 8px;
+      background: rgba(255, 255, 255, 0.02);
+      border: 1px solid rgba(255, 255, 255, 0.04);
+      transition: all 0.2s;
+    }
+
+    .doc-link-item:hover {
+      background: rgba(56, 189, 248, 0.1);
+      border-color: var(--accent);
+      transform: translateX(4px);
+    }
+
+    .doc-link-name {
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: #f1f5f9;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .doc-link-desc {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      margin-top: 2px;
+    }
+
+    /* 空结果状态 */
+    .empty-state {
+      text-align: center;
+      padding: 64px 20px;
+      color: var(--text-muted);
+      display: none;
+    }
+
+    .empty-state-icon {
+      font-size: 3rem;
+      margin-bottom: 12px;
+    }
+
+    /* 悬浮快速定位目录 */
+    .floating-nav {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      background: rgba(30, 41, 59, 0.95);
+      backdrop-filter: blur(16px);
+      border: 1px solid var(--border-color);
+      border-radius: 9999px;
+      padding: 8px 16px;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      z-index: 100;
+    }
+
+    .nav-btn {
+      background: transparent;
+      border: none;
+      color: var(--text-secondary);
+      font-size: 0.8125rem;
+      cursor: pointer;
+      padding: 4px 8px;
+      border-radius: 6px;
+      transition: color 0.2s;
+    }
+
+    .nav-btn:hover {
+      color: #fff;
+    }
+
+    .architecture-box {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 20px;
+      padding: 24px;
+      margin-bottom: 32px;
+    }
+
+    .arch-levels {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 16px;
+      margin-top: 16px;
+    }
+
+    .arch-card {
+      background: rgba(15, 23, 42, 0.5);
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      padding: 16px;
+    }
+
+    .arch-card h4 {
+      font-size: 0.95rem;
+      color: var(--accent);
+      margin-bottom: 8px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .arch-card p {
+      font-size: 0.8125rem;
+      color: var(--text-secondary);
+      line-height: 1.4;
+    }
+
+    @media (max-width: 768px) {
+      .title {
+        font-size: 2rem;
+      }
+      .cards-grid {
+        grid-template-columns: 1fr;
+      }
+      .floating-nav {
+        display: none;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <!-- 头部横幅 -->
+    <header class="header">
+      <div class="logo-badge">
+        <span>📦</span> Collecter Matrix · 全景能力地图与演化矩阵
+      </div>
+      <h1 class="title">Collecter 功能全景能力地图</h1>
+      <p>2026-08-31：本页区分已有能力与演化设想，不能替代验收结论。参见 <a href="stage-current.md">当前状态</a>、<a href="manuals/webdav-backup.md">WebDAV 使用说明</a>及<a href="stages/webdav-integration-report.md">联调证据</a>。Android 发布签名与 Windows 原生交付仍有阻塞。</p>
+      <p class="subtitle">
+        基于第一性原理打造的全维度家庭与个人离线资产、生命周期收纳与数字大脑系统。<br/>
+        囊括 10 大核心领域、12 大收纳馆、已交付功能与未来演化路径，并打通 51+ 架构设计与规范文档。
+      </p>
+    </header>
+
+    <!-- 顶层核心指标 -->
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-number">46+</div>
+        <div class="stat-label">已交付核心功能</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-number">12</div>
+        <div class="stat-label">第一性原理专业收纳馆</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-number">10+</div>
+        <div class="stat-label">未来演化方向 (置灰规划)</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-number">51 篇</div>
+        <div class="stat-label">全量文档互联可达</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-number">100%</div>
+        <div class="stat-label">本地私有沙盒与离线可用</div>
+      </div>
+    </div>
+
+    <!-- 架构分层概览 -->
+    <div class="architecture-box">
+      <div class="section-header" style="border: none; margin-bottom: 0; padding-bottom: 0;">
+        <div class="section-title">
+          <span>🏛️</span> 系统架构第一性原理分层与演化逻辑
+        </div>
+      </div>
+      <div class="arch-levels">
+        <div class="arch-card">
+          <h4>📱 展现与交互层</h4>
+          <p>Material You 沉浸式 UI、Canvas 空间平面图、桌面 Widget 2×2/4×2、Native WebView2 桌面壳、大屏 Web 控制台。</p>
+        </div>
+        <div class="arch-card">
+          <h4>🧠 智能与感知层</h4>
+          <p>ML Kit 离线 OCR、系统截图无感监听、电商订单剪贴板桥接、AI 闲鱼定价文案、AI 空间收纳顾问。</p>
+        </div>
+        <div class="arch-card">
+          <h4>🏛️ 业务与收纳馆层</h4>
+          <p>4 维资产管理、12 大时效生命线收纳馆、灵感想法舱、离线稍后读剪藏库、实物大盘点、外借流转与时光胶囊。</p>
+        </div>
+        <div class="arch-card">
+          <h4>⚡ 互联与外设层</h4>
+          <p>蓝牙 ESC/POS 热敏打印、NFC 碰一碰写卡与寻物、UDP 8849 自发现、P2P 增量对撞、WebDAV 云同步。</p>
+        </div>
+        <div class="arch-card">
+          <h4>🛡️ 存储与安全底座</h4>
+          <p>100% 离线私有沙盒 (JSON + SharedPreferences)、Biometric 芯片级锁、双端统一备份、无网络依赖。</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- 搜索与筛选控制栏 -->
+    <div class="controls">
+      <div class="search-wrapper">
+        <span class="search-icon">🔍</span>
+        <input 
+          type="text" 
+          id="searchInput" 
+          class="search-input" 
+          placeholder="输入关键词、功能名称、收纳馆或代码类名（如：药箱, OCR, 蓝牙, 订阅, WebDAV, 想法, 图谱, 演化）检索..."
+        >
+      </div>
+      <div class="filter-row">
+        <div class="filter-pills" id="filterPills">
+          <button class="filter-btn active" data-filter="all">全部模块 (All)</button>
+          <button class="filter-btn" data-filter="core">📊 资产与物品核心</button>
+          <button class="filter-btn" data-filter="space">🗺️ 空间与寻物地图</button>
+          <button class="filter-btn" data-filter="vaults">🏛️ 12 大收纳馆</button>
+          <button class="filter-btn" data-filter="brain">💡 灵感与剪藏大脑</button>
+          <button class="filter-btn" data-filter="hardware">🖨️ 硬件外设与标签</button>
+          <button class="filter-btn" data-filter="ai">🤖 AI 助手与无感桥接</button>
+          <button class="filter-btn" data-filter="sync">⚡ 同步互传与备份</button>
+          <button class="filter-btn" data-filter="desktop">💻 桌面单机与 Web</button>
+          <button class="filter-btn" data-filter="system">📱 系统小组件与底座</button>
+        </div>
+
+        <div class="status-toggle-group" id="statusToggles">
+          <button class="status-toggle-btn active" data-status="all">全部状态</button>
+          <button class="status-toggle-btn" data-status="done">✅ 仅已实现</button>
+          <button class="status-toggle-btn" data-status="planned">⏳ 仅演化规划</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 功能模块清单 -->
+    <div id="featureSections">
+
+      <!-- 1. 核心资产与物品管理 -->
+      <section class="section-group" data-category="core">
+        <div class="section-header">
+          <div class="section-title">
+            <span>📊</span> 1. 核心资产记账与全生命周期物品管理
+          </div>
+          <span class="section-badge">6 已上线 · 2 演化中</span>
+        </div>
+        <div class="cards-grid">
+          
+          <div class="feature-card" data-status="done" data-keywords="资产看板 财务透视 物品资产 订阅资产 日均成本 折旧">
+            <div class="card-top">
+              <div class="card-title-row">
+                <span class="card-title">双模态全景资产看板</span>
+                <span class="card-state-tag done">✅ 已交付</span>
+              </div>
+              <p class="card-desc">支持一键在「实体物品资产池」与「周期订阅资产池」之间无缝切换，实时透视总资产估值与日均使用平摊成本。</p>
+              <div class="card-highlights">
+                <ul>
+                  <li>动态计算总估值与日均使用成本 (元/天)</li>
+                  <li>支持按在役状态、总价、日均成本等多维排序</li>
+                </ul>
+              </div>
+            </div>
+            <div class="card-bottom">
+              <div class="platform-tags">
+                <span class="platform-badge android">Android</span>
+                <span class="platform-badge desktop">Desktop</span>
+                <span class="platform-badge web">Web</span>
+              </div>
+              <span class="code-ref">HomeFragment / EntryRepository</span>
+            </div>
+          </div>
+
+          <div class="feature-card" data-status="done" data-keywords="4维分类 折旧资产 保质期 长期耐用品 日常消耗品">
+            <div class="card-top">
+              <div class="card-title-row">
+                <span class="card-title">4 维物品管理分类与折旧精算</span>
+                <span class="card-state-tag done">✅ 已交付</span>
+              </div>
+              <p class="card-desc">将物品精确解构为折旧资产、保质期物品、长期耐用品与日常消耗品，执行针对性的成本折算与临期预警算法。</p>
+              <div class="card-highlights">
+                <ul>
+                  <li>折旧日均成本：(原价 - 二手估值) / 拥有天数</li>
+                  <li>保质期临期三色状态倒计时（绿/黄/红）</li>
+                </ul>
+              </div>
+            </div>
+            <div class="card-bottom">
+              <div class="platform-tags">
+                <span class="platform-badge android">Android</span>
+                <span class="platform-badge desktop">Desktop</span>
+              </div>
+              <span class="code-ref">DataModels.kt (Entry)</span>
+            </div>
+          </div>
+
+          <div class="feature-card" data-status="done" data-keywords="订阅资产 周期扣费 订阅监控 续费预警 iCloud Netflix">
+            <div class="card-top">
+              <div class="card-title-row">
+                <span class="card-title">周期订阅资产监控与扣费预警</span>
+                <span class="card-state-tag done">✅ 已交付</span>
+              </div>
+              <p class="card-desc">纳管软件订阅、宽带网络与健身年卡，支持月/季/年/周周期换算，提供扣费前 1~3 天系统通知栏预警。</p>
+              <div class="card-highlights">
+                <ul>
+                  <li>自动精算月均支出与年化总开销</li>
+                  <li>自动排期与周期续费提醒推送</li>
+                </ul>
+              </div>
+            </div>
+            <div class="card-bottom">
+              <div class="platform-tags">
+                <span class="platform-badge android">Android</span>
+                <span class="platform-badge desktop">Desktop</span>
+              </div>
+              <span class="code-ref">ReminderReceiver / DataModels</span>
+            </div>
+          </div>
+
+          <div class="feature-card" data-status="done" data-keywords="在役退役 闲鱼代售 转转 赠送 报废 回血 ROI">
+            <div class="card-top">
+              <div class="card-title-row">
+                <span class="card-title">在役/退役归置与闲鱼回血 ROI</span>
+                <span class="card-state-tag done">✅ 已交付</span>
+              </div>
+              <p class="card-desc">提供 6 种退役归置渠道（闲鱼、转转、赠送、封箱、回收、报废），二手转卖回血金额自动抵扣历史总支出。</p>
+              <div class="card-highlights">
+                <ul>
+                  <li>回血金额真实扣减，精准核算生命周期 ROI</li>
+                  <li>断舍离沉睡物品出清追踪</li>
+                </ul>
+              </div>
+            </div>
+            <div class="card-bottom">
+              <div class="platform-tags">
+                <span class="platform-badge android">Android</span>
+                <span class="platform-badge desktop">Desktop</span>
+              </div>
+              <span class="code-ref">AddEntryDialog / EntryRepository</span>
+            </div>
+          </div>
+
+          <div class="feature-card" data-status="done" data-keywords="时光胶囊 生活回忆录 照片 故事 评分 纪念">
+            <div class="card-top">
+              <div class="card-title-row">
+                <span class="card-title">物品时光胶囊与生活回忆瞬间</span>
+                <span class="card-state-tag done">✅ 已交付</span>
+              </div>
+              <p class="card-desc">记录物品伴随生活的点滴故事与里程碑，支持现场实拍、心情 Emoji、真香/心动评分与回忆长卷海报导出。</p>
+              <div class="card-highlights">
+                <ul>
+                  <li>支持一物多段图文回忆足迹</li>
+                  <li>支持生成精美生活胶囊分享海报</li>
+                </ul>
+              </div>
+            </div>
+            <div class="card-bottom">
+              <div class="platform-tags">
+                <span class="platform-badge android">Android</span>
+              </div>
+              <span class="code-ref">LifeCapsulePosterGenerator.kt</span>
+            </div>
+          </div>
+
+          <div class="feature-card" data-status="done" data-keywords="外借共享 借用人 归还倒计时 押金 借还凭条">
+            <div class="card-top">
+              <div class="card-title-row">
+                <span class="card-title">实物外借共享与借还流转追踪</span>
+                <span class="card-state-tag done">✅ 已交付</span>
+              </div>
+              <p class="card-desc">管理书籍、数码相机等物品借调流转，记录借用人、归还倒计时、押金、交接成色并生成借还凭证卡。</p>
+              <div class="card-highlights">
+                <ul>
+                  <li>逾期未还系统即时醒目预警</li>
+                  <li>一键生成交接凭据海报分享给微信好友</li>
+                </ul>
+              </div>
+            </div>
+            <div class="card-bottom">
+              <div class="platform-tags">
+                <span class="platform-badge android">Android</span>
+              </div>
+              <span class="code-ref">LendingVoucherGenerator.kt</span>
+            </div>
+          </div>
+
+          <!-- 演化方向 -->
+          <div class="feature-card planned" data-status="planned" data-keywords="演化 健康度预测 损耗模型 换新建议 生命周期衰减">
+            <div class="card-top">
+              <div class="card-title-row">
+                <span class="card-title">⏳ 物品损耗模型与换新健康度预测</span>
+                <span class="card-state-tag evo">规划演化</span>
+              </div>
+              <p class="card-desc">【演化路径】根据数码电子、小家电使用年限与历史维保频次，构建非线性损耗衰减模型，自动计算性价比换新拐点。</p>
+              <div class="card-highlights">
+                <ul>
+                  <li>演化方案：在 Entry 中扩充 `DepreciationCurve` 算法</li>
+                  <li>输出报废与转卖的最佳残值窗口期建议</li>
+                </ul>
+              </div>
+            </div>
+            <div class="card-bottom">
+              <div class="platform-tags">
+                <span class="platform-badge future">Stage 46x 规划</span>
+              </div>
+              <span class="code-ref">docs/product-direction.md</span>
+            </div>
+          </div>
+
+          <div class="feature-card planned" data-status="planned" data-keywords="演化 多币种 黄金 保值资产 汇率换算 贵金属">
+            <div class="card-top">
+              <div class="card-title-row">
+                <span class="card-title">⏳ 多币种核算与黄金保值资产跟踪</span>
+                <span class="card-state-tag evo">规划演化</span>
+              </div>
+              <p class="card-desc">【演化路径】支持外币购买资产汇率换算，增加黄金饰品、金条等按克重与实时金价浮动重估总价值的保值池。</p>
+              <div class="card-highlights">
+                <ul>
+                  <li>演化方案：纯离线或可选只读公有汇率源缓存</li>
+                  <li>支持法币、贵金属独立资产估值透视</li>
+                </ul>
+              </div>
+            </div>
+            <div class="card-bottom">
+              <div class="platform-tags">
+                <span class="platform-badge future">Stage 46x 规划</span>
+              </div>
+              <span class="code-ref">docs/product-direction.md</span>
+            </div>
+          </div>
+
+        </div>
+      </section>
+
+      <!-- 2. 空间平面图与寻物地图 -->
+      <section class="section-group" data-category="space">
+        <div class="section-header">
+          <div class="section-title">
+            <span>🗺️</span> 2. 空间平面图、寻物地图与多空间管理
+          </div>
+          <span class="section-badge">4 已上线 · 2 演化中</span>
+        </div>
+        <div class="cards-grid">
+
+          <div class="feature-card" data-status="done" data-keywords="平面图 空间 房间网格 图钉打点 2D户型图">
+            <div class="card-top">
+              <div class="card-title-row">
+                <span class="card-title">2D 平面图绘制与空间房间网格</span>
+                <span class="card-id-tag done">✅ 已交付</span>
+              </div>
+              <p class="card-desc">自由创建「自己的家」、「办公室」、「车内」等独立空间，支持房间网格排布与 Canvas 精准坐标图钉打点。</p>
+              <div class="card-highlights">
+                <ul>
+                  <li>拖拽调整房间大小、图标与主题色</li>
+                  <li>支持房间级与箱盒级层级嵌套</li>
+                </ul>
+              </div>
+            </div>
+            <div class="card-bottom">
+              <div class="platform-tags">
+                <span class="platform-badge android">Android</span>
+                <span class="platform-badge desktop">Desktop</span>
+              </div>
+              <span class="code-ref">FloorPlanView.kt / FloorPlanDialog</span>
+            </div>
+          </div>
+
+          <div class="feature-card" data-status="done" data-keywords="双向穿梭 寻物地图 光晕高亮 抽屉列表 找东西">
+            <div class="card-top">
+              <div class="card-title-row">
+                <span class="card-title">双向穿梭定位与秒级寻物地图</span>
+                <span class="card-state-tag done">✅ 已交付</span>
+              </div>
+              <p class="card-desc">由物找空间（点击位置直达平面图脉冲光晕打点）与由空间看物品（点击房间弹出收纳物品抽屉清单）。</p>
+              <div class="card-highlights">
+                <ul>
+                  <li>脉冲波纹动画精准指示存放点</li>
+                  <li>一键过滤当前房间/箱盒内的全部物资</li>
+                </ul>
+              </div>
+            </div>
+            <div class="card-bottom">
+              <div class="platform-tags">
+                <span class="platform-badge android">Android</span>
+                <span class="platform-badge desktop">Desktop</span>
+              </div>
+              <span class="code-ref">FloorPlanDialog.kt / SpaceRepository</span>
+            </div>
+          </div>
+
+          <div class="feature-card" data-status="done" data-keywords="变迁历史 移动轨迹 挪动记录 空间流转">
+            <div class="card-top">
+              <div class="card-title-row">
+                <span class="card-title">物品位置变迁历史与轨迹溯源</span>
+                <span class="card-state-tag done">✅ 已交付</span>
+              </div>
+              <p class="card-desc">每次变更物品存放位置自动追加一条变迁日志，清晰追踪物品从客厅移到储物间、借出再归位的全轨迹。</p>
+              <div class="card-highlights">
+                <ul>
+                  <li>记录挪动时间、起始房间与备注</li>
+                  <li>彻底解决“东西不知道什么时候换地方了”的痛点</li>
+                </ul>
+              </div>
+            </div>
+            <div class="card-bottom">
+              <div class="platform-tags">
+                <span class="platform-badge android">Android</span>
+                <span class="platform-badge desktop">Desktop</span>
+              </div>
+              <span class="code-ref">DataModels.kt (LocationMovement)</span>
+            </div>
+          </div>
+
+          <div class="feature-card" data-status="done" data-keywords="整箱搬家 批量移动 空间重组 一键搬迁">
+            <div class="card-top">
+              <div class="card-title-row">
+                <span class="card-title">整箱搬家与批量空间变迁引擎</span>
+                <span class="card-state-tag done">✅ 已交付</span>
+              </div>
+              <p class="card-desc">支持按箱盒或房间批量迁移物品位置，一次操作自动更新内部数十件物品的归属地并记录搬迁轨迹。</p>
+              <div class="card-highlights">
+                <ul>
+                  <li>支持跨空间（如“家”到“新房”）整体打包迁移</li>
+                  <li>保证位置历史与盘点状态完整传递</li>
+                </ul>
+              </div>
+            </div>
+            <div class="card-bottom">
+              <div class="platform-tags">
+                <span class="platform-badge android">Android</span>
+              </div>
+              <span class="code-ref">SpaceRepository.kt</span>
+            </div>
+          </div>
+
+          <!-- 空间演化方向 -->
+          <div class="feature-card planned" data-status="planned" data-keywords="演化 2.5D 立体货架 抽屉分层 空间拓扑 3D">
+            <div class="card-top">
+              <div class="card-title-row">
+                <span class="card-title">⏳ 2.5D 立体货架与抽屉层级透视图</span>
+                <span class="card-state-tag evo">规划演化</span>
+              </div>
+              <p class="card-desc">【演化路径】在现有 2D 平面图基础上，为衣柜、收纳架、斗柜增加轻量 2.5D 多层抽屉立体透视，不引入重度 3D CAD 负担。</p>
+              <div class="card-highlights">
+                <ul>
+                  <li>演化方案：基于 Canvas 分层叠放渲染</li>
+                  <li>直观查看“大衣柜第 3 层左抽屉”精准微观收纳</li>
+                </ul>
+              </div>
+            </div>
+            <div class="card-bottom">
+              <div class="platform-tags">
+                <span class="platform-badge future">Stage 46x 规划</span>
+              </div>
+              <span class="code-ref">docs/EVOLUTION_PREFERENCES.md</span>
+            </div>
+          </div>
+
+          <div class="feature-card planned" data-status="planned" data-keywords="演化 AR 实景找物 相机叠加 空间锚点">
+            <div class="card-top">
+              <div class="card-title-row">
+                <span class="card-title">⏳ 轻量 AR 实景相机找物光标引导</span>
+                <span class="card-state-tag evo">规划演化</span>
+              </div>
+              <p class="card-desc">【演化路径】调用手机相机实景，通过房间特征点或门框/箱盒标记，在画面中直接指示物品所在抽屉方向箭头。</p>
+              <div class="card-highlights">
+                <ul>
+                  <li>演化方案：采用 Android ARCore 轻量级平面锚定</li>
+                  <li>完全离线运行，保障家庭室内隐私绝对不外泄</li>
+                </ul>
+              </div>
+            </div>
+            <div class="card-bottom">
+              <div class="platform-tags">
+                <span class="platform-badge future">Stage 47x 规划</span>
+              </div>
+              <span class="code-ref">docs/product-direction.md</span>
+            </div>
+          </div>
+
+        </div>
+      </section>
+
+      <!-- 3. 12 大专业收纳馆 -->
+      <section class="section-group" data-category="vaults">
+        <div class="section-header">
+          <div class="section-title">
+            <span>🏛️</span> 3. 第一性原理 12 大专业收纳与时效生命线馆
+          </div>
+          <span class="section-badge">12 馆全量交付 · 2 演化中</span>
+        </div>
+        <div class="cards-grid">
+
+          <div class="feature-card" data-status="done" data-keywords="卡券馆 优惠券 次卡 会员权益 临期 余额">
+            <div class="card-top">
+              <div class="card-title-row">
+                <span class="card-title">🎟️ 时效权益卡券馆</span>
+                <span class="card-state-tag done">✅ 已交付</span>
+              </div>
+              <p class="card-desc">纳管优惠券、代金券、洗车/理发次卡与会员权益。支持 3 天临期智能预警与次卡一键扣减打卡。</p>
+              <div class="card-highlights">
+                <ul>
+                  <li>次卡剩余次数精准核销与历史记录</li>
+                  <li>券码一键复制与扫码条码展示</li>
+                </ul>
+              </div>
+            </div>
+            <div class="card-bottom">
+              <div class="platform-tags">
+                <span class="platform-badge android">Android</span>
+                <span class="platform-badge desktop">Desktop</span>
+              </div>
+              <span class="code-ref">FamilyVaultDialog / CouponRecord</span>
+            </div>
+          </div>
+
+          <div class="feature-card" data-status="done" data-keywords="证照安全夹 身份证 护照 户口本 防盗水印 脱敏复制">
+            <div class="card-top">
+              <div class="card-title-row">
+                <span class="card-title">🪪 家庭证照安全夹</span>
+                <span class="card-state-tag done">✅ 已交付</span>
+              </div>
+              <p class="card-desc">纳管身份证、护照、户口本、结婚证与房产契约。证件号脱敏显示、一键安全复制与防盗用自定义水印图片导出。</p>
+              <div class="card-highlights">
+                <ul>
+                  <li>证件到期与换证提前预警排期</li>
+                  <li>安全沙盒加密存储，导出自带“仅供办理XX使用”水印</li>
+                </ul>
+              </div>
+            </div>
+            <div class="card-bottom">
+              <div class="platform-tags">
+                <span class="platform-badge android">Android</span>
+                <span class="platform-badge desktop">Desktop</span>
+              </div>
+              <span class="code-ref">IdentityWatermarkHelper / CertRecord</span>
+            </div>
+          </div>
+
+          <div class="feature-card" data-status="done" data-keywords="智能药箱 常用药 对症速查 开封保质期 用法用量 禁忌">
+            <div class="card-top">
+              <div class="card-title-row">
+                <span class="card-title">💊 家庭智能健康药箱</span>
+                <span class="card-state-tag done">✅ 已交付</span>
+              </div>
+              <p class="card-desc">专为家庭常备药设计。支持对症秒查（发烧/止痛/胃肠/感冒等）、开封后有效天数自动推算与过期严禁服用强提醒。</p>
+              <div class="card-highlights">
+                <ul>
+                  <li>开封后保质期动态重算（如眼药水开封后30天）</li>
+                  <li>详细用法用量、成人/儿童剂量备忘</li>
+                </ul>
+              </div>
+            </div>
+            <div class="card-bottom">
+              <div class="platform-tags">
+                <span class="platform-badge android">Android</span>
+                <span class="platform-badge desktop">Desktop</span>
+              </div>
+              <span class="code-ref">FamilyMedicineDialog / MedicineRecord</span>
+            </div>
+          </div>
+
+          <div class="feature-card" data-status="done" data-keywords="食材鲜度 冷冻 冷藏 常温 保鲜倒计时 今晚清库存">
+            <div class="card-top">
+              <div class="card-title-row">
+                <span class="card-title">🥦 食材生鲜鲜度库</span>
+                <span class="card-state-tag done">✅ 已交付</span>
+              </div>
+              <p class="card-desc">冷冻/冷藏/常温三温区分区收纳，食材保鲜期倒计时追踪，提供一键“今晚清库存”智能临期菜谱组合推荐。</p>
+              <div class="card-highlights">
+                <ul>
+                  <li>生鲜果蔬、肉类保鲜周期动态计算</li>
+                  <li>直观展示即将过期食材，拒绝厨房浪费</li>
+                </ul>
+              </div>
+            </div>
+            <div class="card-bottom">
+              <div class="platform-tags">
+                <span class="platform-badge android">Android</span>
+                <span class="platform-badge desktop">Desktop</span>
+              </div>
+              <span class="code-ref">FoodVaultDialog / FoodRecord</span>
+            </div>
+          </div>
+
+          <div class="feature-card" data-status="done" data-keywords="荣誉勋章 证书 考级 履历 年审 奖牌 足迹长卷">
+            <div class="card-top">
+              <div class="card-title-row">
+                <span class="card-title">🏆 荣誉勋章与成长履历馆</span>
+                <span class="card-state-tag done">✅ 已交付</span>
+              </div>
+              <p class="card-desc">纳管学历学位、技能证书、获奖奖状与职业资格。提供资格年审换证预警与个人高光履历长卷海报导出。</p>
+              <div class="card-highlights">
+                <ul>
+                  <li>证书编号与发证机构结构化存档</li>
+                  <li>一键生成精美个人成长高光足迹长卷</li>
+                </ul>
+              </div>
+            </div>
+            <div class="card-bottom">
+              <div class="platform-tags">
+                <span class="platform-badge android">Android</span>
+                <span class="platform-badge desktop">Desktop</span>
+              </div>
+              <span class="code-ref">HonorVaultDialog / HonorRecord</span>
+            </div>
+          </div>
+
+          <div class="feature-card" data-status="done" data-keywords="四季衣橱 换季封箱 材质洗护 穿戴成本 沉睡衣物">
+            <div class="card-top">
+              <div class="card-title-row">
+                <span class="card-title">👗 四季衣橱与穿搭舱</span>
+                <span class="card-state-tag done">✅ 已交付</span>
+              </div>
+              <p class="card-desc">支持按春夏秋冬四季与材质洗护要求分类，换季一键打包封箱归档，自动精算每次穿戴单次成本与沉睡衣物预警。</p>
+              <div class="card-highlights">
+                <ul>
+                  <li>洗涤标示与真丝/羊绒养护指南关联</li>
+                  <li>打卡穿戴次数，单次穿戴成本一目了然</li>
+                </ul>
+              </div>
+            </div>
+            <div class="card-bottom">
+              <div class="platform-tags">
+                <span class="platform-badge android">Android</span>
+                <span class="platform-badge desktop">Desktop</span>
+              </div>
+              <span class="code-ref">WardrobeVaultDialog / WardrobeRecord</span>
+            </div>
+          </div>
+
+          <div class="feature-card" data-status="done" data-keywords="应急防灾 避难包 急救医药 逃生 季度点检 生命线">
+            <div class="card-top">
+              <div class="card-title-row">
+                <span class="card-title">🚨 家庭应急防灾生命线舱</span>
+                <span class="card-state-tag done">✅ 已交付</span>
+              </div>
+              <p class="card-desc">基于四大应急专包（急救医药包、应急求生包、逃生防护包、通信应急包）构筑生命线，支持季度安全点检排期。</p>
+              <div class="card-highlights">
+                <ul>
+                  <li>高能量口粮、净水片、应急手电电池保质期追踪</li>
+                  <li>一键点检合格率打卡，防患于未然</li>
+                </ul>
+              </div>
+            </div>
+            <div class="card-bottom">
+              <div class="platform-tags">
+                <span class="platform-badge android">Android</span>
+                <span class="platform-badge desktop">Desktop</span>
+              </div>
+              <span class="code-ref">EmergencyVaultDialog / EmergencyRecord</span>
+            </div>
+          </div>
+
+          <div class="feature-card" data-status="done" data-keywords="工具五金 设备维保 螺丝规格 耗材更换 净水器滤芯">
+            <div class="card-top">
+              <div class="card-title-row">
+                <span class="card-title">🔧 家庭工具五金与维保配件舱</span>
+                <span class="card-state-tag done">✅ 已交付</span>
+              </div>
+              <p class="card-desc">五金工具分类与螺丝批头规格速查，家电设备（新风、净水器滤芯、扫地机）定期维保周期排期与耗材型号备忘。</p>
+              <div class="card-highlights">
+                <ul>
+                  <li>下次维保倒计时与超期提醒</li>
+                  <li>五金规格参数速查，避免买错备件</li>
+                </ul>
+              </div>
+            </div>
+            <div class="card-bottom">
+              <div class="platform-tags">
+                <span class="platform-badge android">Android</span>
+                <span class="platform-badge desktop">Desktop</span>
+              </div>
+              <span class="code-ref">ToolsVaultDialog / ToolRecord</span>
+            </div>
+          </div>
+
+          <div class="feature-card" data-status="done" data-keywords="绿植花卉 养护日历 浇水 施肥 光照习性 一键打卡">
+            <div class="card-top">
+              <div class="card-title-row">
+                <span class="card-title">🪴 家庭绿植花卉与养护日历舱</span>
+                <span class="card-state-tag done">✅ 已交付</span>
+              </div>
+              <p class="card-desc">记录绿植光照习性（喜阳/耐阴）与浇水/施肥周期日历，提供桌面小组件联动与一键水肥养护完成打卡。</p>
+              <div class="card-highlights">
+                <ul>
+                  <li>智能推算下次浇水日期与干湿周期</li>
+                  <li>绿植成长照片留存对比</li>
+                </ul>
+              </div>
+            </div>
+            <div class="card-bottom">
+              <div class="platform-tags">
+                <span class="platform-badge android">Android</span>
+                <span class="platform-badge desktop">Desktop</span>
+              </div>
+              <span class="code-ref">PlantVaultDialog / PlantRecord</span>
+            </div>
+          </div>
+
+          <div class="feature-card" data-status="done" data-keywords="萌宠档案 狂犬疫苗 驱虫排期 芯片号 宠物健康">
+            <div class="card-top">
+              <div class="card-title-row">
+                <span class="card-title">🐾 家庭萌宠健康生活档案舱</span>
+                <span class="card-state-tag done">✅ 已交付</span>
+              </div>
+              <p class="card-desc">纳管毛孩子品种、生日与芯片编号（脱敏），建立体内/体外驱虫与狂犬疫苗周期排期提醒，追踪宠物体重新陈代谢。</p>
+              <div class="card-highlights">
+                <ul>
+                  <li>疫苗接种日历与体检报告照片留存</li>
+                  <li>驱虫周期到期系统通知推送</li>
+                </ul>
+              </div>
+            </div>
+            <div class="card-bottom">
+              <div class="platform-tags">
+                <span class="platform-badge android">Android</span>
+                <span class="platform-badge desktop">Desktop</span>
+              </div>
+              <span class="code-ref">PetVaultDialog / PetRecord</span>
+            </div>
+          </div>
+
+          <div class="feature-card" data-status="done" data-keywords="书房藏书 书架物理定位 ISBN 读书进度 借阅追踪">
+            <div class="card-top">
+              <div class="card-title-row">
+                <span class="card-title">📚 书房藏书、借阅与精读舱</span>
+                <span class="card-state-tag done">✅ 已交付</span>
+              </div>
+              <p class="card-desc">精确到书架第几层第几格物理定位，支持扫 ISBN 条码录入、阅读进度百分比记录与外借给朋友的流转归还追踪。</p>
+              <div class="card-highlights">
+                <ul>
+                  <li>书目物理格子坐标定位（如 A3-02）</li>
+                  <li>阅读进度条记录与读书笔记关联</li>
+                </ul>
+              </div>
+            </div>
+            <div class="card-bottom">
+              <div class="platform-tags">
+                <span class="platform-badge android">Android</span>
+                <span class="platform-badge desktop">Desktop</span>
+              </div>
+              <span class="code-ref">BookVaultDialog / BookRecord</span>
+            </div>
+          </div>
+
+          <div class="feature-card" data-status="done" data-keywords="茶窖名酿 适饮黄金期 陈化年份 开瓶保鲜 产区">
+            <div class="card-top">
+              <div class="card-title-row">
+                <span class="card-title">🍷 茶窖名酿与适饮时效舱</span>
+                <span class="card-state-tag done">✅ 已交付</span>
+              </div>
+              <p class="card-desc">纳管名茶、红酒、白酒与威士忌。陈化年份精算、最佳适饮黄金期推算、开瓶后保鲜天数管理与剩余库存打卡。</p>
+              <div class="card-highlights">
+                <ul>
+                  <li>名酒适饮峰值年份雷达</li>
+                  <li>开瓶后保鲜期倒计时，避免氧化变质</li>
+                </ul>
+              </div>
+            </div>
+            <div class="card-bottom">
+              <div class="platform-tags">
+                <span class="platform-badge android">Android</span>
+                <span class="platform-badge desktop">Desktop</span>
+              </div>
+              <span class="code-ref">BeverageTeaDialog / BeverageTeaRecord</span>
+            </div>
+          </div>
+
+          <!-- 12 馆演化方向 -->
+          <div class="feature-card planned" data-status="planned" data-keywords="演化 药效禁忌 药物相互作用 配伍禁忌 药箱智能体检">
+            <div class="card-top">
+              <div class="card-title-row">
+                <span class="card-title">⏳ 家庭药箱药物配伍禁忌与冲突熔断</span>
+                <span class="card-state-tag evo">规划演化</span>
+              </div>
+              <p class="card-desc">【演化路径】根据药箱中已有药品成分（如头孢 + 酒精类、布洛芬 + 对乙酰氨基酚重复用药），在查看或服药时弹出冲突警示。</p>
+              <div class="card-highlights">
+                <ul>
+                  <li>演化方案：内置离线常用 OTC 药物成分冲突规则库</li>
+                  <li>服药前双重确认，守护老人与儿童用药安全</li>
+                </ul>
+              </div>
+            </div>
+            <div class="card-bottom">
+              <div class="platform-tags">
+                <span class="platform-badge future">Stage 46x 规划</span>
+              </div>
+              <span class="code-ref">docs/design/01-product-requirements.md</span>
+            </div>
+          </div>
+
+          <div class="feature-card planned" data-status="planned" data-keywords="演化 全家生命线总分 健康度雷达 时效综合评估">
+            <div class="card-top">
+              <div class="card-title-row">
+                <span class="card-title">⏳ 100 分制家庭收纳与时效健康度雷达</span>
+                <span class="card-state-tag evo">规划演化</span>
+              </div>
+              <p class="card-desc">【演化路径】综合 12 馆临期率、证件有效率、防灾物资完备率、空间拥挤度，输出 0~100 分制收纳健康度评分及提升建议。</p>
+              <div class="card-highlights">
+                <ul>
+                  <li>演化方案：建立时效物资加权扣分评估算法</li>
+                  <li>一键生成月度家庭资产健康评估体检表</li>
+                </ul>
+              </div>
+            </div>
+            <div class="card-bottom">
+              <div class="platform-tags">
+                <span class="platform-badge future">Stage 46x 规划</span>
+              </div>
+              <span class="code-ref">docs/manuals/20-user-guide.md</span>
+            </div>
+          </div>
+
+        </div>
+      </section>
+
+      <!-- 4. 第二大脑与灵感剪藏 -->
+      <section class="section-group" data-category="brain">
+        <div class="section-header">
+          <div class="section-title">
+            <span>💡</span> 4. 灵感想法舱、离线剪藏与第二大脑 (Stage 450~453)
+          </div>
+          <span class="section-badge">6 已上线 · 2 演化中</span>
+        </div>
+        <div class="cards-grid">
+
+          <div class="feature-card" data-status="done" data-keywords="灵感想法 闪念卡片 多色主题 标签 置顶 实体关联">
+            <div class="card-top">
+              <div class="card-title-row">
+                <span class="card-title">灵感想法舱 (Idea Vault)</span>
+                <span class="card-state-tag done">✅ 已交付</span>
+              </div>
+              <p class="card-desc">轻量闪念卡片流，支持多色卡片背景、Emoji 分类、Markdown 快捷录入、置顶以及与实体物品的跨维关联引用。</p>
+              <div class="card-highlights">
+                <ul>
+                  <li>支持关联实物资产 ID (linkedAssetIds)</li>
+                  <li>离线秒级检索想法正文与标签</li>
+                </ul>
+              </div>
+            </div>
+            <div class="card-bottom">
+              <div class="platform-tags">
+                <span class="platform-badge android">Android</span>
+                <span class="platform-badge desktop">Desktop</span>
+              </div>
+              <span class="code-ref">IdeaVaultDialog / IdeaRecord</span>
+            </div>
+          </div>
+
+          <div class="feature-card" data-status="done" data-keywords="剪藏知识库 稍后读 离线阅读 纯净Markdown 截图归档">
+            <div class="card-top">
+              <div class="card-title-row">
+                <span class="card-title">智能剪藏知识库 (Clipping Vault)</span>
+                <span class="card-state-tag done">✅ 已交付</span>
+              </div>
+              <p class="card-desc">微信公众号、知乎、技术文章与截图纯净离线剪藏库，内置沉浸式离线稍后读阅读器与阅读进度记忆。</p>
+              <div class="card-highlights">
+                <ul>
+                  <li>完整离线 Markdown 渲染与私有图片沙盒</li>
+                  <li>支持文章阅读进度百分比记录与归档</li>
+                </ul>
+              </div>
+            </div>
+            <div class="card-bottom">
+              <div class="platform-tags">
+                <span class="platform-badge android">Android</span>
+                <span class="platform-badge desktop">Desktop</span>
+              </div>
+              <span class="code-ref">ClippingVaultDialog / ClippingRecord</span>
+            </div>
+          </div>
+
+          <div class="feature-card" data-status="done" data-keywords="截图监听 浮窗 无感识别 OCR提取 自动归档">
+            <div class="card-top">
+              <div class="card-title-row">
+                <span class="card-title">系统截图无感监听器</span>
+                <span class="card-state-tag done">✅ 已交付</span>
+              </div>
+              <p class="card-desc">后台静默监听系统媒体库截图事件，前台轻量气泡提醒，支持一秒唤起 OCR 全文解析并快速转存为剪藏或资产。</p>
+              <div class="card-highlights">
+                <ul>
+                  <li>基于 Android ContentObserver 监听</li>
+                  <li>零耗电无感唤醒，支持一键忽略或采集</li>
+                </ul>
+              </div>
+            </div>
+            <div class="card-bottom">
+              <div class="platform-tags">
+                <span class="platform-badge android">Android</span>
+              </div>
+              <span class="code-ref">ScreenshotWatcherHelper.kt</span>
+            </div>
+          </div>
+
+          <div class="feature-card" data-status="done" data-keywords="ML Kit OCR 离线文字识别 截图打标 提取单号">
+            <div class="card-top">
+              <div class="card-title-row">
+                <span class="card-title">ML Kit 离线 OCR 全文打标引擎</span>
+                <span class="card-state-tag done">✅ 已交付</span>
+              </div>
+              <p class="card-desc">集成 Google ML Kit 纯离线文字识别模型，毫秒级提取截图中的全部文本并建立倒排索引，无需网络上传。</p>
+              <div class="card-highlights">
+                <ul>
+                  <li>离线提取发票单号、订单价格与商品名称</li>
+                  <li>全文 OCR 结果支持全局穿透检索</li>
+                </ul>
+              </div>
+            </div>
+            <div class="card-bottom">
+              <div class="platform-tags">
+                <span class="platform-badge android">Android</span>
+              </div>
+              <span class="code-ref">ScreenshotOcrProcessor.kt</span>
+            </div>
+          </div>
+
+          <div class="feature-card" data-status="done" data-keywords="统一收集箱 系统分享 多模态接收 快速入库">
+            <div class="card-top">
+              <div class="card-title-row">
+                <span class="card-title">统一收集箱与系统级分享桥接</span>
+                <span class="card-state-tag done">✅ 已交付</span>
+              </div>
+              <p class="card-desc">支持作为 Android 系统分享目标（Share Target），接收任意 App 分享的图片、网页 URL 或文本，直接流入收集箱。</p>
+              <div class="card-highlights">
+                <ul>
+                  <li>自动识别 URL 并调度网页剪藏解析</li>
+                  <li>自动识别图片并触发 OCR 与沙盒入库</li>
+                </ul>
+              </div>
+            </div>
+            <div class="card-bottom">
+              <div class="platform-tags">
+                <span class="platform-badge android">Android</span>
+              </div>
+              <span class="code-ref">CollectShareActivity / CollectionWorkspace</span>
+            </div>
+          </div>
+
+          <div class="feature-card" data-status="done" data-keywords="数字资产 电子相册 授权码 软件Key 域名 网盘">
+            <div class="card-top">
+              <div class="card-title-row">
+                <span class="card-title">数字与电子资产管理器</span>
+                <span class="card-state-tag done">✅ 已交付</span>
+              </div>
+              <p class="card-desc">纳管照片相册集、软件/游戏 License Key、域名网站、电子书与教程资料包，支持授权码脱敏与一键复制。</p>
+              <div class="card-highlights">
+                <ul>
+                  <li>支持网盘/NAS 备份状态标记（已备份/仅本地）</li>
+                  <li>资产容量大小与访问链接快速跳转</li>
+                </ul>
+              </div>
+            </div>
+            <div class="card-bottom">
+              <div class="platform-tags">
+                <span class="platform-badge android">Android</span>
+                <span class="platform-badge desktop">Desktop</span>
+              </div>
+              <span class="code-ref">DigitalAssetManagerDialog.kt</span>
+            </div>
+          </div>
+
+          <!-- 大脑演化方向 -->
+          <div class="feature-card planned" data-status="planned" data-keywords="演化 知识图谱 双向穿透 网状连接 实体关联 节点可视化">
+            <div class="card-top">
+              <div class="card-title-row">
+                <span class="card-title">⏳ 跨维双向穿透实体知识图谱 (Graph View)</span>
+                <span class="card-state-tag evo">Stage 452 演化</span>
+              </div>
+              <p class="card-desc">【演化路径】构建「实物物品 × 灵感想法 × 剪藏文章 × 空间节点」的可视化双向网状连接图谱，支持引力布局探索与双向穿透。</p>
+              <div class="card-highlights">
+                <ul>
+                  <li>演化方案：落地 `EntityKnowledgeGraphDialog.kt`</li>
+                  <li>点击任一节点高亮全链路关联资产与笔记</li>
+                </ul>
+              </div>
+            </div>
+            <div class="card-bottom">
+              <div class="platform-tags">
+                <span class="platform-badge future">Stage 452 在研</span>
+              </div>
+              <span class="code-ref">docs/stages/stage-roadmap.md</span>
+            </div>
+          </div>
+
+          <div class="feature-card planned" data-status="planned" data-keywords="演化 离线LLM 端侧大模型 资产问答 语义问答 向量搜索">
+            <div class="card-top">
+              <div class="card-title-row">
+                <span class="card-title">⏳ 端侧离线小型 LLM 本地资产语义问答</span>
+                <span class="card-state-tag evo">规划演化</span>
+              </div>
+              <p class="card-desc">【演化路径】集成轻量级端侧小模型（如 Gemma 2B 离线量化版），支持“我去年买的降噪耳机放在哪个抽屉了”等自然语言推理。</p>
+              <div class="card-highlights">
+                <ul>
+                  <li>演化方案：端侧 NPU/ONNX 纯本地推理，零网络依赖</li>
+                  <li>结合全量倒排索引实现高精度本地问答</li>
+                </ul>
+              </div>
+            </div>
+            <div class="card-bottom">
+              <div class="platform-tags">
+                <span class="platform-badge future">Stage 47x 规划</span>
+              </div>
+              <span class="code-ref">docs/GEMINI_RATIONALE.md</span>
+            </div>
+          </div>
+
+        </div>
+      </section>
+
+      <!-- 5. 智能硬件、外设与标签工坊 -->
+      <section class="section-group" data-category="hardware">
+        <div class="section-header">
+          <div class="section-title">
+            <span>🖨️</span> 5. 智能硬件、外设直连与标签工坊
+          </div>
+          <span class="section-badge">4 已上线 · 2 演化中</span>
+        </div>
+        <div class="cards-grid">
+
+          <div class="feature-card" data-status="done" data-keywords="蓝牙打印 热敏标签机 ESC POS TSPL 打印机 标签纸">
+            <div class="card-top">
+              <div class="card-title-row">
+                <span class="card-title">蓝牙便携热敏标签机直连打印</span>
+                <span class="card-state-tag done">✅ 已交付</span>
+              </div>
+              <p class="card-desc">基于 ESC/POS & TSPL 双协议蓝牙直连主流便携热敏标签机（精臣、汉印、汉码等），一秒打印箱盒标签。</p>
+              <div class="card-highlights">
+                <ul>
+                  <li>支持多尺寸标签规格自适应渲染</li>
+                  <li>支持二维码、条形码与物品图文排版</li>
+                </ul>
+              </div>
+            </div>
+            <div class="card-bottom">
+              <div class="platform-tags">
+                <span class="platform-badge android">Android</span>
+              </div>
+              <span class="code-ref">BluetoothPrinterHelper.kt</span>
+            </div>
+          </div>
+
+          <div class="feature-card" data-status="done" data-keywords="NFC 碰一碰 烧录写卡 秒级寻物 NDEF 智能标签">
+            <div class="card-top">
+              <div class="card-title-row">
+                <span class="card-title">NFC 智能标签「碰一碰」写卡与寻物</span>
+                <span class="card-state-tag done">✅ 已交付</span>
+              </div>
+              <p class="card-desc">支持将物品/箱盒唯一 UID 写入标准 NFC 贴纸；贴在收纳箱后，手机碰一下立即毫秒级弹窗展示内部全量清单。</p>
+              <div class="card-highlights">
+                <ul>
+                  <li>标准 NDEF 格式写入与只读保护</li>
+                  <li>无需打开 App，碰一碰直接呼起物品详情</li>
+                </ul>
+              </div>
+            </div>
+            <div class="card-bottom">
+              <div class="platform-tags">
+                <span class="platform-badge android">Android</span>
+              </div>
+              <span class="code-ref">NfcHelper.kt / MainActivity</span>
+            </div>
+          </div>
+
+          <div class="feature-card" data-status="done" data-keywords="收纳便签 二维码标签 Canvas高清导出 药品清单 食材标贴">
+            <div class="card-top">
+              <div class="card-title-row">
+                <span class="card-title">智能收纳便签工坊 (Canvas 1080P)</span>
+                <span class="card-state-tag done">✅ 已交付</span>
+              </div>
+              <p class="card-desc">提供箱盒全景清单、食材保鲜、用药说明、线缆规格等 5 大精美模板，生成 1080P 高清便签图片导出或打印。</p>
+              <div class="card-highlights">
+                <ul>
+                  <li>内置高容错 QR Code 矢量渲染</li>
+                  <li>支持直接保存到手机相册或分享微信打印</li>
+                </ul>
+              </div>
+            </div>
+            <div class="card-bottom">
+              <div class="platform-tags">
+                <span class="platform-badge android">Android</span>
+              </div>
+              <span class="code-ref">BoxQrCodeDialog.kt</span>
+            </div>
+          </div>
+
+          <div class="feature-card" data-status="done" data-keywords="智能扫码 ZXing 条形码 二维码 EAN-13 秒级识别">
+            <div class="card-top">
+              <div class="card-title-row">
+                <span class="card-title">全能智能扫一扫引擎 (ZXing)</span>
+                <span class="card-state-tag done">✅ 已交付</span>
+              </div>
+              <p class="card-desc">内置高性能扫码核心，支持箱盒二维码、商品 EAN-13 条形码、图书 ISBN 条码毫秒级识别与定位穿透。</p>
+              <div class="card-highlights">
+                <ul>
+                  <li>支持连续扫码盘点模式</li>
+                  <li>支持暗光手电筒照明与相册选图识别</li>
+                </ul>
+              </div>
+            </div>
+            <div class="card-bottom">
+              <div class="platform-tags">
+                <span class="platform-badge android">Android</span>
+              </div>
+              <span class="code-ref">ScannerActivity.kt</span>
+            </div>
+          </div>
+
+          <!-- 外设演化方向 -->
+          <div class="feature-card planned" data-status="planned" data-keywords="演化 电子墨水屏 E-Ink 价签 批量刷屏 低功耗">
+            <div class="card-top">
+              <div class="card-title-row">
+                <span class="card-title">⏳ 蓝牙电子墨水屏 (E-Ink) 价签批量无线刷屏</span>
+                <span class="card-state-tag evo">规划演化</span>
+              </div>
+              <p class="card-desc">【演化路径】对接 2.13/2.9 寸三色电子墨水屏蓝牙智能标牌，支持收纳箱内容变动后手机一键批量无线刷新墨水屏显示。</p>
+              <div class="card-highlights">
+                <ul>
+                  <li>演化方案：基于 BLE 广播协议推送 1-bit 黑白红点阵</li>
+                  <li>超长续航 3~5 年，实现极客科技感物理收纳箱标牌</li>
+                </ul>
+              </div>
+            </div>
+            <div class="card-bottom">
+              <div class="platform-tags">
+                <span class="platform-badge future">Stage 46x 规划</span>
+              </div>
+              <span class="code-ref">docs/product-direction.md</span>
+            </div>
+          </div>
+
+          <div class="feature-card planned" data-status="planned" data-keywords="演化 UWB 超宽带 厘米级定位 室内寻物 雷达">
+            <div class="card-top">
+              <div class="card-title-row">
+                <span class="card-title">⏳ UWB 超宽带室内厘米级寻物雷达</span>
+                <span class="card-state-tag evo">规划演化</span>
+              </div>
+              <p class="card-desc">【演化路径】支持绑定 UWB 寻物标签（如 AirTag 兼容或标准 UWB 模块），在手机屏幕上呈现距离与方向雷达引导。</p>
+              <div class="card-highlights">
+                <ul>
+                  <li>演化方案：采用 Android UWB API 进行高精度测距</li>
+                  <li>实现钥匙、证件包等极小高频贵重物品精准搜寻</li>
+                </ul>
+              </div>
+            </div>
+            <div class="card-bottom">
+              <div class="platform-tags">
+                <span class="platform-badge future">Stage 48x 规划</span>
+              </div>
+              <span class="code-ref">docs/EVOLUTION_PREFERENCES.md</span>
+            </div>
+          </div>
+
+        </div>
+      </section>
+
+      <!-- 6. AI 智能助手与无感桥接 -->
+      <section class="section-group" data-category="ai">
+        <div class="section-header">
+          <div class="section-title">
+            <span>🤖</span> 6. AI 智能管家、出清定价与无感桥接
+          </div>
+          <span class="section-badge">4 已上线 · 1 演化中</span>
+        </div>
+        <div class="cards-grid">
+
+          <div class="feature-card" data-status="done" data-keywords="AI管家 空间收纳顾问 沉睡资产 整理建议 优化方案">
+            <div class="card-top">
+              <div class="card-title-row">
+                <span class="card-title">AI 资产管家与空间收纳顾问</span>
+                <span class="card-state-tag done">✅ 已交付</span>
+              </div>
+              <p class="card-desc">基于本地规则引擎与语义启发式算法，深度扫描全屋空间拥挤度与闲置物品，提供针对性的空间收纳与断舍离方案。</p>
+              <div class="card-highlights">
+                <ul>
+                  <li>自动识别 180 天未移动的沉睡资产</li>
+                  <li>提供各房间收纳利用率评分与优化建议</li>
+                </ul>
+              </div>
+            </div>
+            <div class="card-bottom">
+              <div class="platform-tags">
+                <span class="platform-badge android">Android</span>
+              </div>
+              <span class="code-ref">AiConciergeHelper.kt</span>
+            </div>
+          </div>
+
+          <div class="feature-card" data-status="done" data-keywords="闲鱼AI 转转 二手文案 回血定价 智能描述 卖闲置">
+            <div class="card-top">
+              <div class="card-title-row">
+                <span class="card-title">闲鱼/转转 AI 出清文案与回血定价</span>
+                <span class="card-state-tag done">✅ 已交付</span>
+              </div>
+              <p class="card-desc">根据物品购入价格、使用天数、成色与配件，一键生成高吸引力、高转化率的闲鱼发布文案并推荐合理转卖价格。</p>
+              <div class="card-highlights">
+                <ul>
+                  <li>支持「极客真诚风」、「学生党诚出」、「痛快包邮」多种语气</li>
+                  <li>一键复制完整文案与定价，直奔闲鱼发布</li>
+                </ul>
+              </div>
+            </div>
+            <div class="card-bottom">
+              <div class="platform-tags">
+                <span class="platform-badge android">Android</span>
+              </div>
+              <span class="code-ref">ResaleCopilotHelper.kt</span>
+            </div>
+          </div>
+
+          <div class="feature-card" data-status="done" data-keywords="拍照记账 包装盒 发票OCR 一句话记账 智能录入">
+            <div class="card-top">
+              <div class="card-title-row">
+                <span class="card-title">发票/包装拍照 OCR 与一句话智能记账</span>
+                <span class="card-state-tag done">✅ 已交付</span>
+              </div>
+              <p class="card-desc">拍摄购买发票或商品包装盒自动提取金额、品名与日期；或直接输入“昨天在京东4999买了索尼耳机”自动结构化解析。</p>
+              <div class="card-highlights">
+                <ul>
+                  <li>自然语言时间与金额智能提取算法</li>
+                  <li>极大降低物品录入摩擦力</li>
+                </ul>
+              </div>
+            </div>
+            <div class="card-bottom">
+              <div class="platform-tags">
+                <span class="platform-badge android">Android</span>
+              </div>
+              <span class="code-ref">SmartIntakeHelper.kt</span>
+            </div>
+          </div>
+
+          <div class="feature-card" data-status="done" data-keywords="剪贴板监听 淘口令 京东订单 电商桥接 自动草稿">
+            <div class="card-top">
+              <div class="card-title-row">
+                <span class="card-title">电商订单截图与剪贴板无感桥接</span>
+                <span class="card-state-tag done">✅ 已交付</span>
+              </div>
+              <p class="card-desc">自动捕获剪贴板中的淘宝淘口令、京东分享链接或订单截图，自动解析商品标题、价格并生成入库草稿待确认。</p>
+              <div class="card-highlights">
+                <ul>
+                  <li>复制链接打开 App 即弹窗提示“发现新商品”</li>
+                  <li>无需手动重复打字与选分类</li>
+                </ul>
+              </div>
+            </div>
+            <div class="card-bottom">
+              <div class="platform-tags">
+                <span class="platform-badge android">Android</span>
+              </div>
+              <span class="code-ref">ClipboardOrderBridge.kt</span>
+            </div>
+          </div>
+
+          <!-- AI演化方向 -->
+          <div class="feature-card planned" data-status="planned" data-keywords="演化 空间动线 热力图 物品摆放 科学收纳">
+            <div class="card-top">
+              <div class="card-title-row">
+                <span class="card-title">⏳ 全屋高频动线热力图与科学摆放建议</span>
+                <span class="card-state-tag evo">规划演化</span>
+              </div>
+              <p class="card-desc">【演化路径】根据日常消耗品出入库频次与房间位置变迁，自动绘制家庭动线热力图，提示将高频取用物品移至黄金高度抽屉。</p>
+              <div class="card-highlights">
+                <ul>
+                  <li>演化方案：统计各房间交互频次与物理动线耗时</li>
+                  <li>大幅减少家庭找物与反复奔波的无效损耗</li>
+                </ul>
+              </div>
+            </div>
+            <div class="card-bottom">
+              <div class="platform-tags">
+                <span class="platform-badge future">Stage 46x 规划</span>
+              </div>
+              <span class="code-ref">docs/design/01-product-requirements.md</span>
+            </div>
+          </div>
+
+        </div>
+      </section>
+
+      <!-- 7. 统计分析、盘点与生命线看板 -->
+      <section class="section-group" data-category="core">
+        <div class="section-header">
+          <div class="section-title">
+            <span>📈</span> 7. 统计报表、沉浸式盘点与生命线看板
+          </div>
+          <span class="section-badge">4 已上线</span>
+        </div>
+        <div class="cards-grid">
+
+          <div class="feature-card" data-status="done" data-keywords="报表中心 环形图 资产分布 支出趋势 闲置雷达">
+            <div class="card-top">
+              <div class="card-title-row">
+                <span class="card-title">动态报表中心与交互式环形图</span>
+                <span class="card-state-tag done">✅ 已交付</span>
+              </div>
+              <p class="card-desc">提供全屋资产分类占比动态环形图（触碰高亮悬浮提示）、月度/年度支出趋势流与沉睡闲置雷达透视。</p>
+              <div class="card-highlights">
+                <ul>
+                  <li>手势触控高亮各分类开销与占比</li>
+                  <li>深度穿透至具体分类资产明细列表</li>
+                </ul>
+              </div>
+            </div>
+            <div class="card-bottom">
+              <div class="platform-tags">
+                <span class="platform-badge android">Android</span>
+                <span class="platform-badge desktop">Desktop</span>
+              </div>
+              <span class="code-ref">ReportFragment / DonutChartView</span>
+            </div>
+          </div>
+
+          <div class="feature-card" data-status="done" data-keywords="实物大盘点 扫码盘点 盘盈 盘亏 差异报告 空间审计">
+            <div class="card-top">
+              <div class="card-title-row">
+                <span class="card-title">空间沉浸式大盘点与差异报告</span>
+                <span class="card-state-tag done">✅ 已交付</span>
+              </div>
+              <p class="card-desc">按空间/房间进入大盘点模式，支持扫码核对与快速勾选，一键生成「已盘点 / 盘亏缺失 / 盘盈未知」审计差异报告。</p>
+              <div class="card-highlights">
+                <ul>
+                  <li>支持一键将盘亏物品标记为丢失或退役</li>
+                  <li>支持导出盘点审计 PDF / CSV 报告</li>
+                </ul>
+              </div>
+            </div>
+            <div class="card-bottom">
+              <div class="platform-tags">
+                <span class="platform-badge android">Android</span>
+              </div>
+              <span class="code-ref">InventoryAuditDialog.kt</span>
+            </div>
+          </div>
+
+          <div class="feature-card" data-status="done" data-keywords="生命线看板 今日待办 12馆综合预警 临期汇总 维保提醒">
+            <div class="card-top">
+              <div class="card-title-row">
+                <span class="card-title">今日时效待办与 12 馆生命线看板</span>
+                <span class="card-state-tag done">✅ 已交付</span>
+              </div>
+              <p class="card-desc">首页顶部综合看板，一揽子汇总 12 馆今日/近期到期卡券、临期食品药品、待维保设备、待还图书与待续费订阅。</p>
+              <div class="card-highlights">
+                <ul>
+                  <li>聚合 12 馆时效警报，直观呈现紧急待办事项</li>
+                  <li>点击任一提醒项直接穿透跳转对应收纳馆</li>
+                </ul>
+              </div>
+            </div>
+            <div class="card-bottom">
+              <div class="platform-tags">
+                <span class="platform-badge android">Android</span>
+                <span class="platform-badge desktop">Desktop</span>
+              </div>
+              <span class="code-ref">TodayAlerts / VaultAlertAggregator</span>
+            </div>
+          </div>
+
+          <div class="feature-card" data-status="done" data-keywords="全局搜索 联合检索 毫秒级穿透 跨维查找 OCR内容">
+            <div class="card-top">
+              <div class="card-title-row">
+                <span class="card-title">全库与 12 馆跨维极速联合检索</span>
+                <span class="card-state-tag done">✅ 已交付</span>
+              </div>
+              <p class="card-desc">单一搜索入口，毫秒级跨维穿透检索「实物物资 + 12大专业馆 + 灵感想法 + 剪藏文章 + 截图 OCR 全文文本」。</p>
+              <div class="card-highlights">
+                <ul>
+                  <li>多字段加权匹配，高亮命中关键词</li>
+                  <li>分类过滤 Tab 与最近搜索历史一键唤出</li>
+                </ul>
+              </div>
+            </div>
+            <div class="card-bottom">
+              <div class="platform-tags">
+                <span class="platform-badge android">Android</span>
+                <span class="platform-badge desktop">Desktop</span>
+              </div>
+              <span class="code-ref">GlobalSearchDialog.kt</span>
+            </div>
+          </div>
+
+        </div>
+      </section>
+
+      <!-- 8. 数据互通、同步与多端协同 -->
+      <section class="section-group" data-category="sync">
+        <div class="section-header">
+          <div class="section-title">
+            <span>⚡</span> 8. 局域网 P2P 互传、WebDAV 云同步与完整备份
+          </div>
+          <span class="section-badge">5 已上线 · 1 演化中</span>
+        </div>
+        <div class="cards-grid">
+
+          <div class="feature-card" data-status="done" data-keywords="P2P互传 局域网同步 UDP自发现 增量对撞 免密传">
+            <div class="card-top">
+              <div class="card-title-row">
+                <span class="card-title">局域网双机自发现与 P2P 增量对撞</span>
+                <span class="card-state-tag done">✅ 已交付</span>
+              </div>
+              <p class="card-desc">同一 WiFi 下通过 UDP 8849 广播毫秒级自发现双端设备，基于 Last-Write-Wins 增量对撞算法实现 12 馆全量合并。</p>
+              <div class="card-highlights">
+                <ul>
+                  <li>完全不经过外网服务器，局域网点对点极速传输</li>
+                  <li>冲突安全合并，永不覆盖更新的数据</li>
+                </ul>
+              </div>
+            </div>
+            <div class="card-bottom">
+              <div class="platform-tags">
+                <span class="platform-badge android">Android</span>
+                <span class="platform-badge desktop">Desktop</span>
+              </div>
+              <span class="code-ref">LanPeerDiscovery / LanSyncMergeEngine</span>
+            </div>
+          </div>
+
+          <div class="feature-card" data-status="done" data-keywords="WebDAV 私有云 坚果云 Nextcloud 云备份 完整恢复">
+            <div class="card-top">
+              <div class="card-title-row">
+                <span class="card-title">WebDAV 私有云完整备份与恢复</span>
+                <span class="card-state-tag done">✅ 已交付</span>
+              </div>
+              <p class="card-desc">采用标准 WebDAV PUT/GET 上传与下载完整备份，恢复前校验并确认。当前已有模拟器与桌面 Helper 公网样例验证；同一路径上传会替换远端文件，不是增量合并，未逐家验证云盘兼容性。</p>
+              <div class="card-highlights">
+                <ul>
+                  <li>支持自动定时静默云备份</li>
+                  <li>支持云端备份版本回滚与冲突预防</li>
+                </ul>
+              </div>
+            </div>
+            <div class="card-bottom">
+              <div class="platform-tags">
+                <span class="platform-badge android">Android</span>
+                <span class="platform-badge desktop">Desktop</span>
+              </div>
+              <span class="code-ref">WebDavSyncHelper / DesktopWebDav</span>
+            </div>
+          </div>
+
+          <div class="feature-card" data-status="done" data-keywords="完整备份 安全恢复 JSON互通 缺字段安全 100%兼容">
+            <div class="card-top">
+              <div class="card-title-row">
+                <span class="card-title">双端 100% 互通 JSON 完整备份与恢复</span>
+                <span class="card-state-tag done">✅ 已交付</span>
+              </div>
+              <p class="card-desc">Android 与桌面端共享完全一致的 JSON 备份规范，包含 12 馆、空间坐标、想法与剪藏。具备缺字段安全回退保护。</p>
+              <div class="card-highlights">
+                <ul>
+                  <li>绝不产生数据库方言分裂，跨平台无缝迁移</li>
+                  <li>支持单文件一键备份打包与安全校验恢复</li>
+                </ul>
+              </div>
+            </div>
+            <div class="card-bottom">
+              <div class="platform-tags">
+                <span class="platform-badge android">Android</span>
+                <span class="platform-badge desktop">Desktop</span>
+              </div>
+              <span class="code-ref">BackupCodec.kt / CompleteBackupStore</span>
+            </div>
+          </div>
+
+          <div class="feature-card" data-status="done" data-keywords="CSV导出 Excel UTF-8 BOM 资产总表 流水导出">
+            <div class="card-top">
+              <div class="card-title-row">
+                <span class="card-title">Excel 兼容 CSV 资产总表与流水导出</span>
+                <span class="card-state-tag done">✅ 已交付</span>
+              </div>
+              <p class="card-desc">支持将全量资产总表、生活流流水账、12 馆时效物资导出为标准 CSV，内置 UTF-8 BOM 编码，微软 Excel 打开绝不乱码。</p>
+              <div class="card-highlights">
+                <ul>
+                  <li>支持按时间范围与分类过滤导出</li>
+                  <li>便于用户在电脑端进行深度财务建模</li>
+                </ul>
+              </div>
+            </div>
+            <div class="card-bottom">
+              <div class="platform-tags">
+                <span class="platform-badge android">Android</span>
+                <span class="platform-badge desktop">Desktop</span>
+              </div>
+              <span class="code-ref">ExportManager.kt</span>
+            </div>
+          </div>
+
+          <div class="feature-card" data-status="done" data-keywords="多账本 独立空间 工作区 家庭账本 个人账本 数据隔离">
+            <div class="card-top">
+              <div class="card-title-row">
+                <span class="card-title">多账本独立空间管理体系 (Workspaces)</span>
+                <span class="card-state-tag done">✅ 已交付</span>
+              </div>
+              <p class="card-desc">支持创建「个人私有账本」、「家庭公用账本」、「工作室/公司资产账本」多套物理隔离工作区，一键快捷切换。</p>
+              <div class="card-highlights">
+                <ul>
+                  <li>各账本拥有完全独立的数据存储沙盒</li>
+                  <li>支持针对不同账本单独设置备份与导出策略</li>
+                </ul>
+              </div>
+            </div>
+            <div class="card-bottom">
+              <div class="platform-tags">
+                <span class="platform-badge android">Android</span>
+                <span class="platform-badge desktop">Desktop</span>
+              </div>
+              <span class="code-ref">LedgerManager.kt</span>
+            </div>
+          </div>
+
+          <!-- 同步演化方向 -->
+          <div class="feature-card planned" data-status="planned" data-keywords="演化 E2EE 端到端加密 零知识证明 硬件密钥 私有沙盒安全">
+            <div class="card-top">
+              <div class="card-title-row">
+                <span class="card-title">⏳ 端到端零知识加密 (E2EE) 备份包</span>
+                <span class="card-state-tag evo">规划演化</span>
+              </div>
+              <p class="card-desc">【演化路径】在生成 WebDAV 或本地 JSON 备份文件时，支持由用户指定主密码进行 AES-256-GCM 强加密，云端网盘完全无法窥探内容。</p>
+              <div class="card-highlights">
+                <ul>
+                  <li>演化方案：整合 PBKDF2 派生密钥与防暴力破解盐值</li>
+                  <li>全面强化个人与家庭财务、证件的极客级安全</li>
+                </ul>
+              </div>
+            </div>
+            <div class="card-bottom">
+              <div class="platform-tags">
+                <span class="platform-badge future">Stage 46x 规划</span>
+              </div>
+              <span class="code-ref">docs/design/04-security-compliance-design.md</span>
+            </div>
+          </div>
+
+        </div>
+      </section>
+
+      <!-- 9. 桌面单机版与 Web 控制台 -->
+      <section class="section-group" data-category="desktop">
+        <div class="section-header">
+          <div class="section-title">
+            <span>💻</span> 9. 桌面单机版体系与内嵌 Web 大屏控制台
+          </div>
+          <span class="section-badge">4 已上线 · 2 演化中</span>
+        </div>
+        <div class="cards-grid">
+
+          <div class="feature-card" data-status="done" data-keywords="桌面版 Native WebView2 系统托盘 单实例 C++">
+            <div class="card-top">
+              <div class="card-title-row">
+                <span class="card-title">Native WebView2 桌面壳与系统托盘</span>
+                <span class="card-state-tag done">✅ 已交付</span>
+              </div>
+              <p class="card-desc">基于 C++ 与微软 WebView2 打造的超轻量桌面单机版，具备系统托盘常驻、单实例互斥检测与原生窗口管理。</p>
+              <div class="card-highlights">
+                <ul>
+                  <li>极低内存占用，无需笨重的 Electron 运行时</li>
+                  <li>支持开机自启、托盘菜单快速呼出</li>
+                </ul>
+              </div>
+            </div>
+            <div class="card-bottom">
+              <div class="platform-tags">
+                <span class="platform-badge desktop">Desktop (Win)</span>
+              </div>
+              <span class="code-ref">CollecterWindow.cpp</span>
+            </div>
+          </div>
+
+          <div class="feature-card" data-status="done" data-keywords="嵌入式引擎 Ktor Port 8848 Web服务器 本地API">
+            <div class="card-top">
+              <div class="card-title-row">
+                <span class="card-title">嵌入式 Ktor Web 引擎 (Port 8848)</span>
+                <span class="card-state-tag done">✅ 已交付</span>
+              </div>
+              <p class="card-desc">桌面端内置超轻量 Ktor Web Server，承载全量本地 RESTful 接口与静态前端资源分发，严格绑定 Localhost 安全访问。</p>
+              <div class="card-highlights">
+                <ul>
+                  <li>毫秒级启动，提供全量 12 馆 CRUD 接口</li>
+                  <li>支持与移动端进行局域网数据握手</li>
+                </ul>
+              </div>
+            </div>
+            <div class="card-bottom">
+              <div class="platform-tags">
+                <span class="platform-badge desktop">Desktop</span>
+              </div>
+              <span class="code-ref">EmbeddedWebServer.kt</span>
+            </div>
+          </div>
+
+          <div class="feature-card" data-status="done" data-keywords="数据目录隔离 LOCALAPPDATA 卸载安全 防数据丢失">
+            <div class="card-top">
+              <div class="card-title-row">
+                <span class="card-title">安全数据目录隔离机制</span>
+                <span class="card-state-tag done">✅ 已交付</span>
+              </div>
+              <p class="card-desc">桌面端数据存储于 `%LOCALAPPDATA%\CollecterStandalone\data`，与程序安装路径完全解耦，软件覆盖或卸载绝不丢失用户数据。</p>
+              <div class="card-highlights">
+                <ul>
+                  <li>符合 Windows 应用数据规范</li>
+                  <li>支持一键在资源管理器中打开数据目录</li>
+                </ul>
+              </div>
+            </div>
+            <div class="card-bottom">
+              <div class="platform-tags">
+                <span class="platform-badge desktop">Desktop</span>
+              </div>
+              <span class="code-ref">DesktopDataDirectory.kt</span>
+            </div>
+          </div>
+
+          <div class="feature-card" data-status="done" data-keywords="Web控制台 大屏资产看板 浏览器管理 平板访问">
+            <div class="card-top">
+              <div class="card-title-row">
+                <span class="card-title">局域网内置 Web 大屏资产控制台</span>
+                <span class="card-state-tag done">✅ 已交付</span>
+              </div>
+              <p class="card-desc">手机或桌面端开启服务后，同局域网内的 iPad、Mac 或大屏显示器可通过浏览器直接访问全功能资产控制台。</p>
+              <div class="card-highlights">
+                <ul>
+                  <li>响应式大屏卡片与分类图表视图</li>
+                  <li>支持在大屏键盘下极速录入与批量编辑</li>
+                </ul>
+              </div>
+            </div>
+            <div class="card-bottom">
+              <div class="platform-tags">
+                <span class="platform-badge web">Web Browser</span>
+                <span class="platform-badge desktop">Desktop</span>
+              </div>
+              <span class="code-ref">LanShareServer / EmbeddedWebServer</span>
+            </div>
+          </div>
+
+          <!-- 桌面演化方向 -->
+          <div class="feature-card planned" data-status="planned" data-keywords="演化 浏览器插件 剪藏插件 Chrome Edge 扩展 一键剪藏">
+            <div class="card-top">
+              <div class="card-title-row">
+                <span class="card-title">⏳ 浏览器官方剪藏插件 (Chrome / Edge 扩展)</span>
+                <span class="card-state-tag evo">规划演化</span>
+              </div>
+              <p class="card-desc">【演化路径】开发轻量浏览器 Extension，浏览任意网页、电商商品时一键提取标题、正文与价格直推桌面端 8848 端口。</p>
+              <div class="card-highlights">
+                <ul>
+                  <li>演化方案：WebExtension 直连 localhost:8848/api/clip</li>
+                  <li>实现电脑端网页与文章无缝剪藏沉淀</li>
+                </ul>
+              </div>
+            </div>
+            <div class="card-bottom">
+              <div class="platform-tags">
+                <span class="platform-badge future">Stage 46x 规划</span>
+              </div>
+              <span class="code-ref">docs/stages/stage-roadmap.md</span>
+            </div>
+          </div>
+
+          <div class="feature-card planned" data-status="planned" data-keywords="演化 macOS Linux 跨平台 消除MSVC依赖 原生包">
+            <div class="card-top">
+              <div class="card-title-row">
+                <span class="card-title">⏳ macOS / Linux 原生客户端跨平台构建包</span>
+                <span class="card-state-tag evo">规划演化</span>
+              </div>
+              <p class="card-desc">【演化路径】基于 Webview / Wails / Native Shell 消除本地 MSVC 编译阻塞，生成 DMG、AppImage 与 Deb 多架构安装包。</p>
+              <div class="card-highlights">
+                <ul>
+                  <li>演化方案：跨平台 WebView 统一宿主封装</li>
+                  <li>实现真正的全平台桌面资产单机无缝交付</li>
+                </ul>
+              </div>
+            </div>
+            <div class="card-bottom">
+              <div class="platform-tags">
+                <span class="platform-badge future">Stage 454 规划</span>
+              </div>
+              <span class="code-ref">docs/BLOCKERS.md</span>
+            </div>
+          </div>
+
+        </div>
+      </section>
+
+      <!-- 10. 系统级底座、小组件与体验 -->
+      <section class="section-group" data-category="system">
+        <div class="section-header">
+          <div class="section-title">
+            <span>📱</span> 10. 系统底座、桌面小组件与安全体验
+          </div>
+          <span class="section-badge">5 已上线</span>
+        </div>
+        <div class="cards-grid">
+
+          <div class="feature-card" data-status="done" data-keywords="桌面小组件 App Widget 2x2 4x2 临期预警 快捷记账">
+            <div class="card-top">
+              <div class="card-title-row">
+                <span class="card-title">Android 桌面小组件系统 (Widgets)</span>
+                <span class="card-state-tag done">✅ 已交付</span>
+              </div>
+              <p class="card-desc">提供「临期与订阅预警 (2×2)」、「资产看板与快捷记账 (4×2)」、「12 馆综合时效看板 (2×2)」三大官方桌面小组件。</p>
+              <div class="card-highlights">
+                <ul>
+                  <li>不打开 App 即可在手机主屏一眼洞察时效状态</li>
+                  <li>支持主屏一键点击直达“记一笔”对话框</li>
+                </ul>
+              </div>
+            </div>
+            <div class="card-bottom">
+              <div class="platform-tags">
+                <span class="platform-badge android">Android</span>
+              </div>
+              <span class="code-ref">ExpiringAndSubWidget / QuickAddWidget</span>
+            </div>
+          </div>
+
+          <div class="feature-card" data-status="done" data-keywords="生物识别 指纹锁 面容识别 隐私保护 硬件加密">
+            <div class="card-top">
+              <div class="card-title-row">
+                <span class="card-title">生物识别指纹与面容隐私锁</span>
+                <span class="card-state-tag done">✅ 已交付</span>
+              </div>
+              <p class="card-desc">集成 AndroidX BiometricPrompt 系统级硬件安全芯片，进入应用或查看私密证照/资产时强制生物识别校验。</p>
+              <div class="card-highlights">
+                <ul>
+                  <li>支持指纹、面容或系统锁屏密码兜底</li>
+                  <li>切至后台即时自动上锁，防偷窥防泄露</li>
+                </ul>
+              </div>
+            </div>
+            <div class="card-bottom">
+              <div class="platform-tags">
+                <span class="platform-badge android">Android</span>
+              </div>
+              <span class="code-ref">BiometricLockHelper.kt</span>
+            </div>
+          </div>
+
+          <div class="feature-card" data-status="done" data-keywords="在线热更新 GitHub Releases 镜像加速 验签 安全补丁">
+            <div class="card-top">
+              <div class="card-title-row">
+                <span class="card-title">GitHub 在线更新与动态安全热补丁</span>
+                <span class="card-state-tag done">✅ 已交付</span>
+              </div>
+              <p class="card-desc">官方源严格置顶，多镜像 fallback 加速；支持游戏级 dex 动态热补丁，执行强校验签名（SHA256withRSA）与防 Zip Slip。</p>
+              <div class="card-highlights">
+                <ul>
+                  <li>一键检测新版本与差异更新</li>
+                  <li>安全不变量熔断机制，保障应用绝对纯净</li>
+                </ul>
+              </div>
+            </div>
+            <div class="card-bottom">
+              <div class="platform-tags">
+                <span class="platform-badge android">Android</span>
+              </div>
+              <span class="code-ref">HotUpdateManager / HotPatchEngine</span>
+            </div>
+          </div>
+
+          <div class="feature-card" data-status="done" data-keywords="互动教学 手把手引导 新手教程 跟手演练">
+            <div class="card-top">
+              <div class="card-title-row">
+                <span class="card-title">全景手把手互动引导教学系统</span>
+                <span class="card-state-tag done">✅ 已交付</span>
+              </div>
+              <p class="card-desc">内置沉浸式高亮蒙层交互教学，针对记一笔、空间打点、12 馆使用等核心操作提供按步骤跟手演练系统。</p>
+              <div class="card-highlights">
+                <ul>
+                  <li>高亮指示当前待操作区域与操作提示</li>
+                  <li>支持在设置中随时重新唤起任意单项教程</li>
+                </ul>
+              </div>
+            </div>
+            <div class="card-bottom">
+              <div class="platform-tags">
+                <span class="platform-badge android">Android</span>
+              </div>
+              <span class="code-ref">InteractiveGuideTour / SingleFeatureTours</span>
+            </div>
+          </div>
+
+          <div class="feature-card" data-status="done" data-keywords="图片沙盒 孤立文件清理 批量重压缩 存储瘦身">
+            <div class="card-top">
+              <div class="card-title-row">
+                <span class="card-title">沙盒孤立图片清理与批量重压缩</span>
+                <span class="card-state-tag done">✅ 已交付</span>
+              </div>
+              <p class="card-desc">全库遍历扫描无任何资产引用的历史残留孤立图片，支持一键批量无损/高画质重压缩，显著释放手机存储空间。</p>
+              <div class="card-highlights">
+                <ul>
+                  <li>安全扫描比对，绝不误删在役图片</li>
+                  <li>展示可释放体积并在操作后即时反馈瘦身成果</li>
+                </ul>
+              </div>
+            </div>
+            <div class="card-bottom">
+              <div class="platform-tags">
+                <span class="platform-badge android">Android</span>
+              </div>
+              <span class="code-ref">ImageVaultHelper.kt</span>
+            </div>
+          </div>
+
+        </div>
+      </section>
+
+    </div>
+
+    <!-- 无结果提示 -->
+    <div class="empty-state" id="emptyState">
+      <div class="empty-state-icon">🔎</div>
+      <h3>未找到匹配的功能模块</h3>
+      <p style="margin-top: 8px;">请尝试更换检索关键词，或点击“全部模块”查看全景清单。</p>
+    </div>
+
+    <!-- 📚 全量文档知识库网络 (Documentation Hub) -->
+    <section class="docs-hub" id="docsHub">
+      <div class="docs-hub-header">
+        <div class="docs-hub-title">
+          <span>📚</span> Collecter 全量工程文档与设计规范网络 (51 篇全景直达)
+        </div>
+        <span class="section-badge">无孤立文档 · 100% 互联可达</span>
+      </div>
+      <p style="color: var(--text-secondary); font-size: 0.9rem; margin-bottom: 20px;">
+        本系统所有文档已全面梳理并打通网状索引。点击任一文档可直接在本地编辑器或浏览器中阅读查阅：
+      </p>
+
+      <div class="docs-grid">
+
+        <!-- 1. 根与规范 -->
+        <div class="doc-group-card">
+          <div class="doc-group-title"><span>🧭</span> 根目录与工程治理</div>
+          <ul class="doc-links-list">
+            <li>
+              <a class="doc-link-item" href="../README.md">
+                <div class="doc-link-name">README.md <span>↗</span></div>
+                <div class="doc-link-desc">项目主入口、全景特性与文档总纲</div>
+              </a>
+            </li>
+            <li>
+              <a class="doc-link-item" href="README.md">
+                <div class="doc-link-name">docs/README.md <span>↗</span></div>
+                <div class="doc-link-desc">文档中心目录与读者角色指引</div>
+              </a>
+            </li>
+            <li>
+              <a class="doc-link-item" href="../AGENTS.md">
+                <div class="doc-link-name">AGENTS.md <span>↗</span></div>
+                <div class="doc-link-desc">Coding Agent 统一启动协议与红线</div>
+              </a>
+            </li>
+            <li>
+              <a class="doc-link-item" href="../GEMINI.md">
+                <div class="doc-link-name">GEMINI.md <span>↗</span></div>
+                <div class="doc-link-desc">最高约束、六步协议与门禁法则</div>
+              </a>
+            </li>
+            <li>
+              <a class="doc-link-item" href="codex-skills.md">
+                <div class="doc-link-name">codex-skills.md <span>↗</span></div>
+                <div class="doc-link-desc">工程规范、Token策略与测试门禁</div>
+              </a>
+            </li>
+            <li>
+              <a class="doc-link-item" href="stage-current.md">
+                <div class="doc-link-name">stage-current.md <span>↗</span></div>
+                <div class="doc-link-desc">当前阶段快照与重点任务状态</div>
+              </a>
+            </li>
+            <li>
+              <a class="doc-link-item" href="TODO.md">
+                <div class="doc-link-name">TODO.md <span>↗</span></div>
+                <div class="doc-link-desc">按优先级维护的待办可执行账本</div>
+              </a>
+            </li>
+            <li>
+              <a class="doc-link-item" href="BLOCKERS.md">
+                <div class="doc-link-name">BLOCKERS.md <span>↗</span></div>
+                <div class="doc-link-desc">环境阻断、外部依赖与未解项</div>
+              </a>
+            </li>
+          </ul>
+        </div>
+
+        <!-- 2. 架构设计 -->
+        <div class="doc-group-card">
+          <div class="doc-group-title"><span>🏛️</span> 架构与系统设计</div>
+          <ul class="doc-links-list">
+            <li>
+              <a class="doc-link-item" href="design/01-product-requirements.md">
+                <div class="doc-link-name">01-product-requirements.md <span>↗</span></div>
+                <div class="doc-link-desc">业务需求与第一性原理 12 馆哲学</div>
+              </a>
+            </li>
+            <li>
+              <a class="doc-link-item" href="design/02-system-architecture.md">
+                <div class="doc-link-name">02-system-architecture.md <span>↗</span></div>
+                <div class="doc-link-desc">系统总体架构与分层交互全景图</div>
+              </a>
+            </li>
+            <li>
+              <a class="doc-link-item" href="design/03-data-models-design.md">
+                <div class="doc-link-name">03-data-models-design.md <span>↗</span></div>
+                <div class="doc-link-desc">数据模型字段、仓储与持久化</div>
+              </a>
+            </li>
+            <li>
+              <a class="doc-link-item" href="design/04-security-compliance-design.md">
+                <div class="doc-link-name">04-security-compliance.md <span>↗</span></div>
+                <div class="doc-link-desc">隐私安全、沙盒加密与合规设计</div>
+              </a>
+            </li>
+            <li>
+              <a class="doc-link-item" href="design/05-desktop-standalone-architecture.md">
+                <div class="doc-link-name">05-desktop-architecture.md <span>↗</span></div>
+                <div class="doc-link-desc">桌面单机 Native WebView2 架构规范</div>
+              </a>
+            </li>
+            <li>
+              <a class="doc-link-item" href="ARCHITECTURE.md">
+                <div class="doc-link-name">ARCHITECTURE.md <span>↗</span></div>
+                <div class="doc-link-desc">核心架构概览与技术栈选型</div>
+              </a>
+            </li>
+            <li>
+              <a class="doc-link-item" href="DATA_MODELS.md">
+                <div class="doc-link-name">DATA_MODELS.md <span>↗</span></div>
+                <div class="doc-link-desc">全量数据模型与 JSON 契约总表</div>
+              </a>
+            </li>
+          </ul>
+        </div>
+
+        <!-- 3. 用户手册与演进方向 -->
+        <div class="doc-group-card">
+          <div class="doc-group-title"><span>📖</span> 用户手册与产品演化</div>
+          <ul class="doc-links-list">
+            <li>
+              <a class="doc-link-item" href="manuals/20-user-guide.md">
+                <div class="doc-link-name">20-user-guide.md <span>↗</span></div>
+                <div class="doc-link-desc">全功能权威使用手册 (46大功能详解)</div>
+              </a>
+            </li>
+            <li>
+              <a class="doc-link-item" href="manuals/25-tutorial-dialog-guide.md">
+                <div class="doc-link-name">25-tutorial-guide.md <span>↗</span></div>
+                <div class="doc-link-desc">全景手把手互动引导教学手册</div>
+              </a>
+            </li>
+            <li>
+              <a class="doc-link-item" href="USER_MANUAL.md">
+                <div class="doc-link-name">USER_MANUAL.md <span>↗</span></div>
+                <div class="doc-link-desc">用户快速上手手册与常用操作</div>
+              </a>
+            </li>
+            <li>
+              <a class="doc-link-item" href="product-direction.md">
+                <div class="doc-link-name">product-direction.md <span>↗</span></div>
+                <div class="doc-link-desc">产品演化建议与未来方向分析</div>
+              </a>
+            </li>
+            <li>
+              <a class="doc-link-item" href="EVOLUTION_PREFERENCES.md">
+                <div class="doc-link-name">EVOLUTION_PREFERENCES.md <span>↗</span></div>
+                <div class="doc-link-desc">演化偏好与明确否决的负向清单</div>
+              </a>
+            </li>
+            <li>
+              <a class="doc-link-item" href="GEMINI_RATIONALE.md">
+                <div class="doc-link-name">GEMINI_RATIONALE.md <span>↗</span></div>
+                <div class="doc-link-desc">AI 决策原理、思考链路与逻辑</div>
+              </a>
+            </li>
+          </ul>
+        </div>
+
+        <!-- 4. 开发、测试与发布 -->
+        <div class="doc-group-card">
+          <div class="doc-group-title"><span>🛠️</span> 开发、测试与发版规范</div>
+          <ul class="doc-links-list">
+            <li>
+              <a class="doc-link-item" href="development/11-development-guide.md">
+                <div class="doc-link-name">11-development-guide.md <span>↗</span></div>
+                <div class="doc-link-desc">开发者本地环境配置与编码规范</div>
+              </a>
+            </li>
+            <li>
+              <a class="doc-link-item" href="development/12-test-plan.md">
+                <div class="doc-link-name">12-test-plan.md <span>↗</span></div>
+                <div class="doc-link-desc">测试计划、用例矩阵与回归门禁</div>
+              </a>
+            </li>
+            <li>
+              <a class="doc-link-item" href="development/33-spec-driven-development.md">
+                <div class="doc-link-name">33-spec-driven-dev.md <span>↗</span></div>
+                <div class="doc-link-desc">Spec 驱动开发 (SDD) 强制指南</div>
+              </a>
+            </li>
+            <li>
+              <a class="doc-link-item" href="DEVELOPMENT_GUIDE.md">
+                <div class="doc-link-name">DEVELOPMENT_GUIDE.md <span>↗</span></div>
+                <div class="doc-link-desc">项目构建、调试与日常排错备忘</div>
+              </a>
+            </li>
+            <li>
+              <a class="doc-link-item" href="RELEASE_GUIDE.md">
+                <div class="doc-link-name">RELEASE_GUIDE.md <span>↗</span></div>
+                <div class="doc-link-desc">GitHub Releases 发版标准流程</div>
+              </a>
+            </li>
+            <li>
+              <a class="doc-link-item" href="CHANGELOG.md">
+                <div class="doc-link-name">CHANGELOG.md <span>↗</span></div>
+                <div class="doc-link-desc">全版本更新日志演进历史</div>
+              </a>
+            </li>
+            <li>
+              <a class="doc-link-item" href="baseline.md">
+                <div class="doc-link-name">baseline.md <span>↗</span></div>
+                <div class="doc-link-desc">质量基准、测试指纹与覆盖底线</div>
+              </a>
+            </li>
+          </ul>
+        </div>
+
+        <!-- 5. 阶段演进与交付报告 -->
+        <div class="doc-group-card">
+          <div class="doc-group-title"><span>🚀</span> 阶段演进与交付报告</div>
+          <ul class="doc-links-list">
+            <li>
+              <a class="doc-link-item" href="stages/stage-roadmap.md">
+                <div class="doc-link-name">stage-roadmap.md <span>↗</span></div>
+                <div class="doc-link-desc">阶段路线图全景与里程碑规划</div>
+              </a>
+            </li>
+            <li>
+              <a class="doc-link-item" href="stages/stage-450-idea-clipping-vault.md">
+                <div class="doc-link-name">stage-450-idea-clipping.md <span>↗</span></div>
+                <div class="doc-link-desc">Stage 450: 灵感想法与剪藏基建</div>
+              </a>
+            </li>
+            <li>
+              <a class="doc-link-item" href="stages/stage-451-screenshot-watcher-clipper.md">
+                <div class="doc-link-name">stage-451-screenshot.md <span>↗</span></div>
+                <div class="doc-link-desc">Stage 451: 截图监听与 OCR 提取</div>
+              </a>
+            </li>
+            <li>
+              <a class="doc-link-item" href="stages/stage-453-reliable-collection.md">
+                <div class="doc-link-name">stage-453-reliable.md <span>↗</span></div>
+                <div class="doc-link-desc">Stage 453: 可靠收集箱与对撞 Spec</div>
+              </a>
+            </li>
+            <li>
+              <a class="doc-link-item" href="stages/stage-453-delivery-report.md">
+                <div class="doc-link-name">stage-453-delivery.md <span>↗</span></div>
+                <div class="doc-link-desc">Stage 453 实施交付与验收报告</div>
+              </a>
+            </li>
+            <li>
+              <a class="doc-link-item" href="stages/evidence-453/android-smoke-notes.md">
+                <div class="doc-link-name">android-smoke-notes.md <span>↗</span></div>
+                <div class="doc-link-desc">Stage 453 真机冒烟验证纪要</div>
+              </a>
+            </li>
+            <li>
+              <a class="doc-link-item" href="stages/stage-440-desktop.md">
+                <div class="doc-link-name">stage-440-desktop.md <span>↗</span></div>
+                <div class="doc-link-desc">Stage 440: 桌面端立项 Spec</div>
+              </a>
+            </li>
+            <li>
+              <a class="doc-link-item" href="stages/stage-431.md">
+                <div class="doc-link-name">stage-431.md <span>↗</span></div>
+                <div class="doc-link-desc">Stage 431 交付与验证记录</div>
+              </a>
+            </li>
+          </ul>
+        </div>
+
+        <!-- 6. 问答、缺陷与治理账本 -->
+        <div class="doc-group-card">
+          <div class="doc-group-title"><span>🐞</span> 问答、缺陷与债务治理</div>
+          <ul class="doc-links-list">
+            <li>
+              <a class="doc-link-item" href="aq/aq.md">
+                <div class="doc-link-name">aq.md (架构问答) <span>↗</span></div>
+                <div class="doc-link-desc">架构决策背景与问答知识库</div>
+              </a>
+            </li>
+            <li>
+              <a class="doc-link-item" href="bug/bugList.md">
+                <div class="doc-link-name">bugList.md (缺陷账本) <span>↗</span></div>
+                <div class="doc-link-desc">Bug 唯一入口：现象/根因/修复/验证</div>
+              </a>
+            </li>
+            <li>
+              <a class="doc-link-item" href="TECH_DEBT_AUDIT.md">
+                <div class="doc-link-name">TECH_DEBT_AUDIT.md <span>↗</span></div>
+                <div class="doc-link-desc">技术债务体检总报告与评级</div>
+              </a>
+            </li>
+            <li>
+              <a class="doc-link-item" href="debt/P0-1.md">
+                <div class="doc-link-name">debt/P0-x ~ P3-x 治理项 <span>↗</span></div>
+                <div class="doc-link-desc">12 个技术债务专项治理卡片</div>
+              </a>
+            </li>
+            <li>
+              <a class="doc-link-item" href="releases/v4.3.3-report.md">
+                <div class="doc-link-name">releases/v4.3.x 发布报告 <span>↗</span></div>
+                <div class="doc-link-desc">版本发布实施验证与合规报告</div>
+              </a>
+            </li>
+          </ul>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- 底部悬浮快捷导航 -->
+    <div class="floating-nav">
+      <span style="font-size: 0.8125rem; color: var(--text-muted);">快速定位:</span>
+      <button class="nav-btn" onclick="scrollToCategory('core')">📊 资产核心</button>
+      <button class="nav-btn" onclick="scrollToCategory('space')">🗺️ 空间地图</button>
+      <button class="nav-btn" onclick="scrollToCategory('vaults')">🏛️ 12 馆</button>
+      <button class="nav-btn" onclick="scrollToCategory('brain')">💡 第二大脑</button>
+      <button class="nav-btn" onclick="scrollToCategory('sync')">⚡ 同步互传</button>
+      <button class="nav-btn" onclick="scrollToCategory('docsHub')">📚 文档 Hub</button>
+      <button class="nav-btn" onclick="window.scrollTo({top: 0, behavior: 'smooth'})">⬆ 顶部</button>
+    </div>
+
+  </div>
+
+  <script>
+    const searchInput = document.getElementById('searchInput');
+    const filterPills = document.getElementById('filterPills');
+    const statusToggles = document.getElementById('statusToggles');
+    const cards = document.querySelectorAll('.feature-card');
+    const sections = document.querySelectorAll('.section-group');
+    const emptyState = document.getElementById('emptyState');
+
+    let currentFilter = 'all';
+    let currentStatus = 'all';
+
+    function filterCards() {
+      const query = searchInput.value.trim().toLowerCase();
+      let visibleCardCount = 0;
+
+      sections.forEach(section => {
+        const category = section.getAttribute('data-category');
+        const sectionCards = section.querySelectorAll('.feature-card');
+        let sectionVisibleCount = 0;
+
+        const categoryMatch = (currentFilter === 'all' || currentFilter === category);
+
+        sectionCards.forEach(card => {
+          const cardStatus = card.getAttribute('data-status') || 'done';
+          const title = card.querySelector('.card-title')?.innerText.toLowerCase() || '';
+          const desc = card.querySelector('.card-desc')?.innerText.toLowerCase() || '';
+          const keywords = card.getAttribute('data-keywords')?.toLowerCase() || '';
+          const codeRef = card.querySelector('.code-ref')?.innerText.toLowerCase() || '';
+
+          const statusMatch = (currentStatus === 'all' || currentStatus === cardStatus);
+
+          const searchMatch = !query || 
+            title.includes(query) || 
+            desc.includes(query) || 
+            keywords.includes(query) || 
+            codeRef.includes(query);
+
+          if (categoryMatch && statusMatch && searchMatch) {
+            card.style.display = 'flex';
+            sectionVisibleCount++;
+            visibleCardCount++;
+          } else {
+            card.style.display = 'none';
+          }
+        });
+
+        if (sectionVisibleCount > 0) {
+          section.style.display = 'block';
+        } else {
+          section.style.display = 'none';
+        }
+      });
+
+      if (visibleCardCount === 0) {
+        emptyState.style.display = 'block';
+      } else {
+        emptyState.style.display = 'none';
+      }
+    }
+
+    searchInput.addEventListener('input', filterCards);
+
+    filterPills.addEventListener('click', (e) => {
+      const btn = e.target.closest('.filter-btn');
+      if (!btn) return;
+
+      document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+
+      currentFilter = btn.getAttribute('data-filter');
+      filterCards();
+    });
+
+    statusToggles.addEventListener('click', (e) => {
+      const btn = e.target.closest('.status-toggle-btn');
+      if (!btn) return;
+
+      document.querySelectorAll('.status-toggle-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+
+      currentStatus = btn.getAttribute('data-status');
+      filterCards();
+    });
+
+    function scrollToCategory(cat) {
+      if (cat === 'docsHub') {
+        const hub = document.getElementById('docsHub');
+        if (hub) hub.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        return;
+      }
+      const targetSection = document.querySelector(`.section-group[data-category="${cat}"]`);
+      if (targetSection) {
+        targetSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    }
+  </script>
+</body>
+</html>

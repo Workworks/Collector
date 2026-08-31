@@ -206,6 +206,13 @@ class HomeFragment : Fragment() {
             }
         }
 
+        binding.btnUniversalVaultCenterTop.applyPressScaleAnimation(0.95f)
+        binding.btnUniversalVaultCenterTop.setOnClickListener {
+            UniversalVaultCenterDialog.show(requireActivity(), store) {
+                refresh()
+            }
+        }
+
         binding.btnVoucherVaultTop.applyPressScaleAnimation(0.92f)
         binding.btnVoucherVaultTop.setOnClickListener {
             VoucherVaultDialog.showVoucherVaultDialog(requireActivity(), store) {
@@ -237,6 +244,55 @@ class HomeFragment : Fragment() {
         binding.btnHonorVaultTop.applyPressScaleAnimation(0.92f)
         binding.btnHonorVaultTop.setOnClickListener {
             HonorVaultDialog.show(requireActivity(), store) {
+                refresh()
+            }
+        }
+
+        binding.btnWardrobeVaultTop.applyPressScaleAnimation(0.92f)
+        binding.btnWardrobeVaultTop.setOnClickListener {
+            WardrobeVaultDialog.show(requireActivity(), store) {
+                refresh()
+            }
+        }
+
+        binding.btnEmergencyVaultTop.applyPressScaleAnimation(0.92f)
+        binding.btnEmergencyVaultTop.setOnClickListener {
+            EmergencyVaultDialog.show(requireActivity(), store) {
+                refresh()
+            }
+        }
+
+        binding.btnToolVaultTop.applyPressScaleAnimation(0.92f)
+        binding.btnToolVaultTop.setOnClickListener {
+            ToolMaintenanceDialog.show(requireActivity(), store) {
+                refresh()
+            }
+        }
+
+        binding.btnPlantVaultTop.applyPressScaleAnimation(0.92f)
+        binding.btnPlantVaultTop.setOnClickListener {
+            PlantCareDialog.show(requireActivity(), store) {
+                refresh()
+            }
+        }
+
+        binding.btnPetVaultTop.applyPressScaleAnimation(0.92f)
+        binding.btnPetVaultTop.setOnClickListener {
+            PetCareDialog.show(requireActivity(), store) {
+                refresh()
+            }
+        }
+
+        binding.btnBookVaultTop.applyPressScaleAnimation(0.92f)
+        binding.btnBookVaultTop.setOnClickListener {
+            BookVaultDialog.show(requireActivity(), store) {
+                refresh()
+            }
+        }
+
+        binding.btnBeverageVaultTop.applyPressScaleAnimation(0.92f)
+        binding.btnBeverageVaultTop.setOnClickListener {
+            BeverageTeaDialog.show(requireActivity(), store) {
                 refresh()
             }
         }
@@ -341,12 +397,57 @@ class HomeFragment : Fragment() {
 
         binding.btnBackupNow.applyPressScaleAnimation(0.94f)
         binding.btnBackupNow.setOnClickListener {
-            val json = store.exportBackupJson()
-            val clipboard = requireContext().getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
-            clipboard.setPrimaryClip(ClipData.newPlainText("Collecter Backup", json))
-            store.recordBackupDone()
-            Toast.makeText(requireContext(), "已将完整数据备份复制到剪贴板！", Toast.LENGTH_LONG).show()
-            binding.cardBackupBanner.visibility = View.GONE
+            (activity as? MainActivity)?.openBackupManager()
+        }
+    }
+
+    private fun refreshTodayAlertsBanner() {
+        try {
+            val alerts = VaultAlertAggregator.getUrgentAlerts(requireContext(), store)
+            if (alerts.isEmpty()) {
+                binding.cardTodayAlertsBanner.visibility = View.GONE
+                return
+            }
+
+            binding.cardTodayAlertsBanner.visibility = View.VISIBLE
+            binding.tvTodayAlertsBadge.text = "${alerts.size} 项待处理"
+            binding.layoutTodayAlertsContainer.removeAllViews()
+
+            val display = alerts.take(3)
+            for (item in display) {
+                val row = LinearLayout(requireContext()).apply {
+                    orientation = LinearLayout.HORIZONTAL
+                    gravity = android.view.Gravity.CENTER_VERTICAL
+                    setPadding(0, 4, 0, 4)
+                }
+
+                val tv = TextView(requireContext()).apply {
+                    text = "${item.emoji} ${item.label}"
+                    textSize = 12f
+                    setTextColor(ContextCompat.getColor(context, R.color.text_primary))
+                    isSingleLine = true
+                    ellipsize = android.text.TextUtils.TruncateAt.END
+                    layoutParams = LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f)
+                }
+                row.addView(tv)
+                binding.layoutTodayAlertsContainer.addView(row)
+            }
+
+            if (alerts.size > 3) {
+                binding.tvTodayAlertsFooter.text = "+ ${alerts.size - 3} 项更多 · 查看全部 12 馆时效看板 ➔"
+            } else {
+                binding.tvTodayAlertsFooter.text = "点击打开全景收纳大厅 ➔"
+            }
+
+            binding.cardTodayAlertsBanner.applyPressScaleAnimation(0.96f)
+            binding.cardTodayAlertsBanner.setOnClickListener {
+                UniversalVaultCenterDialog.show(requireActivity(), store) {
+                    refresh()
+                }
+            }
+        } catch (e: Exception) {
+            android.util.Log.w("HomeFragment", "刷新今日待办看板失败", e)
+            binding.cardTodayAlertsBanner.visibility = View.GONE
         }
     }
 
@@ -421,15 +522,7 @@ class HomeFragment : Fragment() {
     }
 
     private fun showSearchDialog() {
-        ModernDialogHelper.showInputDialog(
-            context = requireContext(),
-            title = "搜索资产与物品",
-            subtitle = "支持按物品名称、品牌、分类或收纳位置检索：",
-            hint = "例如: 相机、索尼、主卧衣柜",
-            emoji = "🔍",
-            positiveText = "立即检索",
-            negativeText = "重置列表"
-        ) { query ->
+        GlobalSearchDialog.show(requireActivity(), store) { query ->
             val q = query.trim().lowercase()
             if (q.isNotEmpty()) {
                 val all = if (selectedTab == 0) store.getNonSubscriptionEntries() else store.getSubscriptionEntries()
@@ -437,14 +530,15 @@ class HomeFragment : Fragment() {
                     it.brand.lowercase().contains(q) ||
                     it.category.lowercase().contains(q) ||
                     it.location.lowercase().contains(q) ||
-                    it.notes.lowercase().contains(q)
+                    it.notes.lowercase().contains(q) ||
+                    it.roomName.lowercase().contains(q)
                 }
                 if (selectedTab == 0) {
                     assetAdapter.submitList(filtered)
                 } else {
                     subscriptionAdapter.submitList(filtered)
                 }
-                Toast.makeText(requireContext(), "🎉 找到 ${filtered.size} 项匹配记录", Toast.LENGTH_SHORT).show()
+                Toast.makeText(requireContext(), "🎉 找到 ${filtered.size} 项主库记录", Toast.LENGTH_SHORT).show()
             } else {
                 refresh()
             }
@@ -453,6 +547,7 @@ class HomeFragment : Fragment() {
 
     private fun showAssetMoreMenu(entry: Entry, anchor: View) {
         val popup = PopupMenu(requireContext(), anchor)
+        popup.menu.add(0, 7, 0, "关联资料、发票与说明书")
         popup.menu.add(0, 5, 0, "🎞️ 时光胶囊与生活画册")
         if (entry.isLentOut) {
             popup.menu.add(0, 6, 1, "✅ 确认物品归还打卡")
@@ -466,6 +561,7 @@ class HomeFragment : Fragment() {
 
         popup.setOnMenuItemClickListener { item ->
             when (item.itemId) {
+                7 -> { CollectionWorkspaceDialog.showRecord(requireActivity(), "entries:${entry.id}"); true }
                 5 -> {
                     LifeCapsuleDialog.showCapsuleDialog(requireActivity(), store, entry) {
                         refresh()
@@ -604,6 +700,9 @@ class HomeFragment : Fragment() {
 
         // 0.2 数据备份横幅持久化显示控制
         binding.cardBackupBanner.visibility = if (store.shouldShowBackupBanner()) View.VISIBLE else View.GONE
+
+        // 0.3 🔔 今日 12 馆时效待办与预警看板
+        refreshTodayAlertsBanner()
 
         val isSimple = store.isSimpleMode()
 

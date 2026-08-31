@@ -1,5 +1,24 @@
 # 🏗️ 系统架构与模块设计文档 (ARCHITECTURE.md)
 
+Stage 456：shared `FamilyEndpoint.kt` 校验家庭及 WebDAV 带凭据传输，HTTP 仅私有 IPv4/loopback/localhost，其他必须 HTTPS；Android 显式启用局域网明文，不代表全应用网络白名单。桌面失败导入仅回滚本次新附件，FamilyAccess 清理过期成员；`scripts/Archive-CollecterBackup.ps1` 提供手动离线归档。见 [456 报告](stages/stage-456-report.md)。
+
+## Stage 455 工作台模块
+
+- `WorkbenchRepository.kt`：Android 工作台原始 JSON 快照与单次 SharedPreferences 事务提交，保留多账本标识。
+- `WorkbenchActivity.kt`：关键词/位置搜索、保存查询、批量整理、建议预览、关联与生命周期；加密备份、历史恢复及状态入口。
+- `FamilyClientDialog.kt`：显式连接桌面家庭接口，成员密钥仅在当前会话使用；列表及位置修改，服务端裁决权限。
+- shared `CollectionWorkbench.kt`：两端共用的无损命令、查重、查询和生命周期；`EncryptedBackup.kt`：AES-GCM 加密备份；`WebDavHistoryClient.kt`：只读历史下载。
+- desktop `DesktopWorkbench.kt`：JVM 整理窗口与文件导入；`FamilyAccess.kt`：独立成员会话、逐条授权、角色与撤销；不替代 Native 安装交付。
+
+saved_searches 加入已有备份/合并集合；生命周期、责任人和共享标记为记录扩展字段。成员密钥不写入业务 JSON 或备份；共享接口拒绝未授权集合、全量备份和敏感记录。
+
+## 当前模块与 WebDAV 边界（2026-08-31）
+
+Stage 454 增加 shared `WebDavRevisionGuard`，双端对有能力声明的服务采用 ETag 条件写入。相邻服务历史位于 DAV 挂载之外，覆盖/删除先归档，恢复通过历史下载与条件 PUT；客户端本地数据协议不变。OCR 通过 `WorkspaceRecords.ocrResult` 与仓储事务锁避免旧回调覆盖并发整理。限制与证据见 [454](stages/stage-454-report.md)。
+
+`settings.gradle.kts` 注册 app、desktop、shared。离线存储仍在客户端，旁边 WebDav 项目是可选远端备份服务，不是中心数据库或新 Gradle 模块。`WebDavSyncHelper.kt` 的连接检查使用 HEAD，上传/下载使用 PUT/GET；`DesktopWebDavHelper.kt` 用 JDK HttpClient 发 PROPFIND，数据传输仍用 HttpURLConnection。两端同名文件 `Collecter_Backup.json`，恢复由共享校验与各端仓储执行。远端覆盖备份不等于 `SnapshotSync.kt` 的双向合并。源码与限制见 [使用说明](manuals/webdav-backup.md)，实际测试见 [联调报告](stages/webdav-integration-report.md)。
+
+
 本文档阐述 **Collecter** 的技术架构、目录组织、核心模块及其交互流程。
 
 ---
@@ -161,6 +180,34 @@ graph TD
 | `AddEntryDialog.kt` | 资产出入库与编辑弹窗控制器：物品出入库、折旧、保质期、AI 识物/记账、空间图钉映射与实物照片发票存管 | DialogAddEntryBinding, MaterialAlertDialogBuilder, SmartIntakeHelper |
 | `TourSandbox.kt` | 引导教学演示数据沙盒管理器：演练数据标记与完成/退出时 100% 自动回滚清理 | Sandbox, DataStore, InteractiveGuideTour |
 | `SingleFeatureTours.kt` | 28 个单项功能手把手跟手演练分发器：各功能独立聚光灯、演示沙盒与演练入口调用 | GuideOverlayView, TourSandbox, InteractiveGuideTour 委托 |
+| `VaultUiHelper.kt` | 收纳馆统一 UI 辅助基建：统一 8 大收纳馆的视窗动效、剪贴板复制、日期选择器与搜索监听 | Dialog, DatePickerDialog, ClipboardManager, TextWatcher |
+| `WardrobeVaultDialog.kt` | 换季衣橱与四季穿搭舱控制器：四季胶囊衣橱分舱、真空压缩袋与顶柜收纳定位、穿着打卡、次均穿戴成本精算与 180 天沉睡未穿预警 | DialogWardrobeVaultBinding, VaultUiHelper, WardrobeAdapter, DataStore |
+| `WardrobeAdapter.kt` | 换季衣橱与四季穿搭列表适配器：服饰单品卡片渲染、季节/材质/收纳位展示、穿着打卡与封箱解封操作分发 | ItemWardrobeRecordBinding, WardrobeRecord, RecyclerView.Adapter |
+| `EmergencyVaultDialog.kt` | 家庭应急防灾与生命线舱控制器：四大避难专包归集、物资保质期/自放电测试/滤毒失效生命线追踪与季度点检打卡 | DialogEmergencyVaultBinding, VaultUiHelper, EmergencyAdapter, DataStore |
+| `EmergencyAdapter.kt` | 家庭应急防灾物资列表适配器：应急专包/分类徽章、黄金动线位置展示、失效预警与点检打卡分发 | ItemEmergencyRecordBinding, EmergencyItem, RecyclerView.Adapter |
+| `UniversalVaultCenterDialog.kt` | 全维度收纳总厅与生命线总控看板控制器：12大专业收纳馆聚合直通、全景临期与失效红绿灯雷达与收纳健康度评分 (100分制) | DialogUniversalVaultCenterBinding, VaultUiHelper, MaterialAlertDialogBuilder, DataStore |
+| `ToolMaintenanceDialog.kt` | 家庭工具五金与设备维保舱控制器：电动/手工工具分类、螺丝钻头搭配速查、净水新风等设备耗材周期维保排期与一键打卡 | DialogToolVaultBinding, VaultUiHelper, ToolMaintenanceAdapter, DataStore |
+| `ToolMaintenanceAdapter.kt` | 家庭工具五金与设备维保列表适配器：分类徽章、规格型号/钻头展示、逾期预警与维保打卡分发 | ItemToolRecordBinding, ToolMaintenanceRecord, RecyclerView.Adapter |
+| `PlantCareDialog.kt` | 家庭绿植花卉与水肥养护舱控制器：光照习性档案、浇水施肥倒计时排期、逾期预警与一键养护打卡 | DialogPlantVaultBinding, VaultUiHelper, PlantCareAdapter, DataStore |
+| `PlantCareAdapter.kt` | 家庭绿植花卉与水肥养护列表适配器：光照徽章、排期展示、缺水/需肥角标与浇水施肥操作分发 | ItemPlantRecordBinding, PlantCareRecord, RecyclerView.Adapter |
+| `PetCareDialog.kt` | 家庭萌宠档案与健康耗材舱控制器：物种档案、体重与芯片号脱敏速查、驱虫与疫苗倒计时排期与一键打卡 | DialogPetVaultBinding, VaultUiHelper, PetCareAdapter, DataStore |
+| `PetCareAdapter.kt` | 家庭萌宠档案与健康耗材列表适配器：物种/体重徽章、芯片号复制、待驱虫/待打疫苗角标与打卡操作分发 | ItemPetRecordBinding, PetCareRecord, RecyclerView.Adapter |
+| `BookVaultDialog.kt` | 书房藏书与阅读收纳舱控制器：藏书空间定位、阅读进度追踪打卡、外借流转与书摘评分 | DialogBookVaultBinding, VaultUiHelper, BookVaultAdapter, DataStore |
+| `BookVaultAdapter.kt` | 书房藏书与阅读收纳列表适配器：分类/评分徽章、进度条渲染、外借详情与进度打卡/外借操作分发 | ItemBookRecordBinding, BookRecord, RecyclerView.Adapter |
+| `BeverageTeaDialog.kt` | 茶窖珍藏与适饮时效舱控制器：名茶名酒存藏定位、陈化年份精算、适饮黄金峰值期、开瓶保鲜与库存打卡 | DialogBeverageVaultBinding, VaultUiHelper, BeverageTeaAdapter, DataStore |
+| `BeverageTeaAdapter.kt` | 茶窖珍藏与适饮时效列表适配器：分类/陈化徽章、适饮/超期状态展示、开瓶保鲜信息与开瓶/消耗打卡分发 | ItemBeverageRecordBinding, BeverageTeaRecord, RecyclerView.Adapter |
+| `VaultAlertAggregator.kt` | 12 馆综合时效预警统一聚合器：按紧急天数排序聚合全馆临期卡券、过期药品、生鲜鲜度、绿植水肥、萌宠疫苗等时效事项 | 跨馆数据聚合, 纯 JVM, 单元测试复用 |
+| `VaultAlertWidgetProvider.kt` | 桌面小组件 3：12 馆综合时效预警 2×2 小组件，实时同步显示前 4 条最紧迫待办并一键直达主 App | AppWidgetProvider, RemoteViews, PendingIntent |
+| `GlobalSearchDialog.kt` | 全库与 12 馆跨维极速联合检索对话框：毫秒级穿透资产主库与全部 12 个收纳馆，支持分类卡片展示与主库联动筛选 | MaterialAlertDialogBuilder, DataStore, ViewExt |
+| `StorageCleanupDialog.kt` | 图片沙盒孤立文件清理与批量重压缩工具：扫描未引用废弃图片一键清理，多线程无损重压缩减重 15%~20% 释放存储 | ImageVaultHelper, BitmapFactory, ThreadPool |
+| `LanShareServer.kt` | 局域网 HTTP 互传服务器 (Port 8848)：同一 Wi-Fi 免装客户端网页大屏查看与 JSON 备份极速下载 | ServerSocket, Socket, HTTP 1.1 |
+| `LanPeerDiscovery.kt` | 局域网设备自发现引擎 (UDP Port 8849)：同一 Wi-Fi 下自动广播与监听，秒级探测在线手机端与桌面端设备 | DatagramSocket, UDP 广播, 线程池 |
+| `LanSyncMergeEngine.kt` | 局域网 P2P 双机增量对撞合并引擎：唯一 ID 寻址、时间戳 Last-Write-Wins 冲突仲裁与 12 馆全量物资无损互通 | JSON 对撞合并, 时间戳仲裁, 结构化 MergeReport |
+| `IdeaVaultDialog.kt` | 闪念灵感与想法收纳舱控制器：0.5秒极速记录生活灵感、读书心得与随手便签，多色卡片流、置顶与跨维实体关联 | MaterialCardView, GradientDrawable, DataStore 委托 |
+| `ClippingVaultDialog.kt` | 智能剪藏与文章知识舱控制器：截图OCR索引提取、网络文章深度剪藏与离线纯净 Markdown 沉浸式阅读器 | MaterialAlertDialogBuilder, OCR 预览, DataStore 委托 |
+| `ScreenshotOcrProcessor.kt` | 截图离线 OCR 提取与智能打标引擎：纯本地端侧 ML Kit 提取截图文字、智能分析电商/技术/食谱标签并自动入库 | ML Kit Text Recognition, 线程池, DataStore |
+| `ScreenshotWatcherHelper.kt` | 系统截图无感监听器：注册 ContentObserver 自动捕获系统截屏并去重，无缝唤醒离线 OCR 归档处理 | ContentObserver, MediaStore, 幂等去重 |
+| `WebClipperEngine.kt` | 网页与社交文章深度剪藏引擎：纯净提取微信/知乎/掘金/小红书正文，剔除杂质自动转为离线 Markdown 快照 | HttpURLConnection, 正则解析, Markdown 生成 |
 
 
 
@@ -168,3 +215,24 @@ graph TD
 
 
 
+
+
+
+
+
+
+
+
+
+
+## Stage 453 新增模块
+
+| 文件 | 职责 |
+| --- | --- |
+| `CompleteBackupStore.kt` | 全集合附件备份、导入预检、三套偏好事务日志与中断恢复 |
+| `JsonCollectionWriter.kt` | 保留未知字段，统一编辑版本及删除标记 |
+| `CollectionWorkspace.kt` | 收集箱、双向关联与提醒的持久化入口 |
+| `CollectionWorkspaceDialog.kt` | 收集、找回、关联、OCR 重试、提醒处理界面 |
+| `CollectShareActivity.kt` | Android 分享文字与照片，先保存原件 |
+
+共享模块 `shared`：`BackupDocument.kt` 管理 JSON/附件边界；`WireAliases.kt` 统一两端历史字段；`SnapshotSync.kt` 实现合并；`LanHttp.kt` 处理鉴权和有界请求；`WorkspaceRecords.kt` 管理关联及提醒规则。

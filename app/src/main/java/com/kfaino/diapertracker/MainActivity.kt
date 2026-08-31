@@ -122,6 +122,16 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    override fun onStart() {
+        super.onStart()
+        ScreenshotWatcherHelper.startListening(this)
+    }
+
+    override fun onStop() {
+        super.onStop()
+        ScreenshotWatcherHelper.stopListening(this)
+    }
+
     override fun onNewIntent(intent: Intent?) {
         super.onNewIntent(intent)
         setIntent(intent)
@@ -391,6 +401,11 @@ class MainActivity : AppCompatActivity() {
         if (idx != -1) {
             showAddDialog(editEntry = entry, editPosition = idx)
         }
+    }
+
+    fun openBackupManager() {
+        switchFragment(ProfileFragment().apply { arguments = Bundle().apply { putBoolean("open_backup", true) } })
+        selectTab(3)
     }
 
     // ---------- 记一笔 / 编辑记录 高定现代卡片弹窗 (自带微动效、无原生框、折旧、待办归置与订阅) ----------

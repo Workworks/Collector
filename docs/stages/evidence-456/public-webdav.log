@@ -1,0 +1,9 @@
+PASS 匿名访问: 401
+PASS 错误密码: 401
+PASS 桌面连接协议 PROPFIND: 207
+PASS Android 首次 HEAD 协议: 404，认证通过但尚无备份
+PASS 公网 PUT / GET: 201 / 200，UTF-8 内容逐字相等
+PASS Android 已有备份 HEAD 协议: 200，包含 ETag
+PASS 过期版本保护: 412，原测试备份未改变
+PASS Collector 桌面真实 Helper: 1 项，0 失败、0 跳过；上传、下载、取消和确认恢复
+PASS 清理: 仅移除本轮随机 QA 目录及运行凭据，未触碰真实备份

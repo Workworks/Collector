@@ -90,6 +90,7 @@ object NotificationHelper {
     }
 
     /** 执行提醒检查并推送通知 */
+    @Synchronized
     fun checkAndSendReminders(context: Context): Int {
         createNotificationChannel(context)
         if (!hasNotificationPermission(context)) return 0
@@ -111,14 +112,15 @@ object NotificationHelper {
                 if (daysUntil in 0..3) {
                     val timeDesc = if (daysUntil == 0) "今天" else if (daysUntil == 1) "明天" else "${daysUntil}天后"
                     val content = "【${sub.brand}】将于 $timeDesc 自动扣费 ¥${String.format(Locale.getDefault(), "%.2f", sub.price)}（${sub.subCycle}），请留意账户余额。"
-                    sendNotification(
+                    if (sendNotification(
                         context,
                         nm,
-                        id = sub.id.hashCode(),
+                        id = ("subscription:" + sub.id).hashCode(),
+                        eventKey = "subscription:${sub.id}",
+                        cycle = sub.subNextBillingDate.toString(),
                         title = "🔄 订阅扣费预警：${sub.brand}",
                         content = content
-                    )
-                    notificationCount++
+                    )) notificationCount++
                 }
             }
         }
@@ -130,14 +132,15 @@ object NotificationHelper {
             if (daysSince >= vip.reminderIntervalDays) {
                 val locDesc = if (vip.location.isNotBlank()) "【${vip.houseName} · ${vip.location}】" else "预定位置"
                 val content = "您已超过 ${daysSince} 天未核对【${vip.brand}】，请打开应用确认物品是否仍在 $locDesc 处。"
-                sendNotification(
+                if (sendNotification(
                     context,
                     nm,
-                    id = vip.id.hashCode(),
+                    id = ("check:" + vip.id).hashCode(),
+                    eventKey = "check:${vip.id}",
+                    cycle = lastCheck.toString(),
                     title = "🔑 重要物品核对提醒：${vip.brand}",
                     content = content
-                )
-                notificationCount++
+                )) notificationCount++
             }
         }
 
@@ -147,17 +150,29 @@ object NotificationHelper {
             val daysLeft = (diffMs / (24L * 60 * 60 * 1000)).toInt()
             if (daysLeft in 0..7) {
                 val content = "【${item.brand}】还有 $daysLeft 天即将过期（${item.qty}${item.unit}），请尽快使用避免浪费。"
-                sendNotification(
+                if (sendNotification(
                     context,
                     nm,
-                    id = item.id.hashCode() + 100,
+                    id = ("expiry:" + item.id).hashCode(),
+                    eventKey = "expiry:${item.id}",
+                    cycle = item.expiryDate.toString(),
                     title = "⏳ 物品临期提醒：${item.brand}",
                     content = content
-                )
-                notificationCount++
+                )) notificationCount++
             }
         }
 
+        for (alert in VaultAlertAggregator.getUrgentAlerts(context, store)) {
+            if (sendNotification(context, nm, alert.eventKey.hashCode(), "${alert.emoji} 待处理提醒",
+                    alert.label, alert.eventKey, alert.cycle)) notificationCount++
+        }
+        for (hit in com.kfaino.collecter.core.CollectionWorkbench.records(WorkbenchRepository(context).snapshot())) {
+            val due=hit.record.optLong("_nextActionAt")
+            if(due>0 && due<=now && hit.record.optString("_lifeState","active")=="active") {
+                val key="workbench:${hit.reference}"
+                if(sendNotification(context,nm,key.hashCode(),"物品维护到期",com.kfaino.collecter.core.CollectionWorkbench.title(hit.record),key,due.toString())) notificationCount++
+            }
+        }
         return notificationCount
     }
 
@@ -167,8 +182,15 @@ object NotificationHelper {
         nm: NotificationManager,
         id: Int,
         title: String,
-        content: String
-    ) {
+        content: String,
+        eventKey: String? = null,
+        cycle: String = ""
+    ): Boolean {
+        val workspace = CollectionWorkspace(context)
+        val states = workspace.records("reminders")
+        val existing = (0 until states.length()).map { states.getJSONObject(it) }.firstOrNull { it.optString("id") == eventKey }
+        val now = System.currentTimeMillis()
+        if (eventKey != null && !com.kfaino.collecter.core.WorkspaceRecords.shouldNotify(existing, cycle, now)) return false
         val launchIntent = Intent(context, MainActivity::class.java).apply {
             flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
         }
@@ -191,6 +213,13 @@ object NotificationHelper {
             .build()
 
         nm.notify(id, notification)
+        if (eventKey != null) {
+            val state = org.json.JSONObject(existing?.toString() ?: "{}")
+                .put("id", eventKey).put("title", title).put("cycle", cycle)
+                .put("sentAt", now).put("done", false).put("snoozedUntil", 0L)
+            workspace.upsert("reminders", state)
+        }
+        return true
     }
 
     /** 发送即时测试通知 */

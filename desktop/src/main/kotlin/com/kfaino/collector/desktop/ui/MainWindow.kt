@@ -29,6 +29,12 @@ class MainWindow(private val store: DesktopDataStore) : JFrame() {
     private val timelineTableModel = createTimelineTableModel()
     private val timelineTable = JTable(timelineTableModel)
 
+    private val vouchersTableModel = createVouchersTableModel()
+    private val vouchersTable = JTable(vouchersTableModel)
+
+    private val medicinesTableModel = createMedicinesTableModel()
+    private val medicinesTable = JTable(medicinesTableModel)
+
     private val statTotalWorth = JLabel("¥0.00")
     private val statTotalCount = JLabel("0 件")
     private val statDailyCost = JLabel("¥0.00 /天")
@@ -73,6 +79,7 @@ class MainWindow(private val store: DesktopDataStore) : JFrame() {
         // 3. 中央各模块面板
         contentPanel.add(createInventoryPanel(), "inventory")
         contentPanel.add(createTimelinePanel(), "timeline")
+        contentPanel.add(createVaultsPanel(), "vaults")
         contentPanel.add(createReportPanel(), "report")
         contentPanel.add(createSettingsPanel(), "settings")
 
@@ -162,8 +169,9 @@ class MainWindow(private val store: DesktopDataStore) : JFrame() {
 
         addNavBtn(0, "📦 仓库库存", "inventory")
         addNavBtn(1, "📋 出入流水", "timeline")
-        addNavBtn(2, "📊 数据报表", "report")
-        addNavBtn(3, "⚙️ 系统设置", "settings")
+        addNavBtn(2, "🎟️ 专业收纳", "vaults")
+        addNavBtn(3, "📊 数据报表", "report")
+        addNavBtn(4, "⚙️ 系统设置", "settings")
 
         side.add(Box.createVerticalGlue())
         updateNavSelection(0)
@@ -402,7 +410,9 @@ class MainWindow(private val store: DesktopDataStore) : JFrame() {
         val btnRestoreCloud = JButton("📥 从 WebDAV 云端一键恢复并合并数据").apply {
             alignmentX = Component.LEFT_ALIGNMENT
             addActionListener {
-                val res = DesktopWebDavHelper.downloadAndRestore(store)
+                val res = DesktopWebDavHelper.downloadAndRestore(store) { preview ->
+                    JOptionPane.showConfirmDialog(this@MainWindow, preview, "恢复前预览", JOptionPane.OK_CANCEL_OPTION) == JOptionPane.OK_OPTION
+                }
                 if (res.isSuccess) {
                     refreshData()
                     JOptionPane.showMessageDialog(this@MainWindow, res.message)
@@ -433,6 +443,212 @@ class MainWindow(private val store: DesktopDataStore) : JFrame() {
         }
     }
 
+    private fun createVouchersTableModel(): DefaultTableModel {
+        val cols = arrayOf("卡券名称", "类型", "面额/余次", "到期时间", "适用平台", "状态", "备注", "ID")
+        return object : DefaultTableModel(cols, 0) {
+            override fun isCellEditable(row: Int, column: Int) = false
+        }
+    }
+
+    private fun createMedicinesTableModel(): DefaultTableModel {
+        val cols = arrayOf("药品名称", "分类", "剂型", "余量", "单位", "存放位置", "用法用量", "保质期", "状态", "ID")
+        return object : DefaultTableModel(cols, 0) {
+            override fun isCellEditable(row: Int, column: Int) = false
+        }
+    }
+
+    private fun createVaultsPanel(): JPanel {
+        val panel = JPanel(BorderLayout(0, 12))
+        panel.border = EmptyBorder(16, 16, 16, 16)
+
+        val tabbed = JTabbedPane()
+
+        // 🎟️ 卡券 Tab
+        val voucherPanel = JPanel(BorderLayout(0, 8))
+        val voucherToolBar = JPanel(FlowLayout(FlowLayout.LEFT, 8, 0))
+        val btnAddVoucher = JButton("➕ 新增卡券").apply {
+            addActionListener { showAddVoucherDialog() }
+        }
+        val btnDeleteVoucher = JButton("🗑️ 删除卡券").apply {
+            addActionListener {
+                val row = vouchersTable.selectedRow
+                if (row >= 0) {
+                    val id = vouchersTableModel.getValueAt(row, 7) as String
+                    val list = store.getVouchers().filterNot { it.id == id }
+                    store.saveVouchers(list)
+                    refreshData()
+                } else {
+                    JOptionPane.showMessageDialog(this@MainWindow, "请先在列表中选中一张卡券")
+                }
+            }
+        }
+        voucherToolBar.add(btnAddVoucher)
+        voucherToolBar.add(btnDeleteVoucher)
+        voucherPanel.add(voucherToolBar, BorderLayout.NORTH)
+        setupTableStyle(vouchersTable)
+        voucherPanel.add(JScrollPane(vouchersTable), BorderLayout.CENTER)
+        tabbed.addTab("🎟️ 时效卡券", voucherPanel)
+
+        // 💊 药箱 Tab
+        val medicinePanel = JPanel(BorderLayout(0, 8))
+        val medicineToolBar = JPanel(FlowLayout(FlowLayout.LEFT, 8, 0))
+        val btnAddMedicine = JButton("➕ 新增药品").apply {
+            addActionListener { showAddMedicineDialog() }
+        }
+        val btnDeleteMedicine = JButton("🗑️ 删除药品").apply {
+            addActionListener {
+                val row = medicinesTable.selectedRow
+                if (row >= 0) {
+                    val id = medicinesTableModel.getValueAt(row, 9) as String
+                    val list = store.getMedicines().filterNot { it.id == id }
+                    store.saveMedicines(list)
+                    refreshData()
+                } else {
+                    JOptionPane.showMessageDialog(this@MainWindow, "请先在列表中选中一项药品")
+                }
+            }
+        }
+        medicineToolBar.add(btnAddMedicine)
+        medicineToolBar.add(btnDeleteMedicine)
+        medicinePanel.add(medicineToolBar, BorderLayout.NORTH)
+        setupTableStyle(medicinesTable)
+        medicinePanel.add(JScrollPane(medicinesTable), BorderLayout.CENTER)
+        tabbed.addTab("💊 家庭药箱", medicinePanel)
+
+        panel.add(tabbed, BorderLayout.CENTER)
+        return panel
+    }
+
+    private fun showAddVoucherDialog() {
+        val dialog = JDialog(this, "➕ 登记时效卡券", true)
+        dialog.setSize(420, 360)
+        dialog.setLocationRelativeTo(this)
+
+        val form = JPanel(GridLayout(5, 2, 8, 10)).apply {
+            border = EmptyBorder(16, 20, 16, 20)
+        }
+        val tfTitle = JTextField()
+        val cbType = JComboBox(arrayOf("满减券 (coupon)", "计次卡 (times_card)", "代金券 (cash_voucher)", "会员权益 (privilege)"))
+        val tfAmount = JTextField("10.0")
+        val tfPlatform = JTextField("美团/京东/线下通用")
+        val tfNotes = JTextField()
+
+        form.add(JLabel("券名/权益名称 (*):"))
+        form.add(tfTitle)
+        form.add(JLabel("卡券类型:"))
+        form.add(cbType)
+        form.add(JLabel("面额金额 (¥):"))
+        form.add(tfAmount)
+        form.add(JLabel("适用平台/商家:"))
+        form.add(tfPlatform)
+        form.add(JLabel("使用规则/备注:"))
+        form.add(tfNotes)
+
+        val btnSave = JButton("💾 保存卡券").apply {
+            addActionListener {
+                val title = tfTitle.text.trim()
+                if (title.isBlank()) {
+                    JOptionPane.showMessageDialog(dialog, "请输入卡券名称！")
+                    return@addActionListener
+                }
+                val amount = tfAmount.text.toDoubleOrNull() ?: 0.0
+                val v = com.kfaino.collector.desktop.models.VoucherRecord(
+                    title = title,
+                    type = when (cbType.selectedIndex) {
+                        1 -> "times_card"
+                        2 -> "cash_voucher"
+                        3 -> "privilege"
+                        else -> "coupon"
+                    },
+                    valueAmount = amount,
+                    platform = tfPlatform.text.trim(),
+                    notes = tfNotes.text.trim(),
+                    expiryDate = System.currentTimeMillis() + 30L * 24 * 3600 * 1000
+                )
+                val list = store.getVouchers().toMutableList().apply { add(0, v) }
+                store.saveVouchers(list)
+                dialog.dispose()
+                refreshData()
+            }
+        }
+        val p = JPanel(BorderLayout())
+        p.add(form, BorderLayout.CENTER)
+        p.add(btnSave, BorderLayout.SOUTH)
+        dialog.contentPane = p
+        dialog.isVisible = true
+    }
+
+    private fun showAddMedicineDialog() {
+        val dialog = JDialog(this, "➕ 登记家庭常备药", true)
+        dialog.setSize(420, 420)
+        dialog.setLocationRelativeTo(this)
+
+        val form = JPanel(GridLayout(7, 2, 8, 10)).apply {
+            border = EmptyBorder(16, 20, 16, 20)
+        }
+        val tfName = JTextField()
+        val cbCategory = JComboBox(arrayOf("发热镇痛 (fever)", "感冒咳嗽 (cold)", "肠胃消化 (digest)", "外伤消炎 (trauma)", "抗过敏 (allergy)", "慢病常备 (chronic)", "其他"))
+        val spQty = JSpinner(SpinnerNumberModel(1, 1, 9999, 1))
+        val tfUnit = JTextField("盒")
+        val tfLocation = JTextField("家庭药箱")
+        val tfDosage = JTextField("一次1片，一日2次")
+        val tfNotes = JTextField()
+
+        form.add(JLabel("药品名称 (*):"))
+        form.add(tfName)
+        form.add(JLabel("药品分类:"))
+        form.add(cbCategory)
+        form.add(JLabel("数量与单位:"))
+        val qtyP = JPanel(GridLayout(1, 2, 4, 0)).apply {
+            add(spQty)
+            add(tfUnit)
+        }
+        form.add(qtyP)
+        form.add(JLabel("存放位置:"))
+        form.add(tfLocation)
+        form.add(JLabel("用法用量:"))
+        form.add(tfDosage)
+        form.add(JLabel("禁忌/备忘:"))
+        form.add(tfNotes)
+
+        val btnSave = JButton("💾 保存药品").apply {
+            addActionListener {
+                val name = tfName.text.trim()
+                if (name.isBlank()) {
+                    JOptionPane.showMessageDialog(dialog, "请输入药品名称！")
+                    return@addActionListener
+                }
+                val m = com.kfaino.collector.desktop.models.MedicineRecord(
+                    name = name,
+                    category = when (cbCategory.selectedIndex) {
+                        0 -> "fever"
+                        1 -> "cold"
+                        2 -> "digest"
+                        3 -> "trauma"
+                        4 -> "allergy"
+                        5 -> "chronic"
+                        else -> "other"
+                    },
+                    qty = spQty.value as Int,
+                    unit = tfUnit.text.trim().ifBlank { "盒" },
+                    location = tfLocation.text.trim().ifBlank { "家庭药箱" },
+                    dosage = tfDosage.text.trim(),
+                    contraindications = tfNotes.text.trim(),
+                    expiryDate = System.currentTimeMillis() + 365L * 24 * 3600 * 1000
+                )
+                val list = store.getMedicines().toMutableList().apply { add(0, m) }
+                store.saveMedicines(list)
+                dialog.dispose()
+                refreshData()
+            }
+        }
+        val p = JPanel(BorderLayout())
+        p.add(form, BorderLayout.CENTER)
+        p.add(btnSave, BorderLayout.SOUTH)
+        dialog.contentPane = p
+        dialog.isVisible = true
+    }
+
     private fun setupTableStyle(table: JTable) {
         table.rowHeight = 32
         table.setShowGrid(true)
@@ -444,11 +660,11 @@ class MainWindow(private val store: DesktopDataStore) : JFrame() {
         val centerRenderer = DefaultTableCellRenderer().apply { horizontalAlignment = SwingConstants.CENTER }
         val rightRenderer = DefaultTableCellRenderer().apply { horizontalAlignment = SwingConstants.RIGHT }
 
-        table.columnModel.getColumn(1).cellRenderer = centerRenderer
-        table.columnModel.getColumn(2).cellRenderer = centerRenderer
-        table.columnModel.getColumn(3).cellRenderer = centerRenderer
-        table.columnModel.getColumn(4).cellRenderer = rightRenderer
-        table.columnModel.getColumn(5).cellRenderer = rightRenderer
+        if (table.columnCount > 1) table.columnModel.getColumn(1).cellRenderer = centerRenderer
+        if (table.columnCount > 2) table.columnModel.getColumn(2).cellRenderer = centerRenderer
+        if (table.columnCount > 3) table.columnModel.getColumn(3).cellRenderer = centerRenderer
+        if (table.columnCount > 4) table.columnModel.getColumn(4).cellRenderer = rightRenderer
+        if (table.columnCount > 5) table.columnModel.getColumn(5).cellRenderer = rightRenderer
     }
 
     private fun refreshData() {
@@ -496,6 +712,52 @@ class MainWindow(private val store: DesktopDataStore) : JFrame() {
                 String.format(Locale.getDefault(), "%.2f", e.price * e.qty),
                 e.location,
                 e.notes
+            ))
+        }
+
+        // 4. 填充卡券表格
+        vouchersTableModel.rowCount = 0
+        val daySdf = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
+        for (v in store.getVouchers()) {
+            vouchersTableModel.addRow(arrayOf(
+                v.title,
+                when (v.type) {
+                    "times_card" -> "🎫 计次服务卡"
+                    "cash_voucher" -> "💰 无门槛代金券"
+                    "privilege" -> "👑 会员专属权益"
+                    else -> "🎟️ 满减优惠券"
+                },
+                if (v.type == "times_card") "${v.remainingTimes}/${v.totalTimes} 次" else "¥${String.format(Locale.getDefault(), "%.2f", v.valueAmount)}",
+                if (v.expiryDate > 0) daySdf.format(Date(v.expiryDate)) else "长期有效",
+                v.platform,
+                if (v.isExpired()) "⚠️ 已过期" else if (v.isExpiringSoon()) "🟠 临期" else "🟢 有效",
+                v.notes,
+                v.id
+            ))
+        }
+
+        // 5. 填充药箱表格
+        medicinesTableModel.rowCount = 0
+        for (m in store.getMedicines()) {
+            medicinesTableModel.addRow(arrayOf(
+                m.name,
+                when (m.category) {
+                    "fever" -> "🤒 发热镇痛"
+                    "cold" -> "🤧 感冒咳嗽"
+                    "digest" -> "🤢 肠胃消化"
+                    "trauma" -> "🩹 外伤消炎"
+                    "allergy" -> "🌿 抗过敏"
+                    "chronic" -> "💊 慢病常备"
+                    else -> "📦 其他"
+                },
+                m.form,
+                m.qty,
+                m.unit,
+                m.location,
+                m.dosage,
+                if (m.expiryDate > 0) daySdf.format(Date(m.expiryDate)) else "长期有效",
+                if (m.isExpired()) "🔴 已过期" else if (m.isExpiringSoon()) "🟠 临期" else "🟢 正常",
+                m.id
             ))
         }
     }

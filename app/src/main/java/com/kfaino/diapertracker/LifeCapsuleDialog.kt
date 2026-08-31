@@ -43,9 +43,7 @@ object LifeCapsuleDialog {
             .setView(binding.root)
             .setCancelable(true)
             .create()
-
-        dialog.window?.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
-        dialog.window?.attributes?.windowAnimations = R.style.CustomDialogAnimation
+        VaultUiHelper.setupVaultWindow(dialog)
 
         fun refreshUI() {
             // 重新从 DataStore 取出最新数据

@@ -1,0 +1,37 @@
+{
+  "date": "2026-08-30",
+  "tests": {
+    "Android单测": {
+      "tests": 45,
+      "failures": 0
+    },
+    "共享契约": {
+      "tests": 12,
+      "failures": 0
+    },
+    "桌面单测与HTTP": {
+      "tests": 12,
+      "failures": 0
+    },
+    "Android设备存储": {
+      "tests": 4,
+      "failures": 0
+    }
+  },
+  "hashes": {
+    "app\\build\\outputs\\apk\\release\\app-release.apk": "a68e83bad0c6ab8307957759c73eb3086d392efd1e10bc6160b737db64133a3a",
+    "dist\\desktop\\4.3.2-jvm-development-20260830125444\\Collecter-Desktop.jar": "b932eaaa1951527af0cfa335059ea23d3d0c4826f773cb6336c659b020a9b99c",
+    "tools\\selfcheck.ps1": "3556d7c69a03701fa1ae60487221e651a50ed3b5de702e00afa2d56c061d8dae"
+  },
+  "native": "BLOCKED: MSVC x64 unavailable",
+  "device": "emulator-5556 Android 14 API34 isolated QA",
+  "version": "4.3.2 (39)",
+  "ui": [
+    "text share",
+    "content URI photo share",
+    "local OCR success",
+    "bidirectional linking and unlink",
+    "SAF preview cancel",
+    "debug to release overlay preservation"
+  ]
+}

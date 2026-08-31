@@ -1,0 +1,25 @@
+
+com.kfaino.diapertracker.WorkbenchDeviceTest:
+Error in encryptedWorkflowRoundTripUsesRealAndroidCryptoAndPreferences(com.kfaino.diapertracker.WorkbenchDeviceTest):
+java.lang.IllegalStateException: SharedPreferences in credential encrypted storage are not available until after user (id 0) is unlocked
+	at android.app.ContextImpl.getSharedPreferences(ContextImpl.java:604)
+	at android.app.ContextImpl.getSharedPreferences(ContextImpl.java:587)
+	at com.kfaino.diapertracker.WorkbenchDeviceTest$isolated$1.getSharedPreferences(WorkbenchDeviceTest.kt:20)
+	at com.kfaino.diapertracker.WorkbenchRepository.<init>(WorkbenchRepository.kt:9)
+	at com.kfaino.diapertracker.WorkbenchDeviceTest.encryptedWorkflowRoundTripUsesRealAndroidCryptoAndPreferences(WorkbenchDeviceTest.kt:26)
+
+
+Time: 0.092
+There was 1 failure:
+1) encryptedWorkflowRoundTripUsesRealAndroidCryptoAndPreferences(com.kfaino.diapertracker.WorkbenchDeviceTest)
+java.lang.IllegalStateException: SharedPreferences in credential encrypted storage are not available until after user (id 0) is unlocked
+	at android.app.ContextImpl.getSharedPreferences(ContextImpl.java:604)
+	at android.app.ContextImpl.getSharedPreferences(ContextImpl.java:587)
+	at com.kfaino.diapertracker.WorkbenchDeviceTest$isolated$1.getSharedPreferences(WorkbenchDeviceTest.kt:20)
+	at com.kfaino.diapertracker.WorkbenchRepository.<init>(WorkbenchRepository.kt:9)
+	at com.kfaino.diapertracker.WorkbenchDeviceTest.encryptedWorkflowRoundTripUsesRealAndroidCryptoAndPreferences(WorkbenchDeviceTest.kt:26)
+
+FAILURES!!!
+Tests run: 1,  Failures: 1
+
+

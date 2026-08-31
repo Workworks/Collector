@@ -95,7 +95,7 @@ object KitManager {
             o.put("items", itemsArr)
             arr.put(o)
         }
-        prefs.edit().putString(KEY_KITS_JSON, arr.toString()).apply()
+        JsonCollectionWriter.save(prefs, KEY_KITS_JSON, arr, "kits")
     }
 
     private fun createDefaultKits(): List<Kit> {

@@ -1,0 +1,7 @@
+Exception: F:\LANShare\AgentWorkSpace\Collector\scripts\Build-DesktopWebViewHost.ps1:48
+Line |
+  48 |      throw "MSVC x64 build tools are not installed. Native host was no …
+     |      ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+     | MSVC x64 build tools are not installed. Native host was not built.
+
+

@@ -1,5 +1,6 @@
 package com.kfaino.diapertracker
 
+import java.util.Calendar
 import java.util.UUID
 
 /** 物品外借流转与归还记录 */
@@ -468,6 +469,14 @@ data class MedicineRecord(
         return System.currentTimeMillis() > eff
     }
 
+    /** 是否临近到期 (30天内) */
+    fun isExpiringSoon(): Boolean {
+        val eff = getEffectiveExpiryDate()
+        if (eff <= 0L) return false
+        val diffMs = eff - System.currentTimeMillis()
+        return diffMs in 0..(30L * 24 * 60 * 60 * 1000)
+    }
+
     /** 获取过期状态描述 */
     fun getExpiryStatusText(): String {
         val eff = getEffectiveExpiryDate()
@@ -629,3 +638,463 @@ data class HonorCredential(
         }
     }
 }
+
+// =========================================================================
+// 👗 第一性原理收纳：换季衣橱、四季穿搭与封箱收纳舱模型 (Wardrobe & Seasonal Closet)
+// =========================================================================
+
+data class WardrobeRecord(
+    val id: String = UUID.randomUUID().toString(),
+    val name: String = "",                         // 衣物/单品名称 (如 "波司登极寒鹅绒羽绒服", "Acne Studios 羊绒围巾", "无印良品纯棉衬衫")
+    val season: String = "winter",                 // 适用季节: "spring_autumn" (🌸 春秋), "summer" (☀️ 夏季), "winter" (🍂 冬季), "all_season" (♾️ 四季通用)
+    val category: String = "coat",                 // 类别: "coat" (🧥 外套/羽绒), "top" (👕 上衣/衬衫), "pants" (👖 裤装/裙装), "shoes" (👟 鞋履), "accessory" (🧣 配件/包袋), "bedding" (🛏️ 换季被褥)
+    val color: String = "",                        // 颜色系 (如 "米白", "藏青", "卡其", "纯黑")
+    val material: String = "",                     // 面料材质 (如 "90%白鹅绒", "100%山羊绒", "重磅真丝", "精梳棉")
+    val careNotes: String = "",                    // 洗护与保养说明 (如 "仅限专业干洗", "不可烘干", "防虫袋悬挂")
+    val storageLocation: String = "",              // 存放收纳位置 (如 "主卧大衣柜上层", "真空压缩袋 #03", "榻榻米底抽")
+    val purchasePrice: Double = 0.0,               // 购入单价
+    val purchaseDate: Long = 0L,                   // 购入日期
+    val wearCount: Int = 0,                        // 穿着打卡次数
+    val lastWornAt: Long = 0L,                     // 最近一次穿着/出镜日期
+    val isSealed: Boolean = false,                 // 是否处于封箱/真空收纳防尘状态
+    val sealedAt: Long = 0L,                       // 封箱归档时间
+    val photoPath: String = "",                    // 实物穿搭照/平铺照私有沙盒路径
+    val notes: String = ""                         // 搭配灵感与备忘
+) {
+    /** 计算穿戴次均成本 (元/次) */
+    fun getCostPerWear(): Double {
+        if (purchasePrice <= 0.0) return 0.0
+        val count = wearCount.coerceAtLeast(1)
+        return purchasePrice / count
+    }
+
+    /** 是否长期沉睡未穿 (超过 180 天未打卡且非封箱状态) */
+    fun isSleeping(): Boolean {
+        if (isSealed || lastWornAt <= 0L) return false
+        val diffMs = System.currentTimeMillis() - lastWornAt
+        return diffMs > 180L * 24 * 60 * 60 * 1000
+    }
+
+    /** 季节展示名称 */
+    fun getSeasonDisplayName(): String {
+        return when (season) {
+            "spring_autumn" -> "🌸 春秋季"
+            "summer" -> "☀️ 夏季"
+            "winter" -> "🍂 冬季"
+            else -> "♾️ 四季通用"
+        }
+    }
+
+    /** 品类展示名称 */
+    fun getCategoryDisplayName(): String {
+        return when (category) {
+            "coat" -> "🧥 外套羽绒"
+            "top" -> "👕 上衣衬衫"
+            "pants" -> "👖 裤装裙装"
+            "shoes" -> "👟 鞋靴箱包"
+            "accessory" -> "🧣 配件饰品"
+            "bedding" -> "🛏️ 床品被褥"
+            else -> "👗 经典服饰"
+        }
+    }
+}
+
+// =========================================================================
+// 🚨 第一性原理收纳：家庭应急防灾、避难包与生命线收纳模型 (Emergency & Survival Vault)
+// =========================================================================
+
+data class EmergencyItem(
+    val id: String = UUID.randomUUID().toString(),
+    val name: String = "",                         // 物资名称 (如 "手摇发电多波段收音机", "高能压缩饼干 (500g)", "火灾逃生过滤式自救呼吸器", "车载多功能破窗安全带割刀")
+    val kitType: String = "earthquake",            // 场景包: "earthquake" (🏠 地震避险72h), "fire" (🔥 火灾高层逃生), "car" (🚗 车载应急救援), "flood" (🌧️ 暴雨防汛与极端天气), "general" (🛡️ 常备应急急救)
+    val category: String = "tool",                 // 类别: "food_water" (🍞 食品饮水), "medical" (🩹 急救医疗), "tool" (🔦 求救工具), "protection" (🦺 防护保暖)
+    val qty: Double = 1.0,                         // 数量
+    val unit: String = "件",                       // 计量单位 (瓶/盒/件/包)
+    val location: String = "",                     // 存放收纳位置 (如 "玄关防盗门后收纳挂架", "主卧床头储物格", "后备箱右侧储物网兜")
+    val expiryDate: Long = 0L,                     // 保质截止日 / 滤毒罐失效期 (0 表示长期有效)
+    val rotationIntervalMonths: Int = 0,           // 轮换检查周期月数 (如 电池/饮用水 6个月检查一次，0表示不设限)
+    val lastCheckedAt: Long = 0L,                  // 最近一次点检/测试日期
+    val notes: String = "",                        // 使用要领与操作备忘
+    val photoPath: String = ""                     // 物资实物照片私有沙盒路径
+) {
+    /** 是否在 30 天内即将到期/失效 */
+    fun isExpiringSoon(): Boolean {
+        if (expiryDate <= 0L) return false
+        val diffMs = expiryDate - System.currentTimeMillis()
+        return diffMs in 0..(30L * 24 * 60 * 60 * 1000)
+    }
+
+    /** 是否已过期/失效（必须立即轮换替换） */
+    fun isExpired(): Boolean {
+        if (expiryDate <= 0L) return false
+        return System.currentTimeMillis() > expiryDate
+    }
+
+    /** 是否超过轮换周期需要检查测试 */
+    fun isNeedsCheck(): Boolean {
+        if (rotationIntervalMonths <= 0) return false
+        val checkBase = if (lastCheckedAt > 0L) lastCheckedAt else 0L
+        if (checkBase == 0L) return true
+        val intervalMs = rotationIntervalMonths.toLong() * 30L * 24 * 60 * 60 * 1000
+        return (System.currentTimeMillis() - checkBase) > intervalMs
+    }
+
+    /** 场景包名称展示 */
+    fun getKitTypeDisplayName(): String {
+        return when (kitType) {
+            "earthquake" -> "🏠 地震避险72h包"
+            "fire" -> "🔥 火灾逃生包"
+            "car" -> "🚗 车载应急救援包"
+            "flood" -> "🌧️ 暴雨防汛极端包"
+            else -> "🛡️ 常备应急急救包"
+        }
+    }
+
+    /** 类别名称展示 */
+    fun getCategoryDisplayName(): String {
+        return when (category) {
+            "food_water" -> "🍞 食品与水"
+            "medical" -> "🩹 急救医疗"
+            "protection" -> "🦺 防护保暖"
+            else -> "🔦 工具照明"
+        }
+    }
+}
+
+// =========================================================================
+// 🔧 第一性原理收纳：家庭工具、五金配件与设备维保耗材模型 (Tools & Maintenance Vault)
+// =========================================================================
+
+data class ToolMaintenanceRecord(
+    val id: String = UUID.randomUUID().toString(),
+    val name: String = "",                         // 工具/五金/配件名称 (如 "博世 12V 锂电冲击钻", "M6*60 不锈钢膨胀螺丝", "沁园 RO 净水器 400G 滤芯", "生料带 10米")
+    val category: String = "power_tool",           // "power_tool" (⚡ 电动工具), "hand_tool" (🔨 手动工具), "hardware" (🔩 五金耗材), "maintenance" (🛠️ 设备维保)
+    val spec: String = "",                         // 规格型号 / 适配钻头 (如 "12V 锂电 / 10mm 夹头", "M6*60 (适配8mm钻头)", "RO-400G 复合膜", "宽18mm*厚0.1mm")
+    val qty: Double = 1.0,                         // 数量
+    val unit: String = "件",                       // 单位 (件/套/只/卷/盒)
+    val location: String = "",                     // 存放位置 (如 "阳台五金柜 #01", "地下室工具箱 #02", "水槽下方滤芯备件格")
+    val maintenanceIntervalDays: Int = 0,          // 维保/更换周期天数 (如滤芯 180 天, 0 表示长期工具无需周期更换)
+    val lastMaintainedAt: Long = 0L,               // 最近维保/更换/点检时间戳
+    val notes: String = "",                        // 使用技巧、安全注意与操作备忘
+    val photoPath: String = ""                     // 实物照片私有沙盒路径
+) {
+    /** 计算下一次维保截止时间戳 (0 表示不适用) */
+    fun getNextMaintenanceDate(): Long {
+        if (maintenanceIntervalDays <= 0) return 0L
+        val base = if (lastMaintainedAt > 0L) lastMaintainedAt else 0L
+        if (base == 0L) return 0L
+        return base + (maintenanceIntervalDays.toLong() * 24 * 60 * 60 * 1000)
+    }
+
+    /** 是否已逾期需立即维保/更换 */
+    fun isMaintenanceDue(): Boolean {
+        val nextDate = getNextMaintenanceDate()
+        if (nextDate <= 0L) {
+            return maintenanceIntervalDays > 0 && lastMaintainedAt <= 0L
+        }
+        return System.currentTimeMillis() > nextDate
+    }
+
+    /** 是否在 15 天内临期需要维保/更换 */
+    fun isMaintenanceDueSoon(): Boolean {
+        val nextDate = getNextMaintenanceDate()
+        if (nextDate <= 0L) return false
+        val diffMs = nextDate - System.currentTimeMillis()
+        return diffMs in 0..(15L * 24 * 60 * 60 * 1000)
+    }
+
+    /** 类别展示名称 */
+    fun getCategoryDisplayName(): String {
+        return when (category) {
+            "power_tool" -> "⚡ 电动工具"
+            "hand_tool" -> "🔨 手工工具"
+            "hardware" -> "🔩 五金耗材"
+            "maintenance" -> "🛠️ 设备维保"
+            else -> "🔧 综合工具"
+        }
+    }
+}
+
+// =========================================================================
+// 🪴 第一性原理收纳：家庭绿植花卉、多肉与水肥养护日历模型 (Plant Care Vault)
+// =========================================================================
+
+data class PlantCareRecord(
+    val id: String = UUID.randomUUID().toString(),
+    val name: String = "",                         // 绿植昵称/位置标识 (如 "南阳台龟背竹", "客厅电视柜琴叶榕", "书桌姬秋丽多肉")
+    val species: String = "",                      // 植物品种 (如 "龟背竹", "琴叶榕", "姬秋丽", "蝴蝶兰")
+    val location: String = "",                     // 摆放位置 (如 "南阳台花架上层", "客厅东侧散光位")
+    val lightDemand: String = "semi_shade",        // 光照需求: "full_sun" (☀️ 强光全日照), "semi_shade" (⛅ 散光半阴), "shade" (☁️ 喜阴耐阴)
+    val waterIntervalDays: Int = 7,                // 浇水周期天数 (如 7 天)
+    val lastWateredAt: Long = 0L,                  // 最近一次浇水时间戳
+    val fertilizeIntervalDays: Int = 30,           // 施肥周期天数 (如 30 天, 0 表示不设施肥)
+    val lastFertilizedAt: Long = 0L,               // 最近一次施肥时间戳
+    val careTips: String = "",                     // 养护要领 (如 "表土干透浇透，夏季早晚喷叶面水")
+    val photoPath: String = ""                     // 绿植成长照片沙盒路径
+) {
+    /** 计算下次浇水截止时间戳 */
+    fun getNextWaterDate(): Long {
+        if (waterIntervalDays <= 0) return 0L
+        val base = if (lastWateredAt > 0L) lastWateredAt else 0L
+        if (base == 0L) return 0L
+        return base + (waterIntervalDays.toLong() * 24 * 60 * 60 * 1000)
+    }
+
+    /** 是否逾期需要浇水 */
+    fun isWaterDue(): Boolean {
+        val nextDate = getNextWaterDate()
+        if (nextDate <= 0L) return waterIntervalDays > 0 && lastWateredAt <= 0L
+        return System.currentTimeMillis() > nextDate
+    }
+
+    /** 是否 1 天内临近需浇水 */
+    fun isWaterDueSoon(): Boolean {
+        val nextDate = getNextWaterDate()
+        if (nextDate <= 0L) return false
+        val diffMs = nextDate - System.currentTimeMillis()
+        return diffMs in 0..(24L * 60 * 60 * 1000)
+    }
+
+    /** 计算下次施肥截止时间戳 */
+    fun getNextFertilizeDate(): Long {
+        if (fertilizeIntervalDays <= 0) return 0L
+        val base = if (lastFertilizedAt > 0L) lastFertilizedAt else 0L
+        if (base == 0L) return 0L
+        return base + (fertilizeIntervalDays.toLong() * 24 * 60 * 60 * 1000)
+    }
+
+    /** 是否逾期需要施肥 */
+    fun isFertilizeDue(): Boolean {
+        if (fertilizeIntervalDays <= 0) return false
+        val nextDate = getNextFertilizeDate()
+        if (nextDate <= 0L) return lastFertilizedAt <= 0L
+        return System.currentTimeMillis() > nextDate
+    }
+
+    /** 光照习性展示名称 */
+    fun getLightDemandDisplayName(): String {
+        return when (lightDemand) {
+            "full_sun" -> "☀️ 全日照"
+            "shade" -> "☁️ 耐阴喜阴"
+            else -> "⛅ 散光半阴"
+        }
+    }
+}
+
+// =========================================================================
+// 🐾 第一性原理收纳：家庭萌宠档案、疫苗驱虫与主粮耗材模型 (Pet Care Vault)
+// =========================================================================
+
+data class PetCareRecord(
+    val id: String = UUID.randomUUID().toString(),
+    val name: String = "",                         // 宠物昵称 (如 "咪咪", "布丁", "旺财")
+    val species: String = "猫咪",                   // 物种/品种 (如 "英短银渐层", "金毛犬", "玄凤鹦鹉")
+    val birthDate: Long = 0L,                      // 出生或领养日期时间戳
+    val weightKg: Double = 0.0,                    // 当前体重 (kg)
+    val microchipId: String = "",                  // 电子芯片号 / 防疫证编号 (脱敏复制)
+    val dewormIntervalDays: Int = 30,              // 体内外驱虫周期天数 (如 30 天，0 表示不定期驱虫)
+    val lastDewormedAt: Long = 0L,                 // 最近一次驱虫时间戳
+    val vaccineIntervalDays: Int = 365,            // 核心疫苗接种周期天数 (如 365 天/年，0 表示无需定期接种)
+    val lastVaccinatedAt: Long = 0L,               // 最近一次疫苗接种时间戳
+    val foodBrand: String = "",                    // 主粮品牌与收纳位置 (如 "渴望鸡肉粮 · 阳台储粮桶 #01")
+    val notes: String = "",                        // 绝育状态、过敏禁忌与健康病历备忘
+    val photoPath: String = ""                     // 萌宠专属生活照沙盒路径
+) {
+    /** 计算下次驱虫截止时间戳 */
+    fun getNextDewormDate(): Long {
+        if (dewormIntervalDays <= 0) return 0L
+        val base = if (lastDewormedAt > 0L) lastDewormedAt else 0L
+        if (base == 0L) return 0L
+        return base + (dewormIntervalDays.toLong() * 24 * 60 * 60 * 1000)
+    }
+
+    /** 是否逾期需要驱虫 */
+    fun isDewormDue(): Boolean {
+        val nextDate = getNextDewormDate()
+        if (nextDate <= 0L) return dewormIntervalDays > 0 && lastDewormedAt <= 0L
+        return System.currentTimeMillis() > nextDate
+    }
+
+    /** 是否 7 天内临近需要驱虫 */
+    fun isDewormDueSoon(): Boolean {
+        val nextDate = getNextDewormDate()
+        if (nextDate <= 0L) return false
+        val diffMs = nextDate - System.currentTimeMillis()
+        return diffMs in 0..(7L * 24 * 60 * 60 * 1000)
+    }
+
+    /** 计算下次疫苗接种截止时间戳 */
+    fun getNextVaccineDate(): Long {
+        if (vaccineIntervalDays <= 0) return 0L
+        val base = if (lastVaccinatedAt > 0L) lastVaccinatedAt else 0L
+        if (base == 0L) return 0L
+        return base + (vaccineIntervalDays.toLong() * 24 * 60 * 60 * 1000)
+    }
+
+    /** 是否逾期需要接种疫苗 */
+    fun isVaccineDue(): Boolean {
+        val nextDate = getNextVaccineDate()
+        if (nextDate <= 0L) return vaccineIntervalDays > 0 && lastVaccinatedAt <= 0L
+        return System.currentTimeMillis() > nextDate
+    }
+
+    /** 是否 30 天内临近需要接种疫苗 */
+    fun isVaccineDueSoon(): Boolean {
+        val nextDate = getNextVaccineDate()
+        if (nextDate <= 0L) return false
+        val diffMs = nextDate - System.currentTimeMillis()
+        return diffMs in 0..(30L * 24 * 60 * 60 * 1000)
+    }
+}
+
+// =========================================================================
+// 📚 第一性原理收纳：家庭书房藏书、实体借阅与阅读笔记模型 (Bookshelf Vault)
+// =========================================================================
+
+data class BookRecord(
+    val id: String = UUID.randomUUID().toString(),
+    val title: String = "",                         // 书名 (如 "三体", "置身事内", "被讨厌的勇气")
+    val author: String = "",                        // 作者/译者 (如 "刘慈欣", "兰小欢")
+    val category: String = "社科人文",               // 分类 (文学小说 / 社科人文 / 经管商业 / 科技数码 / 亲子绘本 / 其它)
+    val bookshelfLocation: String = "",             // 书架物理定位 (如 "书房A柜第2层", "客厅电视柜书架")
+    val totalPages: Int = 300,                      // 全书总页数
+    val currentPages: Int = 0,                      // 当前已读页数
+    val readingStatus: String = "unread",           // 阅读状态: "reading"(在读), "unread"(在架未读), "finished"(已读完), "lent"(外借中)
+    val rating: Float = 5.0f,                       // 个人推荐评分 (1.0 ~ 5.0 星)
+    val borrowerName: String = "",                  // 借阅人姓名 (如 "同事张伟")
+    val lentDate: Long = 0L,                        // 借出时间戳
+    val summaryNotes: String = "",                  // 核心书摘、精读心得与金句备忘
+    val coverPath: String = ""                      // 封面或实物照片沙盒路径
+) {
+    /** 计算当前阅读进度百分比 (0~100) */
+    fun getProgressPercent(): Int {
+        if (totalPages <= 0) return 0
+        return ((currentPages.toDouble() / totalPages) * 100.0).toInt().coerceIn(0, 100)
+    }
+
+    /** 是否处于外借状态 */
+    fun isLent(): Boolean = readingStatus == "lent" || borrowerName.isNotBlank()
+
+    /** 是否已完成阅读 */
+    fun isFinished(): Boolean = readingStatus == "finished" || (totalPages > 0 && currentPages >= totalPages)
+
+    /** 是否正在阅读中 */
+    fun isReading(): Boolean = readingStatus == "reading" && !isFinished() && !isLent()
+
+    /** 阅读状态展示名称 */
+    fun getStatusDisplayName(): String {
+        return when {
+            isLent() -> "📤 外借中 (${borrowerName})"
+            isFinished() -> "✅ 已读完"
+            isReading() -> "📖 在读中 (${getProgressPercent()}%)"
+            else -> "⏳ 在架待读"
+        }
+    }
+}
+
+// =========================================================================
+// 🍷 第一性原理收纳：家庭茶窖、酒品珍藏与适饮熟成时效模型 (Cellar & Tea Vault)
+// =========================================================================
+
+data class BeverageTeaRecord(
+    val id: String = UUID.randomUUID().toString(),
+    val name: String = "",                         // 珍藏品名 (如 "飞天茅台 53度", "易武古树普洱生茶", "奔富 Bin 407", "耶加雪菲日晒咖啡豆")
+    val category: String = "茶品干货",              // 分类: "茶品干货", "葡萄酒庄", "烈酒名酿", "精品咖啡", "其它佳酿"
+    val vintageYear: Int = 2020,                   // 生产/采摘/陈化起始年份 (如 2018)
+    val originRegion: String = "",                 // 产区产地 (如 "贵州茅台镇", "法国波尔多梅多克", "云南西双版纳")
+    val storageLocation: String = "",              // 存放位置与环境 (如 "餐边柜恒温酒柜 #02", "书房避光存茶缸")
+    val qty: Int = 1,                              // 在库数量
+    val unit: String = "瓶",                       // 单位 (瓶 / 饼 / 罐 / 袋)
+    val openedAt: Long = 0L,                       // 开瓶/拆封时间戳 (0 表示未开封整件陈化)
+    val bestDrinkingYear: Int = 2030,              // 最佳适饮/熟成峰值年份 (0 表示不限)
+    val openShelfLifeDays: Int = 0,                // 开封后保质/赏味天数 (如红酒3天，咖啡豆30天，0 表示无需限制)
+    val tastingNotes: String = "",                 // 风味特征、香气口感与醒酒/冲泡要领 (如 "陈香浓郁，两颊生津；建议95℃盖碗冲泡")
+    val rating: Float = 5.0f,                      // 珍藏推荐评分 (1.0 ~ 5.0 星)
+    val photoPath: String = ""                     // 实物/标签照片沙盒路径
+) {
+    /** 计算已陈化/存藏年数 */
+    fun getAgingYears(): Int {
+        val currentYear = Calendar.getInstance().get(Calendar.YEAR)
+        if (vintageYear <= 0) return 0
+        return (currentYear - vintageYear).coerceAtLeast(0)
+    }
+
+    /** 是否已开瓶/拆封 */
+    fun isOpened(): Boolean = openedAt > 0L
+
+    /** 开封后是否已超过保质/最佳赏味期 */
+    fun isOpenExpired(): Boolean {
+        if (!isOpened() || openShelfLifeDays <= 0) return false
+        val expireMs = openedAt + (openShelfLifeDays.toLong() * 24 * 3600 * 1000)
+        return System.currentTimeMillis() > expireMs
+    }
+
+    /** 当前是否正处于适饮/熟成峰值黄金期 */
+    fun isPeakDrinkingNow(): Boolean {
+        val currentYear = Calendar.getInstance().get(Calendar.YEAR)
+        return bestDrinkingYear in 1..currentYear
+    }
+
+    /** 状态展示名称 */
+    fun getStatusDisplayName(): String {
+        return when {
+            isOpenExpired() -> "🔴 开封已超期"
+            isOpened() -> "🍷 已开瓶品鉴中"
+            isPeakDrinkingNow() -> "✨ 适饮熟成黄金期"
+            else -> "📦 存藏陈化中 (${getAgingYears()}年)"
+        }
+    }
+}
+
+// =========================================================================
+// 💡 全态数字大脑：闪念想法与灵感收纳模型 (Ideas & Inspiration Stream)
+// =========================================================================
+
+data class IdeaRecord(
+    val id: String = UUID.randomUUID().toString(),
+    val content: String = "",                       // 想法正文 (Markdown/纯文本)
+    val tags: List<String> = emptyList(),           // 标签集合 (如 "生活灵感", "读书心得", "待办")
+    val voiceMemoPath: String = "",                 // 语音速记原音频沙盒路径 (如有)
+    val moodEmoji: String = "💡",                   // 心情/类别 Emoji
+    val isPinned: Boolean = false,                  // 是否置顶
+    val colorHex: String = "#10B981",               // 卡片主题色
+    val linkedAssetIds: List<String> = emptyList(), // 关联的实体物品/藏书/空间 ID 集合
+    val createdAt: Long = System.currentTimeMillis(),
+    val updatedAt: Long = createdAt
+) {
+    fun getPreview(maxChars: Int = 60): String {
+        val trimmed = content.trim().replace("\n", " ")
+        return if (trimmed.length <= maxChars) trimmed else "${trimmed.take(maxChars)}..."
+    }
+}
+
+// =========================================================================
+// 📰 全态数字大脑：智能截图与网络文章知识剪藏模型 (Knowledge & Web Clips)
+// =========================================================================
+
+data class ClippingRecord(
+    val id: String = UUID.randomUUID().toString(),
+    val title: String = "",                         // 文章/剪藏标题
+    val originalUrl: String = "",                   // 原始链接 (如有)
+    val sourcePlatform: String = "screenshot",      // 来源: "screenshot"(截图), "wechat", "zhihu", "web", "note"
+    val fullMarkdown: String = "",                  // 离线纯净正文 Markdown
+    val ocrRawText: String = "",                    // 截图 OCR 提取的全文索引文本
+    val localImagePaths: List<String> = emptyList(),// 离线保存的截图或文章配图私有路径
+    val summary: String = "",                       // 核心摘要 / 重点金句
+    val tags: List<String> = emptyList(),           // 归档分类标签
+    val readingProgress: Float = 0.0f,              // 阅读进度 (0.0 ~ 1.0)
+    val isArchived: Boolean = false,                // 是否已归档
+    val linkedAssetIds: List<String> = emptyList(), // 跨维关联的实物/空间 ID
+    val capturedAt: Long = System.currentTimeMillis()
+) {
+    fun getSearchableContent(): String {
+        return "$title $summary $fullMarkdown $ocrRawText ${tags.joinToString(" ")}"
+    }
+}
+
+
+
+
+
+
+

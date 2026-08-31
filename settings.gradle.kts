@@ -17,5 +17,5 @@ dependencyResolutionManagement {
         mavenCentral()
     }
 }
-rootProject.name = "DiaperTracker"
-include(":app", ":desktop")
+rootProject.name = "Collecter"
+include(":app", ":desktop", ":shared")

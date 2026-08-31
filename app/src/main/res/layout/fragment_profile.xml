@@ -251,7 +251,7 @@
                         android:layout_marginStart="56dp"
                         android:background="@color/card_border" />
 
-                    <!-- 局域网免密极速互传 -->
+                    <!-- 局域网配对互传 -->
                     <LinearLayout
                         android:id="@+id/btn_lan_sync_manage"
                         android:layout_width="match_parent"
@@ -275,7 +275,7 @@
                             android:layout_height="wrap_content"
                             android:layout_weight="1"
                             android:layout_marginStart="16dp"
-                            android:text="⚡ 局域网免密极速互传"
+                            android:text="⚡ 局域网配对互传"
                             android:textSize="16sp"
                             android:textColor="@color/text_primary"
                             android:fontFamily="sans-serif-medium" />

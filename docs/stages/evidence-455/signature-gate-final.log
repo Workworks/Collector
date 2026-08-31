@@ -1,0 +1,7 @@
+Previous SHA256 certificate: 03d73e71eb13c82a820dc50f4ef780630aa698591944693ff6b7c1c3c3bb013a
+Candidate SHA256 certificate: 98edb36c3e227cec56d525ae9e3e7aeafbf653ebccdc923804dd2031b8b5097e
+Exception: F:\LANShare\AgentWorkSpace\Collector\scripts\Verify-AndroidRelease.ps1:23
+Line |
+  23 |  …  -ne $new) { throw 'SIGNATURE-NOT-COMPATIBLE：禁止发布；必须恢复原签名，不得卸载旧版绕过' }
+     |                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+     | SIGNATURE-NOT-COMPATIBLE：禁止发布；必须恢复原签名，不得卸载旧版绕过

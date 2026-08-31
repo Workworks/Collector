@@ -15,3 +15,11 @@ dist/
 *.tar.gz
 *.zip
 .system_generated/
+
+shared/build/
+*.obj
+*.keystore
+*.jks
+.env
+.env.*
+.runtime/

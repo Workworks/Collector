@@ -28,6 +28,7 @@ class DataStore(private val ctx: Context) {
         try {
             ExpiringAndSubWidgetProvider.updateAllWidgets(ctx)
             QuickAddWidgetProvider.updateAllWidgets(ctx)
+            VaultAlertWidgetProvider.updateAllWidgets(ctx)
         } catch (e: Exception) {
             android.util.Log.w("DataStore", "更新桌面小组件失败", e)
         }
@@ -152,14 +153,15 @@ class DataStore(private val ctx: Context) {
 
     // ==================== 备份与恢复 ====================
 
-    fun exportBackupJson(): String = BackupCodec.exportBackupJson(getCategories(), loadAll())
+    init { CompleteBackupStore(ctx, keyEntries).recoverInterruptedRestore() }
 
-    fun importBackupJson(jsonStr: String): Boolean = BackupCodec.importBackupJson(
-        jsonStr,
-        getCategories = { getCategories() },
-        saveCategories = { saveCategories(it) },
-        saveEntries = { saveAll(it) }
-    )
+    fun exportBackupJson(): String = CompleteBackupStore(ctx, keyEntries).exportJson()
+
+    fun previewBackupJson(text: String): String = CompleteBackupStore(ctx, keyEntries).preview(text)
+
+    fun importBackupJson(jsonStr: String): Boolean = CompleteBackupStore(ctx, keyEntries).importJson(jsonStr).also {
+        if (it) notifyWidgets()
+    }
 
     // ==================== 触感震动反馈配置 ====================
 
@@ -208,6 +210,12 @@ class DataStore(private val ctx: Context) {
     fun isSimpleMode(): Boolean = settingsStore.isSimpleMode()
 
     fun setSimpleMode(enabled: Boolean) = settingsStore.setSimpleMode(enabled)
+
+    // ==================== 📸 截图无感自动收纳 ====================
+
+    fun isScreenshotCaptureEnabled(): Boolean = settingsStore.isScreenshotCaptureEnabled()
+
+    fun setScreenshotCaptureEnabled(enabled: Boolean) = settingsStore.setScreenshotCaptureEnabled(enabled)
 
     // ==================== 闲置变现与回血 ROI 统计 (Cashback Analytics) ====================
 
@@ -320,5 +328,92 @@ class DataStore(private val ctx: Context) {
     fun saveHonorCredentials(list: List<HonorCredential>) = honorRepo.saveHonorCredentials(list)
     fun addOrUpdateHonorCredential(honor: HonorCredential) = honorRepo.addOrUpdateHonorCredential(honor)
     fun deleteHonorCredential(honorId: String) = honorRepo.deleteHonorCredential(honorId)
+
+    // ---- 👗 换季衣橱、四季穿搭与封箱收纳舱 (Wardrobe & Seasonal Closet) ----
+    private val wardrobeRepo = WardrobeVaultRepository(prefs)
+
+    fun getWardrobeRecords(): List<WardrobeRecord> = wardrobeRepo.getWardrobeRecords()
+    fun saveWardrobeRecords(list: List<WardrobeRecord>) = wardrobeRepo.saveWardrobeRecords(list)
+    fun addOrUpdateWardrobeRecord(record: WardrobeRecord) = wardrobeRepo.addOrUpdateWardrobeRecord(record)
+    fun deleteWardrobeRecord(recordId: String) = wardrobeRepo.deleteWardrobeRecord(recordId)
+    fun markWardrobeWorn(recordId: String) = wardrobeRepo.markWardrobeWorn(recordId)
+    fun toggleWardrobeSealed(recordId: String) = wardrobeRepo.toggleWardrobeSealed(recordId)
+
+    // ---- 🚨 家庭应急防灾、避难包与生命线物资 (Emergency & Survival Vault) ----
+    private val emergencyRepo = EmergencyVaultRepository(prefs)
+
+    fun getEmergencyItems(): List<EmergencyItem> = emergencyRepo.getEmergencyItems()
+    fun saveEmergencyItems(list: List<EmergencyItem>) = emergencyRepo.saveEmergencyItems(list)
+    fun addOrUpdateEmergencyItem(item: EmergencyItem) = emergencyRepo.addOrUpdateEmergencyItem(item)
+    fun deleteEmergencyItem(itemId: String) = emergencyRepo.deleteEmergencyItem(itemId)
+    fun checkEmergencyItem(itemId: String) = emergencyRepo.checkItem(itemId)
+
+    // ---- 🔧 家庭工具、五金配件与设备维保耗材 (Tools & Maintenance Vault) ----
+    private val toolRepo = ToolMaintenanceVaultRepository(prefs)
+
+    fun getToolRecords(): List<ToolMaintenanceRecord> = toolRepo.getToolRecords()
+    fun saveToolRecords(list: List<ToolMaintenanceRecord>) = toolRepo.saveToolRecords(list)
+    fun addOrUpdateToolRecord(record: ToolMaintenanceRecord) = toolRepo.addOrUpdateToolRecord(record)
+    fun deleteToolRecord(recordId: String) = toolRepo.deleteToolRecord(recordId)
+    fun markToolMaintained(recordId: String) = toolRepo.markMaintained(recordId)
+
+    // ---- 🪴 家庭绿植花卉、多肉与水肥养护日历 (Plant Care Vault) ----
+    private val plantRepo = PlantCareVaultRepository(prefs)
+
+    fun getPlantRecords(): List<PlantCareRecord> = plantRepo.getPlantRecords()
+    fun savePlantRecords(list: List<PlantCareRecord>) = plantRepo.savePlantRecords(list)
+    fun addOrUpdatePlantRecord(record: PlantCareRecord) = plantRepo.addOrUpdatePlantRecord(record)
+    fun deletePlantRecord(recordId: String) = plantRepo.deletePlantRecord(recordId)
+    fun waterPlant(recordId: String) = plantRepo.waterPlant(recordId)
+    fun fertilizePlant(recordId: String) = plantRepo.fertilizePlant(recordId)
+
+    // ---- 🐾 家庭萌宠健康、疫苗驱虫与主粮耗材 (Pet Care Vault) ----
+    private val petRepo = PetCareVaultRepository(prefs)
+
+    fun getPetRecords(): List<PetCareRecord> = petRepo.getPetRecords()
+    fun savePetRecords(list: List<PetCareRecord>) = petRepo.savePetRecords(list)
+    fun addOrUpdatePetRecord(record: PetCareRecord) = petRepo.addOrUpdatePetRecord(record)
+    fun deletePetRecord(recordId: String) = petRepo.deletePetRecord(recordId)
+    fun markPetDewormed(recordId: String) = petRepo.markDewormed(recordId)
+    fun markPetVaccinated(recordId: String) = petRepo.markVaccinated(recordId)
+
+    // ---- 📚 家庭书房藏书、借阅流转与阅读笔记 (Bookshelf Vault) ----
+    private val bookRepo = BookVaultRepository(prefs)
+
+    fun getBookRecords(): List<BookRecord> = bookRepo.getBookRecords()
+    fun saveBookRecords(list: List<BookRecord>) = bookRepo.saveBookRecords(list)
+    fun addOrUpdateBookRecord(record: BookRecord) = bookRepo.addOrUpdateBookRecord(record)
+    fun deleteBookRecord(recordId: String) = bookRepo.deleteBookRecord(recordId)
+    fun updateBookReadingProgress(recordId: String, currentPages: Int) = bookRepo.updateReadingProgress(recordId, currentPages)
+    fun markBookLent(recordId: String, borrowerName: String) = bookRepo.markLent(recordId, borrowerName)
+    fun markBookReturned(recordId: String) = bookRepo.markReturned(recordId)
+
+    // ---- 🍷 家庭茶窖、酒品珍藏与适饮熟成时效 (Cellar & Tea Vault) ----
+    private val beverageRepo = BeverageTeaVaultRepository(prefs)
+
+    fun getBeverageRecords(): List<BeverageTeaRecord> = beverageRepo.getBeverageRecords()
+    fun saveBeverageRecords(list: List<BeverageTeaRecord>) = beverageRepo.saveBeverageRecords(list)
+    fun addOrUpdateBeverageRecord(record: BeverageTeaRecord) = beverageRepo.addOrUpdateBeverageRecord(record)
+    fun deleteBeverageRecord(recordId: String) = beverageRepo.deleteBeverageRecord(recordId)
+    fun openBeverage(recordId: String) = beverageRepo.openBeverage(recordId)
+    fun consumeBeverageQty(recordId: String, delta: Int = 1) = beverageRepo.consumeQty(recordId, delta)
+
+    // ---- 💡 闪念灵感与想法收纳 (Idea & Thought Vault) ----
+    private val ideaRepo = IdeaVaultRepository(prefs)
+
+    fun getIdeas(): List<IdeaRecord> = ideaRepo.getIdeas()
+    fun saveIdeas(list: List<IdeaRecord>) = ideaRepo.saveIdeas(list)
+    fun addOrUpdateIdea(idea: IdeaRecord) = ideaRepo.addOrUpdateIdea(idea)
+    fun deleteIdea(id: String) = ideaRepo.deleteIdea(id)
+    fun toggleIdeaPin(id: String) = ideaRepo.togglePin(id)
+
+    // ---- 📰 智能截图与网络文章剪藏 (Clipping & Knowledge Vault) ----
+    private val clippingRepo = ClippingVaultRepository(prefs)
+
+    fun getClippings(): List<ClippingRecord> = clippingRepo.getClippings()
+    fun saveClippings(list: List<ClippingRecord>) = clippingRepo.saveClippings(list)
+    fun addOrUpdateClipping(clipping: ClippingRecord) = clippingRepo.addOrUpdateClipping(clipping)
+    fun deleteClipping(id: String) = clippingRepo.deleteClipping(id)
+    fun toggleClippingArchive(id: String) = clippingRepo.toggleArchive(id)
 
 }

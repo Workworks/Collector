@@ -1,0 +1,18 @@
+npm warn Unknown user config "home". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.
+
+> webdav@1.0.0 test
+> node --test test/*.test.js
+
+✔ authentication, malformed URI and process survival (436.4246ms)
+✔ Collector backup PUT/GET overwrite and aliases (79.2927ms)
+✔ special names, encoded paths and MOVE destination alias (156.015ms)
+✔ files forced to download; parent traversal rejected (42.8912ms)
+✔ interrupted and oversized uploads preserve existing backup (328.1194ms)
+ℹ tests 5
+ℹ suites 0
+ℹ pass 5
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 1204.8635

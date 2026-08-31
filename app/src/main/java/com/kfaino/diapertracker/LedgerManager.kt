@@ -73,7 +73,7 @@ object LedgerManager {
             o.put("createdAt", l.createdAt)
             arr.put(o)
         }
-        prefs.edit().putString(KEY_LEDGERS_JSON, arr.toString()).apply()
+        JsonCollectionWriter.save(prefs, KEY_LEDGERS_JSON, arr, "ledgers")
     }
 
     /** 弹出账本快速切换与管理对话框 */

@@ -72,4 +72,113 @@ class BackupCodecTest {
         assertTrue(firstItem.isImportant)
         assertEquals("附带 Apple Pencil", firstItem.notes)
     }
+
+    @Test
+    fun `备份空数据往返验证`() {
+        val categories = listOf("数码")
+        val entries = emptyList<Entry>()
+
+        val exportedJson = BackupCodec.exportBackupJson(categories, entries)
+        assertTrue("导出 JSON 必须包含 version", exportedJson.contains("\"version\""))
+
+        val importedCats = mutableListOf<String>()
+        val importedEntries = mutableListOf<Entry>()
+        val success = BackupCodec.importBackupJson(
+            jsonStr = exportedJson,
+            getCategories = { emptyList() },
+            saveCategories = { importedCats.addAll(it) },
+            saveEntries = { importedEntries.addAll(it) }
+        )
+        assertTrue("空数据导入应成功", success)
+        assertEquals(0, importedEntries.size)
+        assertEquals(1, importedCats.size)
+    }
+
+    @Test
+    fun `旧版JSON缺少新字段应安全回退默认值`() {
+        // 手写不含 min_stock / maintenance_months / is_digital 字段的旧格式 JSON
+        val oldJson = """{"version":1,"categories":["数码"],"entries":[{"id":"old-001","cat":"数码","brand":"旧手机","qty":1,"price":1000.0,"is_in":true,"ts":0}]}"""
+
+        val importedEntries = mutableListOf<Entry>()
+        val success = BackupCodec.importBackupJson(
+            jsonStr = oldJson,
+            getCategories = { emptyList() },
+            saveCategories = { /* 不关心分类 */ },
+            saveEntries = { importedEntries.addAll(it) }
+        )
+        assertTrue("旧版 JSON 应能成功导入", success)
+        assertEquals(1, importedEntries.size)
+        val item = importedEntries[0]
+        assertEquals("old-001", item.id)
+        assertEquals(0, item.minStockThreshold)
+        assertEquals(0, item.maintenanceIntervalMonths)
+        assertEquals(false, item.isDigital)
+    }
+
+    @Test
+    fun `畸形JSON导入应安全拒绝且不崩溃`() {
+        val importedEntries = mutableListOf<Entry>()
+        var saveEntriesCalled = false
+
+        val success = BackupCodec.importBackupJson(
+            jsonStr = "not-valid-json",
+            getCategories = { emptyList() },
+            saveCategories = { /* 不关心 */ },
+            saveEntries = {
+                saveEntriesCalled = true
+                importedEntries.addAll(it)
+            }
+        )
+        assertEquals(false, success)
+        assertEquals(false, saveEntriesCalled)
+        assertEquals(0, importedEntries.size)
+    }
+
+    @Test
+    fun `订阅类资产字段往返无损验证`() {
+        val categories = listOf("网络订阅")
+        val billingDate = 1900000000000L  // 固定时间戳
+        val entries = listOf(
+            Entry(
+                id = "sub-001",
+                category = "网络订阅",
+                brand = "Netflix",
+                isSubscription = true,
+                subCycle = "月付",
+                subNextBillingDate = billingDate,
+                subAutoRenew = true,
+                price = 68.0
+            )
+        )
+
+        val exportedJson = BackupCodec.exportBackupJson(categories, entries)
+        val importedEntries = mutableListOf<Entry>()
+        BackupCodec.importBackupJson(
+            jsonStr = exportedJson,
+            getCategories = { emptyList() },
+            saveCategories = { /* 不关心 */ },
+            saveEntries = { importedEntries.addAll(it) }
+        )
+        assertEquals(1, importedEntries.size)
+        val sub = importedEntries[0]
+        assertEquals(true, sub.isSubscription)
+        assertEquals("月付", sub.subCycle)
+        assertEquals(billingDate, sub.subNextBillingDate)
+        assertEquals(true, sub.subAutoRenew)
+    }
+
+    @Test
+    fun `导出CSV必须以UTF8_BOM开头`() {
+        val entries = listOf(
+            Entry(
+                id = "csv-001",
+                category = "数码",
+                brand = "测试物品",
+                qty = 1,
+                price = 100.0
+            )
+        )
+        val csv = ExportManager.generateAssetsCsv(entries)
+        assertTrue("CSV 第一个字符必须是 UTF-8 BOM (\\uFEFF)", csv.startsWith("\uFEFF"))
+    }
 }

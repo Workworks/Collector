@@ -1,0 +1,18 @@
+{
+  "checked": [
+    "README.md",
+    "stage-current.md",
+    "TODO.md",
+    "ARCHITECTURE.md",
+    "USER_MANUAL.md",
+    "BLOCKERS.md",
+    "product-direction.md",
+    "manuals/webdav-backup.md",
+    "baseline.md",
+    "stages/stage-453-delivery-report.md",
+    "releases/v4.3.3-report.md",
+    "stages/docs-refresh-20260831.md",
+    "capability-map.html (new links only)"
+  ],
+  "brokenFileTargets": []
+}

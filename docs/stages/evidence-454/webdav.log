@@ -1,0 +1,20 @@
+✔ history restores overwritten and deleted snapshots; authentication required (605.5913ms)
+✔ concurrent revision writers have one winner; history inaccessible through DAV (82.1085ms)
+✔ large backup roundtrip and archive failure preserve current data (321.7245ms)
+✔ protected backup interruption and history quota fail closed (690.5792ms)
+✔ Windows aliases cannot bypass protected backup path (52.6363ms)
+✔ recovery command restores exact historical bytes with a version condition (1742.4607ms)
+✔ 64 MiB backup boundary succeeds and excess declared size is rejected (2106.9377ms)
+✔ authentication, malformed URI and process survival (463.7224ms)
+✔ Collector backup PUT/GET overwrite and aliases (73.4686ms)
+✔ special names, encoded paths and MOVE destination alias (84.0036ms)
+✔ files forced to download; parent traversal rejected (38.0437ms)
+✔ interrupted and oversized uploads preserve existing backup (333.7338ms)
+ℹ tests 12
+ℹ suites 0
+ℹ pass 12
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 5826.9448

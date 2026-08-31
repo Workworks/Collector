@@ -24,6 +24,7 @@
     <uses-feature android:name="android.hardware.bluetooth" android:required="false" />
 
     <application
+        android:usesCleartextTraffic="true"
         android:allowBackup="true"
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
@@ -56,6 +57,16 @@
             android:screenOrientation="portrait"
             android:theme="@style/Theme.DiaperTracker" />
 
+        <activity android:name=".WorkbenchActivity" android:exported="false" />
+        <activity android:name=".CollectShareActivity" android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.SEND" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <data android:mimeType="text/plain" />
+                <data android:mimeType="image/*" />
+            </intent-filter>
+        </activity>
+
         <!-- 桌面小组件 1：临期与扣费预警 -->
         <receiver
             android:name=".ExpiringAndSubWidgetProvider"
@@ -78,6 +89,18 @@
             <meta-data
                 android:name="android.appwidget.provider"
                 android:resource="@xml/widget_quick_add_info" />
+        </receiver>
+
+        <!-- 桌面小组件 3：12 馆综合时效预警 -->
+        <receiver
+            android:name=".VaultAlertWidgetProvider"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/widget_vault_alert_info" />
         </receiver>
 
         <provider

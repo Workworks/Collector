@@ -1,0 +1,43 @@
+
+com.kfaino.diapertracker.Upgrade456DeviceTest:.
+Error in realAndroidFamilyClientUsesDesktopPermissions(com.kfaino.diapertracker.Upgrade456DeviceTest):
+java.io.IOException: unexpected end of stream on com.android.okhttp.Address@233bef83
+	at com.android.okhttp.internal.http.Http1xStream.readResponse(Http1xStream.java:203)
+	at com.android.okhttp.internal.http.Http1xStream.readResponseHeaders(Http1xStream.java:129)
+	at com.android.okhttp.internal.http.HttpEngine.readNetworkResponse(HttpEngine.java:750)
+	at com.android.okhttp.internal.http.HttpEngine.readResponse(HttpEngine.java:622)
+	at com.android.okhttp.internal.huc.HttpURLConnectionImpl.execute(HttpURLConnectionImpl.java:475)
+	at com.android.okhttp.internal.huc.HttpURLConnectionImpl.getResponse(HttpURLConnectionImpl.java:411)
+	at com.android.okhttp.internal.huc.HttpURLConnectionImpl.getResponseCode(HttpURLConnectionImpl.java:542)
+	at com.kfaino.diapertracker.FamilyClientDialog.request(FamilyClientDialog.kt:48)
+	at com.kfaino.diapertracker.Upgrade456DeviceTest.realAndroidFamilyClientUsesDesktopPermissions(Upgrade456DeviceTest.kt:22)
+	... 31 trimmed
+Caused by: java.io.EOFException: \n not found: size=0 content=...
+	at com.android.okhttp.okio.RealBufferedSource.readUtf8LineStrict(RealBufferedSource.java:202)
+	at com.android.okhttp.internal.http.Http1xStream.readResponse(Http1xStream.java:188)
+	... 40 more
+
+
+Time: 0.061
+There was 1 failure:
+1) realAndroidFamilyClientUsesDesktopPermissions(com.kfaino.diapertracker.Upgrade456DeviceTest)
+java.io.IOException: unexpected end of stream on com.android.okhttp.Address@233bef83
+	at com.android.okhttp.internal.http.Http1xStream.readResponse(Http1xStream.java:203)
+	at com.android.okhttp.internal.http.Http1xStream.readResponseHeaders(Http1xStream.java:129)
+	at com.android.okhttp.internal.http.HttpEngine.readNetworkResponse(HttpEngine.java:750)
+	at com.android.okhttp.internal.http.HttpEngine.readResponse(HttpEngine.java:622)
+	at com.android.okhttp.internal.huc.HttpURLConnectionImpl.execute(HttpURLConnectionImpl.java:475)
+	at com.android.okhttp.internal.huc.HttpURLConnectionImpl.getResponse(HttpURLConnectionImpl.java:411)
+	at com.android.okhttp.internal.huc.HttpURLConnectionImpl.getResponseCode(HttpURLConnectionImpl.java:542)
+	at com.kfaino.diapertracker.FamilyClientDialog.request(FamilyClientDialog.kt:48)
+	at com.kfaino.diapertracker.Upgrade456DeviceTest.realAndroidFamilyClientUsesDesktopPermissions(Upgrade456DeviceTest.kt:22)
+	... 31 trimmed
+Caused by: java.io.EOFException: \n not found: size=0 content=...
+	at com.android.okhttp.okio.RealBufferedSource.readUtf8LineStrict(RealBufferedSource.java:202)
+	at com.android.okhttp.internal.http.Http1xStream.readResponse(Http1xStream.java:188)
+	... 40 more
+
+FAILURES!!!
+Tests run: 2,  Failures: 1
+
+

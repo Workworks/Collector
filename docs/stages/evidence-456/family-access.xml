@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="com.kfaino.collector.desktop.server.FamilyAccessTest" tests="2" skipped="0" failures="0" errors="0" timestamp="2026-08-31T15:22:50" hostname="KFAINO" time="2.013">
+  <properties/>
+  <testcase name="expiryFreesQuotaAndReissueDoesNotInheritSharing" classname="com.kfaino.collector.desktop.server.FamilyAccessTest" time="0.633"/>
+  <testcase name="actualHttpEnforcesScopeRolesRevocationAndAudit" classname="com.kfaino.collector.desktop.server.FamilyAccessTest" time="1.379"/>
+  <system-out><![CDATA[Collecter Embedded Server started on http://127.0.0.1:2348/ (local only)
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

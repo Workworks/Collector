@@ -39,9 +39,7 @@ object FamilyVaultDialog {
             .setView(binding.root)
             .setCancelable(true)
             .create()
-
-        dialog.window?.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
-        dialog.window?.attributes?.windowAnimations = R.style.CustomDialogAnimation
+        VaultUiHelper.setupVaultWindow(dialog)
 
         fun refreshList() {
             val all = store.getIdentityDocs()
@@ -203,9 +201,7 @@ object FamilyVaultDialog {
                 paint.isFakeBoldText = true
                 setTextColor(ContextCompat.getColor(activity, R.color.accent_dark))
                 setOnClickListener {
-                    val cm = activity.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
-                    cm.setPrimaryClip(ClipData.newPlainText("ID Number", d.docNumber))
-                    Toast.makeText(activity, "已复制【${d.nameOnDoc}】完整证号", Toast.LENGTH_SHORT).show()
+                    VaultUiHelper.copyToClipboard(activity, "ID Number", d.docNumber, "已复制【${d.nameOnDoc}】完整证号")
                 }
             }
             infoLayout.addView(numberTv)

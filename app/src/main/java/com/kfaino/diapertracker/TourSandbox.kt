@@ -15,6 +15,13 @@ object TourSandbox {
     private val demoMedicineIds = mutableSetOf<String>()
     private val demoFoodIds = mutableSetOf<String>()
     private val demoHonorIds = mutableSetOf<String>()
+    private val demoWardrobeIds = mutableSetOf<String>()
+    private val demoEmergencyIds = mutableSetOf<String>()
+    private val demoToolIds = mutableSetOf<String>()
+    private val demoPlantIds = mutableSetOf<String>()
+    private val demoPetIds = mutableSetOf<String>()
+    private val demoBookIds = mutableSetOf<String>()
+    private val demoBeverageIds = mutableSetOf<String>()
 
     fun registerDemoEntry(id: String) = demoEntryIds.add(id)
     fun registerDemoVoucher(id: String) = demoVoucherIds.add(id)
@@ -22,6 +29,13 @@ object TourSandbox {
     fun registerDemoMedicine(id: String) = demoMedicineIds.add(id)
     fun registerDemoFood(id: String) = demoFoodIds.add(id)
     fun registerDemoHonor(id: String) = demoHonorIds.add(id)
+    fun registerDemoWardrobe(id: String) = demoWardrobeIds.add(id)
+    fun registerDemoEmergency(id: String) = demoEmergencyIds.add(id)
+    fun registerDemoTool(id: String) = demoToolIds.add(id)
+    fun registerDemoPlant(id: String) = demoPlantIds.add(id)
+    fun registerDemoPet(id: String) = demoPetIds.add(id)
+    fun registerDemoBook(id: String) = demoBookIds.add(id)
+    fun registerDemoBeverage(id: String) = demoBeverageIds.add(id)
 
     /** 执行沙盒演示数据彻底回滚清理，确保不影响真实资产记录 */
     fun cleanup(activity: Activity) {
@@ -68,6 +82,55 @@ object TourSandbox {
             store.saveHonorCredentials(all)
             cleanedCount += demoHonorIds.size
             demoHonorIds.clear()
+        }
+
+        if (demoWardrobeIds.isNotEmpty()) {
+            val all = store.getWardrobeRecords().filterNot { demoWardrobeIds.contains(it.id) }
+            store.saveWardrobeRecords(all)
+            cleanedCount += demoWardrobeIds.size
+            demoWardrobeIds.clear()
+        }
+
+        if (demoEmergencyIds.isNotEmpty()) {
+            val all = store.getEmergencyItems().filterNot { demoEmergencyIds.contains(it.id) }
+            store.saveEmergencyItems(all)
+            cleanedCount += demoEmergencyIds.size
+            demoEmergencyIds.clear()
+        }
+
+        if (demoToolIds.isNotEmpty()) {
+            val all = store.getToolRecords().filterNot { demoToolIds.contains(it.id) }
+            store.saveToolRecords(all)
+            cleanedCount += demoToolIds.size
+            demoToolIds.clear()
+        }
+
+        if (demoPlantIds.isNotEmpty()) {
+            val all = store.getPlantRecords().filterNot { demoPlantIds.contains(it.id) }
+            store.savePlantRecords(all)
+            cleanedCount += demoPlantIds.size
+            demoPlantIds.clear()
+        }
+
+        if (demoPetIds.isNotEmpty()) {
+            val all = store.getPetRecords().filterNot { demoPetIds.contains(it.id) }
+            store.savePetRecords(all)
+            cleanedCount += demoPetIds.size
+            demoPetIds.clear()
+        }
+
+        if (demoBookIds.isNotEmpty()) {
+            val all = store.getBookRecords().filterNot { demoBookIds.contains(it.id) }
+            store.saveBookRecords(all)
+            cleanedCount += demoBookIds.size
+            demoBookIds.clear()
+        }
+
+        if (demoBeverageIds.isNotEmpty()) {
+            val all = store.getBeverageRecords().filterNot { demoBeverageIds.contains(it.id) }
+            store.saveBeverageRecords(all)
+            cleanedCount += demoBeverageIds.size
+            demoBeverageIds.clear()
         }
 
         if (cleanedCount > 0) {

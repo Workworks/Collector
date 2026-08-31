@@ -196,4 +196,169 @@ object ExportManager {
 
         activity.startActivity(Intent.createChooser(intent, title))
     }
+
+    /**
+     * 生成 12 馆时效物资联合报表 CSV (UTF-8 BOM)
+     * 字段：来源馆 / 物品名称 / 数量与单位 / 关键日期 / 剩余天数 / 存放位置 / 状态标签 / 备注
+     */
+    fun generateAllVaultsCsv(store: DataStore): String {
+        val sb = StringBuilder()
+        sb.append('\uFEFF')  // UTF-8 BOM，防 Excel 中文乱码
+        val headers = listOf("来源馆", "物品名称", "数量与单位", "关键日期", "剩余天数", "存放位置", "状态标签", "备注")
+        sb.append(headers.joinToString(",") { escapeCsv(it) }).append("\r\n")
+
+        val now = System.currentTimeMillis()
+        val dayMs = 86400000L
+
+        fun daysLeftStr(ts: Long): String = when {
+            ts <= 0L -> "-"
+            ts < now -> "已过期 ${(now - ts) / dayMs} 天"
+            else -> "剩余 ${(ts - now) / dayMs} 天"
+        }
+
+        // 🎟️ 时效卡券
+        try {
+            store.getVouchers().filter { !it.isUsed }.forEach { v ->
+                sb.append(listOf(
+                    escapeCsv("🎟️ 时效卡券"), escapeCsv(v.title),
+                    escapeCsv("${v.remainingTimes} 次"),
+                    escapeCsv(if (v.expiryDate > 0) DAY_FORMAT.format(java.util.Date(v.expiryDate)) else "长期有效"),
+                    escapeCsv(daysLeftStr(v.expiryDate)), escapeCsv(v.platform),
+                    escapeCsv(if (v.isExpired()) "⚠️ 已过期" else if (v.isExpiringSoon()) "🟠 临期" else "🟢 有效"),
+                    escapeCsv(v.notes)
+                ).joinToString(",")).append("\r\n")
+            }
+        } catch (e: Exception) { android.util.Log.w("ExportManager", "导出卡券数据失败", e) }
+
+        // 💊 家庭药箱
+        try {
+            store.getMedicines().forEach { m ->
+                val eff = m.getEffectiveExpiryDate()
+                sb.append(listOf(
+                    escapeCsv("💊 家庭药箱"), escapeCsv(m.name),
+                    escapeCsv("${m.qty} ${m.unit}"),
+                    escapeCsv(if (eff > 0) DAY_FORMAT.format(java.util.Date(eff)) else "长期有效"),
+                    escapeCsv(daysLeftStr(eff)), escapeCsv(m.location),
+                    escapeCsv(if (m.isExpired()) "🔴 已过期" else if (m.isExpiringSoon()) "🟠 临期" else "🟢 正常"),
+                    escapeCsv(m.dosage)
+                ).joinToString(",")).append("\r\n")
+            }
+        } catch (e: Exception) { android.util.Log.w("ExportManager", "导出药箱数据失败", e) }
+
+        // 🥦 食材鲜度库
+        try {
+            store.getFoods().filter { !it.isConsumed }.forEach { f ->
+                val eff = f.getEffectiveExpiryDate()
+                sb.append(listOf(
+                    escapeCsv("🥦 食材鲜度库"), escapeCsv(f.name),
+                    escapeCsv("${f.qty} ${f.unit}"),
+                    escapeCsv(if (eff > 0) DAY_FORMAT.format(java.util.Date(eff)) else "长期在库"),
+                    escapeCsv(daysLeftStr(eff)), escapeCsv(f.location),
+                    escapeCsv(f.getFreshnessStatusText()), escapeCsv(f.notes)
+                ).joinToString(",")).append("\r\n")
+            }
+        } catch (e: Exception) { android.util.Log.w("ExportManager", "导出食材数据失败", e) }
+
+        // 🚨 应急防灾
+        try {
+            store.getEmergencyItems().forEach { e ->
+                sb.append(listOf(
+                    escapeCsv("🚨 应急防灾"), escapeCsv(e.name),
+                    escapeCsv("${e.qty} ${e.unit}"),
+                    escapeCsv(if (e.expiryDate > 0) DAY_FORMAT.format(java.util.Date(e.expiryDate)) else "长期有效"),
+                    escapeCsv(daysLeftStr(e.expiryDate)), escapeCsv(e.location),
+                    escapeCsv(if (e.isExpired()) "🔴 已过期" else if (e.isExpiringSoon()) "🟠 临期" else "🟢 正常"),
+                    escapeCsv(e.notes)
+                ).joinToString(",")).append("\r\n")
+            }
+        } catch (e: Exception) { android.util.Log.w("ExportManager", "导出应急物资数据失败", e) }
+
+        // 🔧 工具维保
+        try {
+            store.getToolRecords().forEach { t ->
+                val nextMs = t.getNextMaintenanceDate()
+                sb.append(listOf(
+                    escapeCsv("🔧 工具五金"), escapeCsv(t.name),
+                    escapeCsv("${t.qty} ${t.unit}"),
+                    escapeCsv(if (nextMs > 0) DAY_FORMAT.format(java.util.Date(nextMs)) else "-"),
+                    escapeCsv(daysLeftStr(nextMs)), escapeCsv(t.location),
+                    escapeCsv(t.getCategoryDisplayName()), escapeCsv(t.notes)
+                ).joinToString(",")).append("\r\n")
+            }
+        } catch (e: Exception) { android.util.Log.w("ExportManager", "导出工具维保数据失败", e) }
+
+        // 🪴 绿植水肥
+        try {
+            store.getPlantRecords().forEach { p ->
+                val nextWaterMs = p.getNextWaterDate()
+                sb.append(listOf(
+                    escapeCsv("🪴 绿植水肥"), escapeCsv("${p.name}（${p.species}）"),
+                    escapeCsv("1 盆"),
+                    escapeCsv(if (nextWaterMs > 0) DAY_FORMAT.format(java.util.Date(nextWaterMs)) else "-"),
+                    escapeCsv(daysLeftStr(nextWaterMs)), escapeCsv(p.location),
+                    escapeCsv(p.getLightDemandDisplayName()),
+                    escapeCsv(p.careTips)
+                ).joinToString(",")).append("\r\n")
+            }
+        } catch (e: Exception) { android.util.Log.w("ExportManager", "导出绿植养护数据失败", e) }
+
+        // 🐾 萌宠健康
+        try {
+            store.getPetRecords().forEach { p ->
+                val nextDewormMs = p.getNextDewormDate()
+                sb.append(listOf(
+                    escapeCsv("🐾 萌宠健康"), escapeCsv("${p.name}（${p.species}）"),
+                    escapeCsv("-"),
+                    escapeCsv(if (nextDewormMs > 0) DAY_FORMAT.format(java.util.Date(nextDewormMs)) else "-"),
+                    escapeCsv(daysLeftStr(nextDewormMs)), escapeCsv(""),
+                    escapeCsv(if (p.isDewormDue()) "⚠️ 驱虫逾期" else if (p.isDewormDueSoon()) "🟠 即将驱虫" else "🟢 正常"),
+                    escapeCsv(p.notes)
+                ).joinToString(",")).append("\r\n")
+            }
+        } catch (e: Exception) { android.util.Log.w("ExportManager", "导出萌宠健康数据失败", e) }
+
+        // 📚 书房藏书
+        try {
+            store.getBookRecords().forEach { b ->
+                sb.append(listOf(
+                    escapeCsv("📚 书房藏书"), escapeCsv("${b.title}（${b.author}）"),
+                    escapeCsv("1 册"),
+                    escapeCsv(if (b.lentDate > 0) DAY_FORMAT.format(java.util.Date(b.lentDate)) else "-"),
+                    escapeCsv("-"), escapeCsv(b.bookshelfLocation),
+                    escapeCsv(b.getStatusDisplayName()),
+                    escapeCsv(b.summaryNotes.take(50))
+                ).joinToString(",")).append("\r\n")
+            }
+        } catch (e: Exception) { android.util.Log.w("ExportManager", "导出书房藏书数据失败", e) }
+
+        // 🍷 茶窖名酿
+        try {
+            store.getBeverageRecords().forEach { bv ->
+                sb.append(listOf(
+                    escapeCsv("🍷 茶窖名酿"), escapeCsv(bv.name),
+                    escapeCsv("${bv.qty} ${bv.unit}"),
+                    escapeCsv(if (bv.vintageYear > 0) "${bv.vintageYear} 年起酿" else "-"),
+                    escapeCsv("已陈化 ${bv.getAgingYears()} 年"), escapeCsv(bv.storageLocation),
+                    escapeCsv(bv.getStatusDisplayName()),
+                    escapeCsv(bv.tastingNotes.take(50))
+                ).joinToString(",")).append("\r\n")
+            }
+        } catch (e: Exception) { android.util.Log.w("ExportManager", "导出茶窖名酿数据失败", e) }
+
+        return sb.toString()
+    }
+
+    /** 导出 12 馆时效物资联合报表并拉起系统分享面板 */
+    fun exportAndShareAllVaultsCsv(activity: android.app.Activity, store: DataStore) {
+        try {
+            val timeStr = FILE_DATE_FORMAT.format(java.util.Date())
+            val filename = "Collecter_12馆时效联合报表_$timeStr.csv"
+            val csvText = generateAllVaultsCsv(store)
+            val file = writeCsvToFile(activity, filename, csvText)
+            shareFile(activity, file, title = "分享【12 馆时效物资联合报表】", mimeType = "text/csv")
+        } catch (e: Exception) {
+            android.widget.Toast.makeText(activity, "导出失败: ${e.message}", android.widget.Toast.LENGTH_LONG).show()
+            android.util.Log.w("ExportManager", "导出 12 馆联合报表失败", e)
+        }
+    }
 }

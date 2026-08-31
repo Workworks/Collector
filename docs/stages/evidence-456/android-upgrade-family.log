@@ -1,0 +1,27 @@
+
+com.kfaino.diapertracker.Upgrade456DeviceTest:.
+Error in realAndroidFamilyClientUsesDesktopPermissions(com.kfaino.diapertracker.Upgrade456DeviceTest):
+java.io.IOException: Cleartext HTTP traffic to 127.0.0.1 not permitted
+	at com.android.okhttp.HttpHandler$CleartextURLFilter.checkURLPermitted(HttpHandler.java:127)
+	at com.android.okhttp.internal.huc.HttpURLConnectionImpl.execute(HttpURLConnectionImpl.java:462)
+	at com.android.okhttp.internal.huc.HttpURLConnectionImpl.getResponse(HttpURLConnectionImpl.java:411)
+	at com.android.okhttp.internal.huc.HttpURLConnectionImpl.getResponseCode(HttpURLConnectionImpl.java:542)
+	at com.kfaino.diapertracker.FamilyClientDialog.request(FamilyClientDialog.kt:49)
+	at com.kfaino.diapertracker.Upgrade456DeviceTest.realAndroidFamilyClientUsesDesktopPermissions(Upgrade456DeviceTest.kt:22)
+
+
+Time: 0.021
+There was 1 failure:
+1) realAndroidFamilyClientUsesDesktopPermissions(com.kfaino.diapertracker.Upgrade456DeviceTest)
+java.io.IOException: Cleartext HTTP traffic to 127.0.0.1 not permitted
+	at com.android.okhttp.HttpHandler$CleartextURLFilter.checkURLPermitted(HttpHandler.java:127)
+	at com.android.okhttp.internal.huc.HttpURLConnectionImpl.execute(HttpURLConnectionImpl.java:462)
+	at com.android.okhttp.internal.huc.HttpURLConnectionImpl.getResponse(HttpURLConnectionImpl.java:411)
+	at com.android.okhttp.internal.huc.HttpURLConnectionImpl.getResponseCode(HttpURLConnectionImpl.java:542)
+	at com.kfaino.diapertracker.FamilyClientDialog.request(FamilyClientDialog.kt:49)
+	at com.kfaino.diapertracker.Upgrade456DeviceTest.realAndroidFamilyClientUsesDesktopPermissions(Upgrade456DeviceTest.kt:22)
+
+FAILURES!!!
+Tests run: 2,  Failures: 1
+
+

@@ -124,4 +124,12 @@ class SettingsStore(private val prefs: SharedPreferences) {
     fun setSimpleMode(enabled: Boolean) {
         prefs.edit().putBoolean(KEY_SIMPLE_MODE, enabled).apply()
     }
+
+    // ==================== 📸 截图无感自动收纳与 OCR ====================
+
+    fun isScreenshotCaptureEnabled(): Boolean = prefs.getBoolean("screenshot_auto_capture_enabled", false)
+
+    fun setScreenshotCaptureEnabled(enabled: Boolean) {
+        prefs.edit().putBoolean("screenshot_auto_capture_enabled", enabled).apply()
+    }
 }

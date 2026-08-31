@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="com.kfaino.collecter.core.CollectionWorkbenchTest" tests="4" skipped="0" failures="0" errors="0" timestamp="2026-08-31T07:31:01" hostname="KFAINO" time="0.6">
+  <properties/>
+  <testcase name="captureSuggestionsSearchLinksAndSavedSearchRoundTrip" classname="com.kfaino.collecter.core.CollectionWorkbenchTest" time="0.097"/>
+  <testcase name="invalidBatchIsAllOrNothingAndLifecycleTransitionsHaveHistory" classname="com.kfaino.collecter.core.CollectionWorkbenchTest" time="0.022"/>
+  <testcase name="ledgerReferencesDoNotCollideAndWritesAdvanceRevision" classname="com.kfaino.collecter.core.CollectionWorkbenchTest" time="0.005"/>
+  <testcase name="twentyThousandRecordSearchMeasuredWithoutClaimingDeviceLatency" classname="com.kfaino.collecter.core.CollectionWorkbenchTest" time="0.476"/>
+  <system-out><![CDATA[PERF workbench search: records=20000 results=200 elapsedMs=403 (JVM only)
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

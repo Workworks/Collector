@@ -1,0 +1,41 @@
+INSTRUMENTATION_STATUS: class=com.kfaino.diapertracker.WebDavLiveDeviceTest
+INSTRUMENTATION_STATUS: current=1
+INSTRUMENTATION_STATUS: id=AndroidJUnitRunner
+INSTRUMENTATION_STATUS: numtests=1
+INSTRUMENTATION_STATUS: stream=
+com.kfaino.diapertracker.WebDavLiveDeviceTest:
+INSTRUMENTATION_STATUS: test=publicHttpsUploadDownloadAndRestoreAllCollections
+INSTRUMENTATION_STATUS_CODE: 1
+INSTRUMENTATION_STATUS: class=com.kfaino.diapertracker.WebDavLiveDeviceTest
+INSTRUMENTATION_STATUS: current=1
+INSTRUMENTATION_STATUS: id=AndroidJUnitRunner
+INSTRUMENTATION_STATUS: numtests=1
+INSTRUMENTATION_STATUS: stack=java.lang.AssertionError: 连接失败: Expected one of [OPTIONS, GET, HEAD, POST, PUT, DELETE, TRACE, PATCH] but was PROPFIND
+	at org.junit.Assert.fail(Assert.java:89)
+	at org.junit.Assert.assertTrue(Assert.java:42)
+	at com.kfaino.diapertracker.WebDavLiveDeviceTest.publicHttpsUploadDownloadAndRestoreAllCollections(WebDavLiveDeviceTest.kt:33)
+
+INSTRUMENTATION_STATUS: stream=
+Error in publicHttpsUploadDownloadAndRestoreAllCollections(com.kfaino.diapertracker.WebDavLiveDeviceTest):
+java.lang.AssertionError: 连接失败: Expected one of [OPTIONS, GET, HEAD, POST, PUT, DELETE, TRACE, PATCH] but was PROPFIND
+	at org.junit.Assert.fail(Assert.java:89)
+	at org.junit.Assert.assertTrue(Assert.java:42)
+	at com.kfaino.diapertracker.WebDavLiveDeviceTest.publicHttpsUploadDownloadAndRestoreAllCollections(WebDavLiveDeviceTest.kt:33)
+
+INSTRUMENTATION_STATUS: test=publicHttpsUploadDownloadAndRestoreAllCollections
+INSTRUMENTATION_STATUS_CODE: -2
+INSTRUMENTATION_RESULT: stream=
+
+Time: 0.15
+There was 1 failure:
+1) publicHttpsUploadDownloadAndRestoreAllCollections(com.kfaino.diapertracker.WebDavLiveDeviceTest)
+java.lang.AssertionError: 连接失败: Expected one of [OPTIONS, GET, HEAD, POST, PUT, DELETE, TRACE, PATCH] but was PROPFIND
+	at org.junit.Assert.fail(Assert.java:89)
+	at org.junit.Assert.assertTrue(Assert.java:42)
+	at com.kfaino.diapertracker.WebDavLiveDeviceTest.publicHttpsUploadDownloadAndRestoreAllCollections(WebDavLiveDeviceTest.kt:33)
+
+FAILURES!!!
+Tests run: 1,  Failures: 1
+
+
+INSTRUMENTATION_CODE: -1

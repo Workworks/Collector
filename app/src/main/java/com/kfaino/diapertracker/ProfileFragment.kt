@@ -30,6 +30,69 @@ class ProfileFragment : Fragment() {
 
     private val store by lazy { DataStore(requireContext()) }
 
+    private val saveBackupFile = registerForActivityResult(androidx.activity.result.contract.ActivityResultContracts.CreateDocument("application/json")) { uri ->
+        if (uri != null) {
+            val ctx = requireContext().applicationContext
+            Thread {
+                val message = try {
+                    val json = DataStore(ctx).exportBackupJson()
+                    ctx.contentResolver.openOutputStream(uri, "wt")!!.use { it.write(json.toByteArray(Charsets.UTF_8)) }
+                    DataStore(ctx).recordBackupDone()
+                    "完整备份（含附件）已保存"
+                } catch (e: Exception) {
+                    android.util.Log.e("ProfileFragment", "导出备份失败", e)
+                    "备份失败：${e.message}；请勿使用未完成的文件"
+                }
+                activity?.runOnUiThread { Toast.makeText(ctx, message, Toast.LENGTH_LONG).show() }
+            }.start()
+        }
+    }
+
+    private val openBackupFile = registerForActivityResult(androidx.activity.result.contract.ActivityResultContracts.OpenDocument()) { uri ->
+        if (uri != null) {
+            try {
+                val bytes = requireContext().contentResolver.openInputStream(uri)!!.use { input ->
+                    val out = java.io.ByteArrayOutputStream()
+                    val buffer = ByteArray(8192)
+                    while (true) {
+                        val count = input.read(buffer)
+                        if (count < 0) break
+                        require(out.size().toLong() + count <= com.kfaino.collecter.core.BackupDocument.MAX_BYTES) { "备份超过大小限制" }
+                        out.write(buffer, 0, count)
+                    }
+                    out.toByteArray()
+                }
+                confirmBackupRestore(String(bytes, Charsets.UTF_8)) {}
+            } catch (e: Exception) {
+                android.util.Log.e("ProfileFragment", "读取备份失败", e)
+                Toast.makeText(requireContext(), "读取备份失败：${e.message}", Toast.LENGTH_LONG).show()
+            }
+        }
+    }
+
+    private fun confirmBackupRestore(text: String, onSuccess: () -> Unit) {
+        try {
+            val summary = store.previewBackupJson(text)
+            MaterialAlertDialogBuilder(requireContext()).setTitle("恢复前预览")
+                .setMessage(summary + "\n请先保存当前备份，确认后才会写入。")
+                .setNegativeButton("取消", null)
+                .setPositiveButton("确认恢复") { _, _ ->
+                    try {
+                        check(store.importBackupJson(text)) { "备份无效或保存失败，原数据已保留" }
+                        Toast.makeText(requireContext(), "数据恢复成功", Toast.LENGTH_LONG).show()
+                        (activity as? MainActivity)?.refreshCurrentFragment()
+                        onSuccess()
+                    } catch (e: Exception) {
+                        android.util.Log.e("ProfileFragment", "恢复失败", e)
+                        Toast.makeText(requireContext(), "恢复失败：${e.message}", Toast.LENGTH_LONG).show()
+                    }
+                }.show()
+        } catch (e: Exception) {
+            android.util.Log.w("ProfileFragment", "备份预览失败", e)
+            Toast.makeText(requireContext(), "备份无效：${e.message}", Toast.LENGTH_LONG).show()
+        }
+    }
+
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
@@ -54,6 +117,25 @@ class ProfileFragment : Fragment() {
         binding.btnFloorplanManage.visibility = if (isSimple) View.GONE else View.VISIBLE
 
         setupClicks()
+        val workspaceBar = android.widget.LinearLayout(requireContext()).apply {
+            orientation = android.widget.LinearLayout.HORIZONTAL
+            setPadding(12, 0, 12, 0)
+        }
+        for ((label, open) in listOf<Pair<String, () -> Unit>>(
+            "收集箱" to { CollectionWorkspaceDialog.show(requireActivity()) },
+            "找回与关联" to { CollectionWorkspaceDialog.search(requireActivity()) },
+            "处理提醒" to { CollectionWorkspaceDialog.reminders(requireActivity()) })) {
+            workspaceBar.addView(com.google.android.material.button.MaterialButton(requireContext()).apply {
+                text = label
+                layoutParams = android.widget.LinearLayout.LayoutParams(0, android.view.ViewGroup.LayoutParams.WRAP_CONTENT, 1f)
+                setOnClickListener { open() }
+            })
+        }
+        (binding.root as android.widget.LinearLayout).addView(workspaceBar, 1)
+        if (arguments?.getBoolean("open_backup") == true) {
+            arguments?.remove("open_backup")
+            binding.root.post { if (isAdded) showBackupRestoreDialog() }
+        }
     }
 
     private fun setupClicks() {
@@ -389,16 +471,32 @@ class ProfileFragment : Fragment() {
 
         bBinding.btnExportJsonBackup.applyPressScaleAnimation(0.96f)
         bBinding.btnExportJsonBackup.setOnClickListener {
-            val json = store.exportBackupJson()
-            val clipboard = requireContext().getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
-            clipboard.setPrimaryClip(ClipData.newPlainText("Collecter Backup", json))
-            Toast.makeText(requireContext(), "备份 JSON 数据已复制到剪贴板！", Toast.LENGTH_LONG).show()
+            saveBackupFile.launch("Collecter-Backup-${System.currentTimeMillis()}.json")
         }
 
         bBinding.btnImportJsonBackup.applyPressScaleAnimation(0.96f)
         bBinding.btnImportJsonBackup.setOnClickListener {
             dialog.dismiss()
-            showImportDialog()
+            MaterialAlertDialogBuilder(requireContext()).setTitle("恢复备份")
+                .setItems(arrayOf("选择备份文件（支持附件）", "粘贴旧版 JSON")) { _, which ->
+                    if (which == 0) openBackupFile.launch(arrayOf("application/json", "text/plain", "application/octet-stream"))
+                    else showImportDialog()
+                }.show()
+        }
+
+        bBinding.btnExportAllVaultsCsv.applyPressScaleAnimation(0.96f)
+        bBinding.btnExportAllVaultsCsv.setOnClickListener {
+            ExportManager.exportAndShareAllVaultsCsv(requireActivity(), store)
+        }
+
+        bBinding.btnLanShare.applyPressScaleAnimation(0.96f)
+        bBinding.btnLanShare.setOnClickListener {
+            showLanShareDialog()
+        }
+
+        bBinding.btnStorageCleanup.applyPressScaleAnimation(0.96f)
+        bBinding.btnStorageCleanup.setOnClickListener {
+            StorageCleanupDialog.show(requireActivity(), store)
         }
 
         bBinding.btnClearAllData.applyPressScaleAnimation(0.96f)
@@ -414,6 +512,48 @@ class ProfileFragment : Fragment() {
         bBinding.btnDoneBackupDialog.setOnClickListener { dialog.dismiss() }
 
         dialog.show()
+    }
+
+    private fun showLanShareDialog() {
+        val wifiManager = requireContext().applicationContext.getSystemService(Context.WIFI_SERVICE) as? android.net.wifi.WifiManager
+        val ipInt = wifiManager?.connectionInfo?.ipAddress ?: 0
+        val ip = if (ipInt == 0) "127.0.0.1" else
+            "${ipInt and 0xff}.${(ipInt shr 8) and 0xff}.${(ipInt shr 16) and 0xff}.${(ipInt shr 24) and 0xff}"
+        val url = "http://$ip:8848"
+
+        val lanServer = LanShareServer(requireContext(), store)
+        val started = lanServer.start()
+
+        val message = if (started) """
+            📡 局域网服务器已启动！
+
+            🌐 在同一 Wi-Fi 下的手机或电脑浏览器中访问：
+            $url
+
+            用户名：collecter
+            本次访问密钥：${lanServer.accessToken}
+            仅在可信局域网使用（HTTP 不加密）。
+
+            功能特性：
+            • / → 资产全景网页大屏
+            • /backup → 极速下载完整 JSON 备份包
+
+            ⚠️ 关闭此对话框将同时停止局域网共享服务。
+        """.trimIndent() else """
+            ❌ 局域网服务器启动失败
+
+            可能原因：8848 端口被占用或未连接局域网。
+        """.trimIndent()
+
+        MaterialAlertDialogBuilder(requireContext())
+            .setTitle("📡 局域网互传")
+            .setMessage(message)
+            .setPositiveButton("停止并关闭") { d, _ ->
+                lanServer.stop()
+                d.dismiss()
+            }
+            .setOnCancelListener { lanServer.stop() }
+            .show()
     }
 
     // =========================================================================
@@ -449,14 +589,7 @@ class ProfileFragment : Fragment() {
         iBinding.btnConfirmImport.setOnClickListener {
             val text = iBinding.inputBackupJson.text.toString().trim()
             if (text.isNotEmpty()) {
-                val ok = store.importBackupJson(text)
-                if (ok) {
-                    Toast.makeText(requireContext(), "🎉 数据恢复成功！", Toast.LENGTH_SHORT).show()
-                    (activity as? MainActivity)?.refreshCurrentFragment()
-                    dialog.dismiss()
-                } else {
-                    Toast.makeText(requireContext(), "备份解析失败，请确认 JSON 数据格式正确", Toast.LENGTH_SHORT).show()
-                }
+                confirmBackupRestore(text) { dialog.dismiss() }
             } else {
                 Toast.makeText(requireContext(), "请先输入或粘贴备份 JSON 内容", Toast.LENGTH_SHORT).show()
             }
@@ -575,7 +708,11 @@ class ProfileFragment : Fragment() {
                 return@setOnClickListener
             }
 
-            val json = store.exportBackupJson()
+            val json = try { store.exportBackupJson() } catch (e: Exception) {
+                android.util.Log.e("ProfileFragment", "生成完整备份失败", e)
+                Toast.makeText(requireContext(), "备份失败：${e.message}", Toast.LENGTH_LONG).show()
+                return@setOnClickListener
+            }
             Toast.makeText(requireContext(), "正在上传备份至 WebDAV...", Toast.LENGTH_SHORT).show()
             Thread {
                 val (ok, msg) = WebDavSyncHelper.uploadBackup(url, user, pass, json)
@@ -612,19 +749,12 @@ class ProfileFragment : Fragment() {
             ) {
                 Toast.makeText(requireContext(), "正在从 WebDAV 下载备份...", Toast.LENGTH_SHORT).show()
                 Thread {
-                    val (ok, result) = WebDavSyncHelper.downloadBackup(url, user, pass)
+                    val (ok, message, json) = WebDavSyncHelper.downloadBackup(url, user, pass)
                     activity?.runOnUiThread {
                         if (ok) {
-                            val importOk = store.importBackupJson(result)
-                            if (importOk) {
-                                Toast.makeText(requireContext(), "🎉 云端数据恢复成功！", Toast.LENGTH_SHORT).show()
-                                (activity as? MainActivity)?.refreshCurrentFragment()
-                                dialog.dismiss()
-                            } else {
-                                Toast.makeText(requireContext(), "解析云端备份失败，数据可能已损坏", Toast.LENGTH_SHORT).show()
-                            }
+                            confirmBackupRestore(json) { dialog.dismiss() }
                         } else {
-                            Toast.makeText(requireContext(), "⚠️ $result", Toast.LENGTH_LONG).show()
+                            Toast.makeText(requireContext(), "⚠️ $message", Toast.LENGTH_LONG).show()
                         }
                     }
                 }.start()

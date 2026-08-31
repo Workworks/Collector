@@ -1,0 +1,5 @@
+Exception: F:\LANShare\AgentWorkSpace\Collector\scripts\Archive-CollecterBackup.ps1:19
+Line |
+  19 |  … lt ($MinimumFreeBytes+$sourceItem.Length)) { throw '可用磁盘空间低于归档安全阈值' }
+     |                                                 ~~~~~~~~~~~~~~~~~~~~~~
+     | 可用磁盘空间低于归档安全阈值

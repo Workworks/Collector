@@ -41,9 +41,7 @@ object DigitalAssetManagerDialog {
             .setView(binding.root)
             .setCancelable(true)
             .create()
-
-        dialog.window?.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
-        dialog.window?.attributes?.windowAnimations = R.style.CustomDialogAnimation
+        VaultUiHelper.setupVaultWindow(dialog)
 
         fun refreshList() {
             val allDigital = store.getDigitalAssets()
