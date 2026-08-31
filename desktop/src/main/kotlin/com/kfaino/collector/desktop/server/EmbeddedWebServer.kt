@@ -121,7 +121,7 @@ class EmbeddedWebServer(
             val resp = JSONObject()
                 .put("status", "UP")
                 .put("app", "Collecter")
-                .put("version", "4.3.5")
+                .put("version", "4.3.6")
                 .put("timestamp", System.currentTimeMillis())
                 .toString()
             sendJsonResponse(exchange, 200, resp)

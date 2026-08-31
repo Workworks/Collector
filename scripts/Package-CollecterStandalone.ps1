@@ -1,6 +1,6 @@
 [CmdletBinding()]
 param(
-    [string]$Version = "4.3.5",
+    [string]$Version = "4.3.6",
     [switch]$SkipNativeBuild
 )
 

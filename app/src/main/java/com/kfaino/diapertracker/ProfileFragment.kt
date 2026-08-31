@@ -1,4 +1,4 @@
-﻿package com.kfaino.diapertracker
+package com.kfaino.diapertracker
 
 import android.content.ClipData
 import android.content.ClipboardManager
@@ -15,12 +15,14 @@ import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
+import android.util.Log
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.kfaino.diapertracker.databinding.DialogBackupManageBinding
 import com.kfaino.diapertracker.databinding.DialogEditRepoBinding
 import com.kfaino.diapertracker.databinding.DialogImportBackupBinding
 import com.kfaino.diapertracker.databinding.DialogMoreSettingsBinding
 import com.kfaino.diapertracker.databinding.DialogThemePickerBinding
+import com.kfaino.diapertracker.databinding.DialogWebdavConfigBinding
 import com.kfaino.diapertracker.databinding.FragmentProfileBinding
 
 class ProfileFragment : Fragment() {
@@ -133,8 +135,30 @@ class ProfileFragment : Fragment() {
             dBinding.tvCurrentRepoDesc.text = "$repo (热更新源)"
         }
 
+        fun updateWebDavText() {
+            val user = store.getWebDavUsername()
+            dBinding.tvCurrentWebdavDesc.text = if (user.isNotBlank()) {
+                "已配置：$user"
+            } else {
+                "坚果云 / Nextcloud / 群晖多端同步"
+            }
+        }
+
         updateThemeText()
         updateRepoText()
+        updateWebDavText()
+
+        // 0. 简易库存模式开关
+        dBinding.switchSimpleMode.isChecked = store.isSimpleMode()
+        dBinding.switchSimpleMode.setOnCheckedChangeListener { _, isChecked ->
+            store.setSimpleMode(isChecked)
+            dBinding.root.performAppHapticFeedback()
+            Toast.makeText(
+                requireContext(),
+                if (isChecked) "已开启「简易库存模式」📦" else "已切换为「全能资产模式」✨",
+                Toast.LENGTH_SHORT
+            ).show()
+        }
 
         // 1. 外观与主题
         dBinding.cardSettingTheme.applyPressScaleAnimation(0.96f)
@@ -183,6 +207,43 @@ class ProfileFragment : Fragment() {
             }
         }
 
+        // 5. 生物识别隐私锁
+        val isBiometricSupported = BiometricLockHelper.canAuthenticate(requireContext())
+        if (isBiometricSupported) {
+            dBinding.switchBiometricLock.isChecked = store.isBiometricLockEnabled()
+            dBinding.switchBiometricLock.setOnCheckedChangeListener { _, isChecked ->
+                if (isChecked) {
+                    BiometricLockHelper.authenticate(
+                        requireActivity(),
+                        title = "验证指纹/面容以开启隐私锁",
+                        onSuccess = {
+                            store.setBiometricLockEnabled(true)
+                            dBinding.switchBiometricLock.isChecked = true
+                            Toast.makeText(requireContext(), "已开启生物识别隐私锁 🔐", Toast.LENGTH_SHORT).show()
+                        },
+                        onError = { errMsg ->
+                            dBinding.switchBiometricLock.isChecked = false
+                            Toast.makeText(requireContext(), "生物识别验证未通过: $errMsg", Toast.LENGTH_SHORT).show()
+                        }
+                    )
+                } else {
+                    store.setBiometricLockEnabled(false)
+                    Toast.makeText(requireContext(), "已关闭生物识别隐私锁", Toast.LENGTH_SHORT).show()
+                }
+            }
+        } else {
+            dBinding.switchBiometricLock.isEnabled = false
+            dBinding.switchBiometricLock.isChecked = false
+        }
+
+        // 6. WebDAV 私有云同步
+        dBinding.cardSettingWebdav.applyPressScaleAnimation(0.96f)
+        dBinding.cardSettingWebdav.setOnClickListener {
+            showWebDavDialog {
+                updateWebDavText()
+            }
+        }
+
         // 关闭与完成按钮
         dBinding.btnCloseSettings.applyPressScaleAnimation(0.90f)
         dBinding.btnCloseSettings.setOnClickListener { dialog.dismiss() }
@@ -191,6 +252,11 @@ class ProfileFragment : Fragment() {
         dBinding.btnDialogDone.setOnClickListener { dialog.dismiss() }
 
         dialog.show()
+
+        val dm = resources.displayMetrics
+        val dialogHeight = (dm.heightPixels * 0.82).toInt()
+        val dialogWidth = (dm.widthPixels * 0.94).toInt().coerceAtMost((440 * dm.density + 0.5f).toInt())
+        dialog.window?.setLayout(dialogWidth, dialogHeight)
     }
 
     // =========================================================================
@@ -269,6 +335,123 @@ class ProfileFragment : Fragment() {
                 Toast.makeText(requireContext(), "仓库格式不正确 (如 Workworks/Collector)", Toast.LENGTH_SHORT).show()
             }
         }
+
+        dialog.show()
+    }
+
+    // =========================================================================
+    // ☁️ 现代化「WebDAV 私有云同步」配置面板
+    // =========================================================================
+
+    private fun showWebDavDialog(onConfigSaved: (() -> Unit)? = null) {
+        val wBinding = DialogWebdavConfigBinding.inflate(layoutInflater)
+        val dialog = MaterialAlertDialogBuilder(requireContext())
+            .setView(wBinding.root)
+            .create()
+
+        dialog.window?.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
+        dialog.window?.attributes?.windowAnimations = R.style.CustomDialogAnimation
+
+        wBinding.inputWebdavUrl.setText(store.getWebDavUrl())
+        wBinding.inputWebdavUser.setText(store.getWebDavUsername())
+        wBinding.inputWebdavPass.setText(store.getWebDavPassword())
+
+        wBinding.btnTestWebdav.applyPressScaleAnimation(0.94f)
+        wBinding.btnTestWebdav.setOnClickListener {
+            val url = wBinding.inputWebdavUrl.text.toString().trim()
+            val user = wBinding.inputWebdavUser.text.toString().trim()
+            val pass = wBinding.inputWebdavPass.text.toString().trim()
+
+            if (url.isBlank() || user.isBlank() || pass.isBlank()) {
+                Toast.makeText(requireContext(), "请先完整填写 URL、用户名和密码", Toast.LENGTH_SHORT).show()
+                return@setOnClickListener
+            }
+
+            Toast.makeText(requireContext(), "正在测试 WebDAV 连接...", Toast.LENGTH_SHORT).show()
+            Thread {
+                val (ok, msg) = WebDavSyncHelper.testConnection(url, user, pass)
+                activity?.runOnUiThread {
+                    Toast.makeText(requireContext(), if (ok) "✅ $msg" else "❌ $msg", Toast.LENGTH_LONG).show()
+                }
+            }.start()
+        }
+
+        wBinding.btnSaveWebdavConfig.applyPressScaleAnimation(0.94f)
+        wBinding.btnSaveWebdavConfig.setOnClickListener {
+            val url = wBinding.inputWebdavUrl.text.toString().trim()
+            val user = wBinding.inputWebdavUser.text.toString().trim()
+            val pass = wBinding.inputWebdavPass.text.toString().trim()
+
+            store.setWebDavUrl(url)
+            store.setWebDavUsername(user)
+            store.setWebDavPassword(pass)
+            Toast.makeText(requireContext(), "WebDAV 配置已保存 💾", Toast.LENGTH_SHORT).show()
+            onConfigSaved?.invoke()
+            dialog.dismiss()
+        }
+
+        wBinding.btnUploadToWebdav.applyPressScaleAnimation(0.94f)
+        wBinding.btnUploadToWebdav.setOnClickListener {
+            val url = wBinding.inputWebdavUrl.text.toString().trim()
+            val user = wBinding.inputWebdavUser.text.toString().trim()
+            val pass = wBinding.inputWebdavPass.text.toString().trim()
+
+            if (url.isBlank() || user.isBlank() || pass.isBlank()) {
+                Toast.makeText(requireContext(), "请先配置并保存 WebDAV 凭据", Toast.LENGTH_SHORT).show()
+                return@setOnClickListener
+            }
+
+            val json = BackupCodec.exportBackupJson(store.getCategories(), store.loadAll())
+            Toast.makeText(requireContext(), "正在同步上传至云端...", Toast.LENGTH_SHORT).show()
+            Thread {
+                val (ok, msg) = WebDavSyncHelper.uploadBackup(url, user, pass, json)
+                activity?.runOnUiThread {
+                    Toast.makeText(requireContext(), if (ok) "✅ $msg" else "❌ $msg", Toast.LENGTH_LONG).show()
+                }
+            }.start()
+        }
+
+        wBinding.btnDownloadFromWebdav.applyPressScaleAnimation(0.94f)
+        wBinding.btnDownloadFromWebdav.setOnClickListener {
+            val url = wBinding.inputWebdavUrl.text.toString().trim()
+            val user = wBinding.inputWebdavUser.text.toString().trim()
+            val pass = wBinding.inputWebdavPass.text.toString().trim()
+
+            if (url.isBlank() || user.isBlank() || pass.isBlank()) {
+                Toast.makeText(requireContext(), "请先配置并保存 WebDAV 凭据", Toast.LENGTH_SHORT).show()
+                return@setOnClickListener
+            }
+
+            Toast.makeText(requireContext(), "正在从云端获取备份...", Toast.LENGTH_SHORT).show()
+            Thread {
+                val (ok, result) = WebDavSyncHelper.downloadBackup(url, user, pass)
+                activity?.runOnUiThread {
+                    if (ok) {
+                        try {
+                            val success = BackupCodec.importBackupJson(
+                                result,
+                                { store.getCategories() },
+                                { store.saveCategories(it) },
+                                { store.saveAll(it) }
+                            )
+                            if (success) {
+                                Toast.makeText(requireContext(), "✅ 成功从 WebDAV 恢复数据！", Toast.LENGTH_LONG).show()
+                            } else {
+                                Toast.makeText(requireContext(), "❌ 数据解析失败", Toast.LENGTH_LONG).show()
+                            }
+                        } catch (e: Exception) {
+                            Log.w("ProfileFragment", "恢复云端数据解析异常", e)
+                            Toast.makeText(requireContext(), "❌ 解析恢复失败: ${e.localizedMessage}", Toast.LENGTH_LONG).show()
+                        }
+                    } else {
+                        Toast.makeText(requireContext(), "❌ 下载失败: $result", Toast.LENGTH_LONG).show()
+                    }
+                }
+            }.start()
+        }
+
+        wBinding.btnCloseWebdav.applyPressScaleAnimation(0.90f)
+        wBinding.btnCloseWebdav.setOnClickListener { dialog.dismiss() }
 
         dialog.show()
     }
