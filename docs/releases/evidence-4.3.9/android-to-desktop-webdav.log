@@ -1,0 +1,19 @@
+> Task :desktop:checkKotlinGradlePluginConfigurationErrors
+> Task :shared:checkKotlinGradlePluginConfigurationErrors
+> Task :shared:processResources NO-SOURCE
+> Task :desktop:processResources
+> Task :desktop:processTestResources NO-SOURCE
+> Task :shared:compileKotlin
+> Task :shared:compileJava NO-SOURCE
+> Task :shared:classes UP-TO-DATE
+> Task :shared:jar
+> Task :desktop:compileKotlin
+> Task :desktop:compileJava NO-SOURCE
+> Task :desktop:classes
+> Task :desktop:compileTestKotlin
+> Task :desktop:compileTestJava NO-SOURCE
+> Task :desktop:testClasses UP-TO-DATE
+> Task :desktop:test
+
+BUILD SUCCESSFUL in 33s
+8 actionable tasks: 8 executed

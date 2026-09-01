@@ -18,8 +18,8 @@ android {
         applicationId = "com.kfaino.diapertracker"
         minSdk = 26
         targetSdk = 34
-        versionCode = 45
-        versionName = "4.3.8"
+        versionCode = 46
+        versionName = "4.3.9"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 

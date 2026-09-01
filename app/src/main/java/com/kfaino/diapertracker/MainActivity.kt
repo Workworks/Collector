@@ -31,6 +31,7 @@ import java.util.Date
 import java.util.Locale
 
 class MainActivity : AppCompatActivity() {
+    private var backgroundAtElapsedMs = 0L
 
     lateinit var binding: ActivityMainBinding
     private val store by lazy { DataStore(this) }
@@ -124,10 +125,16 @@ class MainActivity : AppCompatActivity() {
 
     override fun onStart() {
         super.onStart()
+        val now = android.os.SystemClock.elapsedRealtime()
+        if (store.isBiometricLockEnabled() && BackgroundLockPolicy.shouldRelock(backgroundAtElapsedMs, now)) {
+            BiometricLockHelper.isUnlockedThisSession = false
+        }
+        backgroundAtElapsedMs = 0L
         ScreenshotWatcherHelper.startListening(this)
     }
 
     override fun onStop() {
+        backgroundAtElapsedMs = android.os.SystemClock.elapsedRealtime()
         super.onStop()
         ScreenshotWatcherHelper.stopListening(this)
     }

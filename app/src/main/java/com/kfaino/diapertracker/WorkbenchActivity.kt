@@ -1,6 +1,8 @@
 package com.kfaino.diapertracker
 
 import android.os.Bundle
+import android.view.DragEvent
+import android.view.KeyEvent
 import android.widget.*
 import androidx.appcompat.app.AppCompatActivity
 import androidx.activity.result.contract.ActivityResultContracts
@@ -21,6 +23,7 @@ class WorkbenchActivity : AppCompatActivity() {
     private lateinit var progress: ProgressBar
     private val running=java.util.concurrent.atomic.AtomicInteger()
     private var hits=emptyList<CollectionWorkbench.Hit>()
+    private var pendingSelectedRefs=emptySet<String>()
     private var password: CharArray?=null
     private val saveEncrypted=registerForActivityResult(ActivityResultContracts.CreateDocument("application/octet-stream")) { uri ->
         val pass=password; password=null
@@ -67,13 +70,48 @@ class WorkbenchActivity : AppCompatActivity() {
         row("收集" to { collect() },"批量整理" to { edit() },"详情/关联" to { details() })
         row("生命周期" to { lifecycle() },"备份/家庭" to { backupMenu() })
         list=ListView(this).apply { choiceMode=ListView.CHOICE_MODE_MULTIPLE }
+        list.setOnDragListener { _, event ->
+            when (event.action) {
+                DragEvent.ACTION_DRAG_STARTED -> event.clipDescription?.hasMimeType(android.content.ClipDescription.MIMETYPE_TEXT_PLAIN) == true
+                DragEvent.ACTION_DROP -> {
+                    val text = event.clipData?.getItemAt(0)?.coerceToText(this)?.toString().orEmpty()
+                    if (text.isBlank()) false else {
+                        execute(JSONObject().put("op", "collect").put("text", text))
+                        true
+                    }
+                }
+                else -> true
+            }
+        }
         root.addView(list,LinearLayout.LayoutParams(-1,0,1f)); setContentView(root)
+        query.setText(savedInstanceState?.getString("query").orEmpty())
+        location.setText(savedInstanceState?.getString("location").orEmpty())
+        pendingSelectedRefs = savedInstanceState?.getStringArrayList("selected_refs")?.toSet().orEmpty()
         refresh()
+    }
+    override fun onSaveInstanceState(outState: Bundle) {
+        outState.putString("query", query.text.toString())
+        outState.putString("location", location.text.toString())
+        outState.putStringArrayList("selected_refs", ArrayList(selected()))
+        super.onSaveInstanceState(outState)
+    }
+    override fun onKeyDown(keyCode: Int, event: KeyEvent): Boolean {
+        if (event.isCtrlPressed && keyCode == KeyEvent.KEYCODE_F) { query.requestFocus(); return true }
+        if (event.isCtrlPressed && keyCode == KeyEvent.KEYCODE_S) {
+            execute(JSONObject().put("op","save-search").put("query",query.text).put("location",location.text)); return true
+        }
+        if (event.isCtrlPressed && keyCode == KeyEvent.KEYCODE_B) { backupMenu(); return true }
+        if (keyCode == KeyEvent.KEYCODE_ESCAPE) { finish(); return true }
+        return super.onKeyDown(keyCode, event)
     }
     private fun refresh() {
         val q=query.text.toString(); val loc=location.text.toString()
         background({ CollectionWorkbench.search(repository.snapshot(),q,loc) }) { result ->
             hits=result; list.adapter=ArrayAdapter(this,android.R.layout.simple_list_item_multiple_choice,hits.map { "${CollectionWorkbench.title(it.record)} · ${it.record.optString("loc",it.record.optString("location"))} · ${it.record.optString("_lifeState","active")}" })
+            if (pendingSelectedRefs.isNotEmpty()) {
+                hits.forEachIndexed { index, hit -> list.setItemChecked(index, hit.reference in pendingSelectedRefs) }
+                pendingSelectedRefs = emptySet()
+            }
             summary.text="找到 ${hits.size} 条 · 勾选后可批量操作"
         }
     }

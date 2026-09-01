@@ -1,0 +1,10 @@
+Public WebDAV runtime verification
+Anonymous: 401 PASS
+Wrong password: 401 PASS
+Desktop PROPFIND: 207 PASS
+Android initial HEAD: 404 authenticated PASS
+Public PUT/GET: 201/200 UTF-8 exact PASS
+Android existing-backup HEAD: 200 with ETag PASS
+Stale revision protection: 412 and original unchanged PASS
+QA cleanup: isolated random directories only; real backup untouched PASS
+Runtime remains a temporary trycloudflare.com Quick Tunnel.

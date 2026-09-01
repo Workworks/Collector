@@ -1,0 +1,8 @@
+Physical-device gate: BLOCKED
+adb devices -l exposed only emulator-5556 (Android API 34 x86_64). No USB or network physical Android device was available. Device-credential and independent two-device claims are not marked PASS.
+
+Fixed-public-domain gate: BLOCKED
+WebDav runtime exposes a trycloudflare.com Quick Tunnel. No managed tunnel configuration or owned hostname was present. Public WebDAV protocol verification passed through the current temporary URL, but this is not a stable production domain.
+
+Credential/database migration gate: BLOCKED BY SAFETY PRECONDITION
+No physical device with recoverable device credential was available. Existing business JSON and WebDAV credential migration was deliberately not activated because rollback, credential change and damaged-cipher recovery cannot be honestly verified in this environment. Background session relock was implemented and unit tested.

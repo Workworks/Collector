@@ -117,6 +117,7 @@ graph TD
 | `ExpiringAndSubWidgetProvider.kt` | 桌面小组件 1：临期保质期与周期订阅扣费倒计时小组件 | AppWidgetProvider, RemoteViews |
 | `QuickAddWidgetProvider.kt` | 桌面小组件 2：在役资产净值/日均消费看板与一键记一笔小组件 | AppWidgetProvider, PendingIntent |
 | `BiometricLockHelper.kt` | 生物识别隐私锁：调用系统原生指纹/面容/锁屏凭据认证，保护资产隐私 | BiometricPrompt, BiometricManager |
+| `BackgroundLockPolicy.kt` | 应用锁后台超时纯策略：后台达到 60 秒边界后清除本次认证会话，旋转和短暂系统弹窗不会立即重锁 | elapsedRealtime, 单元测试覆盖 |
 | `WebDavSyncHelper.kt` | WebDAV 私有云同步引擎：支持坚果云、Nextcloud、群晖 Synology，原生 HttpURLConnection 实现 | HTTP Basic Auth, PUT, GET, PROPFIND |
 | `ImageVaultHelper.kt` | 本地私有沙盒图片存储引擎：图片压缩、EXIF 角度纠偏、采样下采样与 LRU 内存双级缓存 | ExifInterface, LruCache, Bitmap |
 | `FloorPlanView.kt` | 自定义 Canvas 平面图视图：支持空间网格绘制、房间触控拾取、图钉打点、脉冲高亮与在库物品数量徽章 | Custom View, Canvas, Touch Event |

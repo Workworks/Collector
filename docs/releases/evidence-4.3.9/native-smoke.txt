@@ -1,0 +1,7 @@
+Windows Native smoke
+Package: dist/desktop/4.3.9-windows-native-20260901221749
+Command: Start-Collecter.cmd --smoke-test
+Embedded server: http://127.0.0.1:8848/ local only
+Exit code: 0
+Native executable compiled with MSVC x64 Build Tools 17.14.39 and WebView2 SDK 1.0.4129.50.
+Warnings: two existing C4996 warnings for _wgetenv; no compile errors.

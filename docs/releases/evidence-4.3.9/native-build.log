@@ -1,0 +1,11 @@
+Downloading WebView2 SDK 1.0.4129.50 ...
+Compiling Native WebView2 Host CollecterWindow.exe ...
+**********************************************************************
+** Visual Studio 2022 Developer Command Prompt v17.14.39
+** Copyright (c) 2025 Microsoft Corporation
+**********************************************************************
+[vcvarsall.bat] Environment initialized for: 'x64'
+CollecterWindow.cpp
+F:\LANShare\AgentWorkSpace\Collector\desktop\src\main\native\webview2\CollecterWindow.cpp(227): warning C4996: '_wgetenv': This function or variable may be unsafe. Consider using _wdupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+F:\LANShare\AgentWorkSpace\Collector\desktop\src\main\native\webview2\CollecterWindow.cpp(230): warning C4996: '_wgetenv': This function or variable may be unsafe. Consider using _wdupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+Native WebView2 Host build SUCCESS: F:\LANShare\AgentWorkSpace\Collector\desktop\build\native-window\CollecterWindow.exe

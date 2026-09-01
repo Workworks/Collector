@@ -1,0 +1,9 @@
+Android API 34 original-signature upgrade
+Baseline: genuine GitHub v4.3.8 app-release.apk
+Baseline SHA-256: d4aa55672532e62005ec83e45c08d96bbc41df1810ec79babad09d0caa1ce63d
+Seed: ReleaseUpgradeProbeTest#seedOnReleased438 -> OK (1 test)
+Upgrade: adb install -r app/build/outputs/apk/release/app-release.apk -> Success
+Verify: ReleaseUpgradeProbeTest#verifyAfterUpgradeTo439AndCleanup -> OK (1 test)
+Verified versionCode 46 / versionName 4.3.9 and sentinel 保留升级数据-4.3.8-to-4.3.9.
+Cold start: pid 6994; recent AndroidRuntime error log contained no fatal entry.
+Temporary AVD CollecterRelease439Qa deleted.
