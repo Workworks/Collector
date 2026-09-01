@@ -101,7 +101,7 @@ gh release create v2.6.0 "app\build\outputs\apk\release\app-release.apk#Collecte
 2. **版本号比对规则**：
    - 自动获取 Release 中的 `tag_name`，剔除 `v`/`V` 前缀后与手机当前运行的 `versionName` 逐位对比。
 3. **镜像加速下载**：
-   - 内置直连与镜像备用通道（`ghfast.top`、`ghproxy.net`），保障在不同网络环境下均可高速下载。
+   - 仅使用 GitHub 官方下载地址；应用内失败时可转系统浏览器打开官方下载页。
 4. **自动安装与权限**：
    - 下载完成后通过 Android `FileProvider` 自动拉起系统安装器；
    - Android 8.0+ 首次安装会引导开启“允许安装未知应用”权限。

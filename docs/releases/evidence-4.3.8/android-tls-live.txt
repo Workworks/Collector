@@ -1,0 +1,6 @@
+Android API 34 TLS live test
+Device: temporary AVD CollecterRelease438Qa, system-images;android-34;google_apis;x86_64
+Test: UpdateTlsLiveTest#officialTlsChainWorksOnAndroid
+Result: OK (1 test), GitHub official latest-release API returned 2xx and contained tag_name.
+Rejected candidate evidence from the preceding run: ghfast TLS handshake succeeded but HTTP response was 403; it was removed from UpdateSource before the passing run.
+No TLS validation bypass was enabled.

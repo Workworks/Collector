@@ -8,8 +8,7 @@ import org.junit.Test
 /**
  * 🔐 更新下载源优先级测试。
  *
- * 覆盖 GEMINI.md 铁律 3 的第 1 条安全不变量：官方源必须排在第一位，
- * 第三方 CDN 代理只能作为 fallback。
+ * 覆盖 GEMINI.md 铁律 3 的安全不变量：更新只允许 GitHub 官方源。
  *
  * 这条曾经被破坏过一次 —— commit `ed0ce33` 为了「修复下载超时」把三个第三方代理
  * 提到了官方源前面。本测试就是防止同样的事再发生第二次。
@@ -31,22 +30,16 @@ class UpdateSourceTest {
     }
 
     @Test
-    fun `第三方代理只能出现在官方源之后`() {
+    fun `官方资源不得经第三方代理转发`() {
         val candidates = UpdateSource.candidates(officialApk)
-        val officialIndex = candidates.indexOf(officialApk)
+        assertEquals(listOf(officialApk), candidates)
+    }
 
-        val proxyIndexes = candidates.indices.filter { i ->
-            val url = candidates[i]
-            url.startsWith("https://ghfast.top/") ||
-                url.startsWith("https://mirror.ghproxy.com/") ||
-                url.startsWith("https://ghproxy.net/")
-        }
-
-        assertTrue("应保留代理作为容灾 fallback", proxyIndexes.isNotEmpty())
-        assertTrue(
-            "所有代理都必须排在官方源之后，实际顺序：$candidates",
-            proxyIndexes.all { it > officialIndex }
-        )
+    @Test
+    fun `已失效证书代理不得保留在候选列表`() {
+        val candidates = UpdateSource.candidates(officialApk)
+        assertFalse(candidates.any { it.contains("ghfast.top") || it.contains("ghproxy") })
+        assertEquals(listOf("GitHub 官方"), candidates.map(UpdateSource::label))
     }
 
     @Test

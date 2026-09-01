@@ -48,6 +48,7 @@ object UpdateManager {
         val changelog: String,
         val apkDownloadUrl: String,
         val apkSize: Long,
+        val apkSha256: String = "",
         val patchDownloadUrl: String = "",
         val patchSize: Long = 0L,
         val patchVersion: String = "",
@@ -115,7 +116,7 @@ object UpdateManager {
                 if (release.apkDownloadUrl.isBlank()) return@execute
                 val saveDir = context.getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS) ?: context.cacheDir
                 val apkFile = File(saveDir, "Collecter_${release.versionName}.apk")
-                if (apkFile.exists() && apkFile.length() > 0 && (release.apkSize == 0L || apkFile.length() == release.apkSize)) {
+                if (UpdateArtifactVerifier.verify(apkFile, release.apkSize, release.apkSha256)) {
                     return@execute
                 }
 
@@ -138,10 +139,13 @@ object UpdateManager {
                                     input.copyTo(output)
                                 }
                             }
-                            if (tempFile.exists() && tempFile.length() > 0) {
+                            if (UpdateArtifactVerifier.verify(tempFile, release.apkSize, release.apkSha256)) {
                                 if (apkFile.exists()) apkFile.delete()
                                 tempFile.renameTo(apkFile)
                                 break
+                            } else {
+                                tempFile.delete()
+                                throw SecurityException("下载文件大小或 SHA-256 与 GitHub 发布信息不一致")
                             }
                         }
                     } catch (e: Exception) {
@@ -258,6 +262,7 @@ object UpdateManager {
 
         var apkUrl = ""
         var apkSize = 0L
+        var apkSha256 = ""
         var patchUrl = ""
         var patchSize = 0L
         var patchVer = ""
@@ -270,6 +275,7 @@ object UpdateManager {
                 if (name.endsWith(".apk", ignoreCase = true)) {
                     apkUrl = asset.optString("browser_download_url", "")
                     apkSize = asset.optLong("size", 0L)
+                    apkSha256 = asset.optString("digest", "").removePrefix("sha256:")
                 } else if (name.contains("patch", ignoreCase = true) && name.endsWith(".zip", ignoreCase = true)) {
                     patchUrl = asset.optString("browser_download_url", "")
                     patchSize = asset.optLong("size", 0L)
@@ -290,6 +296,7 @@ object UpdateManager {
             changelog = changelog,
             apkDownloadUrl = apkUrl,
             apkSize = apkSize,
+            apkSha256 = apkSha256,
             patchDownloadUrl = patchUrl,
             patchSize = patchSize,
             patchVersion = patchVer,
@@ -351,7 +358,7 @@ object UpdateManager {
         // 2. 全量 APK 下载与秒装
         val saveDir = activity.getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS) ?: activity.cacheDir
         val apkFile = File(saveDir, "Collecter_${release.versionName}.apk")
-        val isPreloaded = apkFile.exists() && apkFile.length() > 0 && (release.apkSize == 0L || apkFile.length() == release.apkSize)
+        val isPreloaded = UpdateArtifactVerifier.verify(apkFile, release.apkSize, release.apkSha256)
 
         if (isPreloaded) {
             binding.customBtnUpdate.text = "⚡ 安装包已就绪，立即秒装"
@@ -400,7 +407,7 @@ object UpdateManager {
         val urlsToTry = UpdateSource.candidates(release.apkDownloadUrl)
 
         downloadThread = Thread {
-            var lastError: Exception? = null
+            val failures = mutableListOf<String>()
             var success = false
 
             for (currentUrl in urlsToTry) {
@@ -457,10 +464,18 @@ object UpdateManager {
                     output.flush()
                     output.close()
                     input.close()
+                    if (!UpdateArtifactVerifier.verify(apkFile, release.apkSize, release.apkSha256)) {
+                        apkFile.delete()
+                        throw SecurityException("文件大小或 SHA-256 与 GitHub 发布信息不一致")
+                    }
                     success = true
                     break
                 } catch (e: Exception) {
-                    lastError = e
+                    apkFile.delete()
+                    val reason = if (e is javax.net.ssl.SSLHandshakeException || e.message.orEmpty().contains("Chain validation", true)) {
+                        "证书链验证失败（请检查手机日期、时间与系统证书）"
+                    } else e.message ?: e.javaClass.simpleName
+                    failures += "${UpdateSource.label(currentUrl)}：$reason"
                 }
             }
 
@@ -471,15 +486,30 @@ object UpdateManager {
                 if (success && apkFile.exists() && apkFile.length() > 0) {
                     installApk(activity, apkFile)
                 } else if (!isCanceled) {
-                    Toast.makeText(
-                        activity,
-                        "下载失败: ${lastError?.message ?: "网络连接超时"}",
-                        Toast.LENGTH_LONG
-                    ).show()
+                    showDownloadFailure(activity, release, failures)
                 }
             }
         }
         downloadThread.start()
+    }
+
+    private fun showDownloadFailure(activity: Activity, release: ReleaseInfo, failures: List<String>) {
+        val binding = DialogCustomResultBinding.inflate(LayoutInflater.from(activity))
+        val dialog = createCustomDialog(activity, binding.root, cancelable = true)
+        binding.resultTitle.text = "应用内下载失败"
+        binding.resultMessage.text = failures.joinToString("\n").ifBlank { "所有下载源均不可用" } +
+            "\n\n未关闭 TLS 校验。请先确认手机已启用自动日期与时间；也可交给系统浏览器从 GitHub 官方地址下载。"
+        binding.resultBtnConfirm.text = "用浏览器打开官方下载"
+        binding.resultBtnConfirm.setOnClickListener {
+            dialog.dismiss()
+            try {
+                activity.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(release.apkDownloadUrl)))
+            } catch (e: Exception) {
+                android.util.Log.w(TAG, "无法打开系统浏览器下载官方 APK", e)
+                Toast.makeText(activity, "无法打开浏览器，请访问 ${release.htmlUrl}", Toast.LENGTH_LONG).show()
+            }
+        }
+        dialog.show()
     }
 
     /** 定制当前已是最新弹窗 */

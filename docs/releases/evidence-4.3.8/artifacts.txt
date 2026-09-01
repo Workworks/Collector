@@ -1,0 +1,9 @@
+Candidate identity and checksums
+APK package: com.kfaino.diapertracker
+APK versionCode: 45
+APK versionName: 4.3.8
+Signer certificate SHA-256: 03d73e71eb13c82a820dc50f4ef780630aa698591944693ff6b7c1c3c3bb013a
+APK SHA-256: d4aa55672532e62005ec83e45c08d96bbc41df1810ec79babad09d0caa1ce63d
+APK size: 48205931
+Desktop JAR SHA-256: a167955a912b892736840d798d23033d72522ae4df34b92b7a308db4bc66f4d2
+Desktop JAR size: 3835005

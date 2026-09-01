@@ -13,7 +13,7 @@ import java.util.concurrent.Executors
 
 /**
  * 类游戏极速热更新下载、校验与版本管理引擎
- * - 内置多镜像极速 CDN 备用通道（ghfast.top、mirror.ghproxy.com、ghproxy.net）与直连容灾
+ * - 只使用 GitHub 官方源，避免第三方代理证书或访问策略导致下载失败
  * - 智能跟随 301/302 重定向，解决国内网络直连 GitHub Releases 443 超时问题
  */
 object HotUpdateManager {
@@ -38,12 +38,7 @@ object HotUpdateManager {
         val activePatchVer = HotPatchEngine.getActivePatchVersion(context)
         val store = DataStore(context)
         val repo = store.getGithubRepo().ifBlank { "Workworks/Collector" }
-        val apiUrls = listOf(
-            "https://ghfast.top/https://api.github.com/repos/$repo/releases/latest",
-            "https://mirror.ghproxy.com/https://api.github.com/repos/$repo/releases/latest",
-            "https://ghproxy.net/https://api.github.com/repos/$repo/releases/latest",
-            "https://api.github.com/repos/$repo/releases/latest"
-        )
+        val apiUrls = UpdateSource.candidates(UpdateSource.latestReleaseApi(repo))
 
         executor.execute {
             var lastError = "无法连接至 GitHub 仓库"
@@ -137,12 +132,7 @@ object HotUpdateManager {
             val tempDir = File(context.cacheDir, "patch_download").apply { mkdirs() }
             val tempFile = File(tempDir, "patch_${info.patchVersion}.zip")
 
-            val urlsToTry = listOf(
-                "https://ghfast.top/${info.downloadUrl}",
-                "https://mirror.ghproxy.com/${info.downloadUrl}",
-                "https://ghproxy.net/${info.downloadUrl}",
-                info.downloadUrl
-            )
+            val urlsToTry = UpdateSource.candidates(info.downloadUrl)
 
             var lastError = "下载失败"
             var success = false

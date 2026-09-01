@@ -1,0 +1,10 @@
+Android API 34 in-place upgrade
+Baseline: genuine GitHub v4.3.7 app-release.apk
+Baseline SHA-256: 02c3c36abd95477a2b5ee2b70170a6b3e90cf8a2b70fe148f209f8731083e539
+Seed: ReleaseUpgradeProbeTest#seedOnReleased437 -> OK (1 test)
+Upgrade command: adb install -r app/build/outputs/apk/release/app-release.apk -> Success
+Verify: ReleaseUpgradeProbeTest#verifyAfterUpgradeTo438AndCleanup -> OK (1 test)
+Verified identity: versionCode 45, versionName 4.3.8
+Verified persisted sentinel: 保留升级数据-4.3.7-to-4.3.8
+Cold start: process pid 7636; recent AndroidRuntime error log contained no fatal entry.
+Temporary AVD deleted after the test.

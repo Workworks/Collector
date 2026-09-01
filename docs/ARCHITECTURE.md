@@ -124,10 +124,11 @@ graph TD
 | `NotificationHelper.kt` | 系统定时提醒管理：订阅到期预警（提前 1~3 天）、VIP 物品核对打卡、保质期到期通知 | NotificationManager, AlarmManager |
 | `ExportManager.kt` | 数据导出引擎：生成带 UTF-8 BOM 的 Excel 兼容 CSV 资产总表与流水表，支持系统级分享 | FileProvider, Intent.ACTION_SEND |
 | `UpdateManager.kt` | GitHub Releases 在线热更新引擎：官方源优先的多通道下载、后台静默预缓存与 0 秒秒级安装 | HttpURLConnection, PackageInstaller, UpdateSource |
+| `UpdateArtifactVerifier.kt` | APK 更新产物完整性校验：按 GitHub Release 声明的文件大小与 SHA-256 摘要执行 fail-closed 校验，缓存与前台下载共用 | MessageDigest, GitHub asset digest |
 | `HotPatchEngine.kt` | 🔐 动态热补丁与沙盒资源加载引擎：补丁沙盒管理、崩溃熔断自动回滚；**动态 dex 必须通过 SHA256withRSA 验签才允许加载（fail-closed）** | DexClassLoader, Signature, PatchArchive |
 | `HotUpdateManager.kt` | 热补丁检查与下载调度：解析 Release 资产中的 `*patch*.zip`、下载进度回调与应用落地 | HttpURLConnection, UpdateSource |
 | `ViewExt.kt` | UI 交互动效与触感震动扩展：按压回弹微缩放动效 (`applyPressScaleAnimation`) 与统一马达震动 (`performAppHapticFeedback`) | ObjectAnimator, HapticFeedbackConstants |
-| `UpdateSource.kt` | 🔐 更新下载源优先级统一策略：官方 GitHub 域名永远排在候选列表第一位，第三方 CDN 代理仅作容灾 fallback；非官方地址不转发给代理 | 安全不变量, 单元测试覆盖 |
+| `UpdateSource.kt` | 🔐 更新下载源策略：仅允许 GitHub 官方域名；第三方代理因 Android 端证书链失败或 HTTP 403 已全部移除；非官方地址不转发 | 安全不变量, 单元测试覆盖 |
 | `PatchArchive.kt` | 🔐 补丁压缩包安全解压器（纯 JVM，可单元测试）：Zip Slip 路径穿越防护、条目数上限与解压体积上限（防 zip 炸弹） | ZipInputStream, canonicalPath 校验 |
 | `VaultRepositories.kt` | 五大收纳馆（卡券 / 证照 / 药箱 / 生鲜 / 荣誉）的持久化仓储集，由 `DataStore` 门面持有并委托，存储 key 与 JSON 字段与拆分前完全一致 | SharedPreferences, JSON, Facade 模式 |
 | `VoucherVaultDialog.kt` | 时效权益与卡券票据收纳馆：管理优惠券、代金券、次卡与会员权益，3天临期预警，次卡扣减打卡 | ViewBinding, MaterialCardView, Filter |
