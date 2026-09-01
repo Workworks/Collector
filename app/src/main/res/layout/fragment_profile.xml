@@ -57,9 +57,10 @@
             android:autoSizeMinTextSize="12sp"
             android:autoSizeMaxTextSize="14sp"
             android:autoSizeStepGranularity="1sp"
-            android:text="收集箱"
+            android:text="📥  收集箱"
+            android:textColor="@color/white"
             android:textAllCaps="false"
-            app:cornerRadius="16dp" />
+            app:cornerRadius="14dp" />
 
         <com.google.android.material.button.MaterialButton
             android:id="@+id/btn_collection_search"
@@ -81,9 +82,10 @@
             android:autoSizeMinTextSize="12sp"
             android:autoSizeMaxTextSize="14sp"
             android:autoSizeStepGranularity="1sp"
-            android:text="找回与关联"
+            android:text="🔎  找回关联"
+            android:textColor="@color/white"
             android:textAllCaps="false"
-            app:cornerRadius="16dp" />
+            app:cornerRadius="14dp" />
 
         <com.google.android.material.button.MaterialButton
             android:id="@+id/btn_collection_reminders"
@@ -105,9 +107,10 @@
             android:autoSizeMinTextSize="12sp"
             android:autoSizeMaxTextSize="14sp"
             android:autoSizeStepGranularity="1sp"
-            android:text="处理提醒"
+            android:text="⏰  处理提醒"
+            android:textColor="@color/white"
             android:textAllCaps="false"
-            app:cornerRadius="16dp" />
+            app:cornerRadius="14dp" />
     </LinearLayout>
 
     <ScrollView

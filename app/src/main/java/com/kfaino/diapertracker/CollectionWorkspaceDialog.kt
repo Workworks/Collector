@@ -1,10 +1,17 @@
 package com.kfaino.diapertracker
 
 import android.app.Activity
+import android.graphics.Color
+import android.graphics.drawable.ColorDrawable
+import android.view.LayoutInflater
+import android.view.View
+import android.widget.LinearLayout
+import android.widget.TextView
 import android.widget.EditText
 import android.widget.Toast
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.kfaino.collecter.core.WorkspaceRecords
+import com.kfaino.diapertracker.databinding.DialogCollectionWorkspaceBinding
 import org.json.JSONObject
 
 object CollectionWorkspaceDialog {
@@ -20,14 +27,45 @@ object CollectionWorkspaceDialog {
         val workspace = CollectionWorkspace(activity)
         val records = workspace.records("inbox")
         val list = (0 until records.length()).map { records.getJSONObject(it) }.reversed()
-        MaterialAlertDialogBuilder(activity).setTitle("收集箱 · ${list.size} 条")
-            .setItems(list.map { "${workspace.title(it)} · ${statusLabel(it.optString("status", "pending"))}" }.toTypedArray()) { _, i ->
-                showRecord(activity, "inbox:${list[i].getString("id")}")
-            }.setPositiveButton("收下文字/链接") { _, _ ->
-                val input = EditText(activity).apply { hint = "先保存原文，稍后整理"; minLines = 3 }
-                MaterialAlertDialogBuilder(activity).setTitle("快速收集").setView(input).setNegativeButton("取消", null)
-                    .setPositiveButton("保存") { _, _ -> safely(activity) { workspace.addText(input.text.toString()); show(activity) } }.show()
-            }.setNeutralButton("整理工作台") { _, _ -> activity.startActivity(android.content.Intent(activity,WorkbenchActivity::class.java)) }.setNegativeButton("关闭", null).show()
+        val binding = DialogCollectionWorkspaceBinding.inflate(LayoutInflater.from(activity))
+        val dialog = MaterialAlertDialogBuilder(activity)
+            .setView(binding.root)
+            .setCancelable(true)
+            .create()
+        dialog.window?.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
+        binding.workspaceTitle.text = "收集箱 · ${list.size} 条"
+        binding.workspaceEmptyState.visibility = if (list.isEmpty()) View.VISIBLE else View.GONE
+        binding.workspaceRecordScroll.visibility = if (list.isEmpty()) View.GONE else View.VISIBLE
+
+        val density = activity.resources.displayMetrics.density
+        list.forEach { record ->
+            binding.workspaceRecordList.addView(TextView(activity).apply {
+                text = "${workspace.title(record)}\n${statusLabel(record.optString("status", "pending"))}"
+                textSize = 15f
+                setTextColor(activity.getColor(R.color.text_primary))
+                setPadding((16 * density).toInt(), (12 * density).toInt(), (16 * density).toInt(), (12 * density).toInt())
+                background = activity.getDrawable(R.drawable.bg_input_box)
+                layoutParams = LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT).apply {
+                    bottomMargin = (8 * density).toInt()
+                }
+                setOnClickListener {
+                    dialog.dismiss()
+                    showRecord(activity, "inbox:${record.getString("id")}")
+                }
+            })
+        }
+        binding.workspaceClose.setOnClickListener { dialog.dismiss() }
+        binding.workspaceAddText.setOnClickListener {
+            dialog.dismiss()
+            val input = EditText(activity).apply { hint = "先保存原文，稍后整理"; minLines = 3 }
+            MaterialAlertDialogBuilder(activity).setTitle("快速收集").setView(input).setNegativeButton("取消", null)
+                .setPositiveButton("保存") { _, _ -> safely(activity) { workspace.addText(input.text.toString()); show(activity) } }.show()
+        }
+        binding.workspaceOpenWorkbench.setOnClickListener {
+            dialog.dismiss()
+            activity.startActivity(android.content.Intent(activity, WorkbenchActivity::class.java))
+        }
+        dialog.show()
     }
 
     fun search(activity: Activity) {
