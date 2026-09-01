@@ -1,22 +1,18 @@
 # 当前阶段与验证状态
 
-更新：2026-09-01。**v4.3.8 已正式发布**。移动端更新下载 TLS 故障已修复；构建、原签名、Android 14 官方源联网、v4.3.7 覆盖升级及远端附件回读通过，见 [发布报告](releases/v4.3.8-report.md)。
+更新：2026-09-01。**v4.3.9 已正式发布**。移动端更新反馈、工作台入口/收集箱 UI、旋转恢复/快捷键、后台隐私重锁、每日校验归档及 Windows Native 便携包已交付；原签名覆盖升级和远端三附件回读通过，见 [发布报告](releases/v4.3.9-report.md)。
 
-Stage 459 已在源码修复 v4.3.8 点击更新后无明显反馈：未缓存 APK 的主按钮改为立即打开系统浏览器，应用内下载保留为备用入口。源码自检已通过，但尚未增加版本号或发布，不能宣称手机已获得修复。
-
-Stage 460 已在源码修复“我的”页顶部三个工作台入口的窄屏换行和间距问题；Android 14 截图与 selfcheck 通过。该修复同样尚未发布到移动端。
-
-Stage 461 已继续优化顶部入口和收集箱弹窗：加入语义图标、稳定文字对比度、明确空状态及主次操作。Android 14 截图与 selfcheck 通过，尚未发布到移动端。
+Stage 459–462 已进入 v4.3.9。物理 Android 设备、固定公网域名、物理设备凭据加密迁移和第二台干净 Windows 主机仍受外部环境阻塞，不列为已完成。
 
 | 项目 | 当前事实 | 依据 |
 | --- | --- | --- |
 | Git 基线 | 本地快照 d3c1f4d 与 origin/main b0aafdd 合并；不强制推送 | [整合报告](stages/stage-457-report.md) |
-| 产品及版本 | Collecter；Android 4.3.8 / 45，desktop 4.3.8；applicationId 不变 | app/build.gradle.kts、desktop/build.gradle.kts |
+| 产品及版本 | Collecter；Android 4.3.9 / 46，desktop 4.3.9；applicationId 不变 | app/build.gradle.kts、desktop/build.gradle.kts |
 | WebDAV | Android HEAD、双端完整备份和条件上传；模拟器、公网、桌面分别记录证据 | [457 证据](stages/evidence-457/) |
 | 安全 | DEX 安装/启动均先验签；默认缺钥拒绝；ZIP 边界、数量与体积限制 | HotPatchEngine、DexSignatureVerifier、PatchArchive |
 | 数据兼容 | 两分支集合键一次性原子迁移，日期/进度字段兼容，饮品小数不截断 | VaultSchemaMigration、WireAliases |
-| 发布 | v4.3.8 Release 已发布并回下载校验；移动端仅使用 GitHub 官方更新源 | [发布报告](releases/v4.3.8-report.md) |
-| 后续 | 真机、完整 GUI、Native、固定公网及长期运维仍待验收 | [TODO](TODO.md) |
+| 发布 | v4.3.9 三项产物已发布并回下载校验；移动端仅使用 GitHub 官方更新源 | [发布报告](releases/v4.3.9-report.md) |
+| 后续 | 只剩需要外部硬件、域名或恢复前置的阻塞项 | [TODO](TODO.md) |
 
 原签名已找回并核对，不再是“缺少签名”。DEX 公钥未配置及调用未接入，不能用资源 ZIP 修复 WebDAV 原生代码。
 
