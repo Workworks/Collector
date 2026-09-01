@@ -1,0 +1,9 @@
+{
+  "version": "4.3.7",
+  "androidVersionCode": 44,
+  "applicationId": "com.kfaino.diapertracker",
+  "apkSha256": "02c3c36abd95477a2b5ee2b70170a6b3e90cf8a2b70fe148f209f8731083e539",
+  "jarSha256": "7885346f4089501f7dabfaa4442d52de1ef1afe2d7d5cf24697ac33d3d83979e",
+  "certificateSha256": "03d73e71eb13c82a820dc50f4ef780630aa698591944693ff6b7c1c3c3bb013a",
+  "desktopArtifact": "Universal JVM JAR; Java 17 required; not Native installer"
+}

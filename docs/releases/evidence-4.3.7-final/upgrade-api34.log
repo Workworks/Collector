@@ -1,0 +1,66 @@
+STEP install genuine GitHub v4.3.6 APK on isolated AVD
+Performing Streamed Install
+Success
+Performing Incremental Install
+Performing Streamed Install
+Success
+INSTRUMENTATION_STATUS: class=com.kfaino.diapertracker.ReleaseUpgradeProbeTest
+INSTRUMENTATION_STATUS: current=1
+INSTRUMENTATION_STATUS: id=AndroidJUnitRunner
+INSTRUMENTATION_STATUS: numtests=1
+INSTRUMENTATION_STATUS: stream=
+com.kfaino.diapertracker.ReleaseUpgradeProbeTest:
+INSTRUMENTATION_STATUS: test=seedOnReleased436
+INSTRUMENTATION_STATUS_CODE: 1
+INSTRUMENTATION_STATUS: class=com.kfaino.diapertracker.ReleaseUpgradeProbeTest
+INSTRUMENTATION_STATUS: current=1
+INSTRUMENTATION_STATUS: id=AndroidJUnitRunner
+INSTRUMENTATION_STATUS: numtests=1
+INSTRUMENTATION_STATUS: stream=.
+INSTRUMENTATION_STATUS: test=seedOnReleased436
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_RESULT: stream=
+
+Time: 0.05
+
+OK (1 test)
+
+
+INSTRUMENTATION_CODE: -1
+STEP in-place install candidate v4.3.7 without uninstall/clear
+Performing Streamed Install
+Success
+INSTRUMENTATION_STATUS: class=com.kfaino.diapertracker.ReleaseUpgradeProbeTest
+INSTRUMENTATION_STATUS: current=1
+INSTRUMENTATION_STATUS: id=AndroidJUnitRunner
+INSTRUMENTATION_STATUS: numtests=1
+INSTRUMENTATION_STATUS: stream=
+com.kfaino.diapertracker.ReleaseUpgradeProbeTest:
+INSTRUMENTATION_STATUS: test=verifyAfterUpgradeTo437AndCleanup
+INSTRUMENTATION_STATUS_CODE: 1
+INSTRUMENTATION_STATUS: class=com.kfaino.diapertracker.ReleaseUpgradeProbeTest
+INSTRUMENTATION_STATUS: current=1
+INSTRUMENTATION_STATUS: id=AndroidJUnitRunner
+INSTRUMENTATION_STATUS: numtests=1
+INSTRUMENTATION_STATUS: stream=.
+INSTRUMENTATION_STATUS: test=verifyAfterUpgradeTo437AndCleanup
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_RESULT: stream=
+
+Time: 0.06
+
+OK (1 test)
+
+
+INSTRUMENTATION_CODE: -1
+Starting: Intent { cmp=com.kfaino.diapertracker/.MainActivity }
+Status: ok
+LaunchState: COLD
+Activity: com.google.android.permissioncontroller/com.android.permissioncontroller.permission.ui.GrantPermissionsActivity
+TotalTime: 3573
+WaitTime: 3678
+Complete
+
+    versionCode=44 minSdk=26 targetSdk=34
+    versionName=4.3.7
+PASS process=6505, no recent package fatal crash

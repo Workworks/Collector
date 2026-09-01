@@ -7,7 +7,7 @@
 <p align="center">
   <img src="https://img.shields.io/badge/Platform-Android_8.0+-3DDC84?logo=android&logoColor=white" alt="Platform" />
   <img src="https://img.shields.io/badge/Language-Kotlin_1.9-7F52FF?logo=kotlin&logoColor=white" alt="Language" />
-  <img src="https://img.shields.io/badge/Version-v4.3.6-10B981" alt="Version" />
+  <img src="https://img.shields.io/badge/Version-v4.3.7-10B981" alt="Version" />
   <img src="https://img.shields.io/badge/License-MIT-blue" alt="License" />
 </p>
 
@@ -120,4 +120,4 @@ adb install -r app/build/outputs/apk/release/app-release.apk
 
 工程名已于 2026-08-30 统一为 `Collecter`，Android 安装标识仍为 `com.kfaino.diapertracker`。当前质量基线见 [baseline](docs/baseline.md)，后续需求建议见 [product-direction](docs/product-direction.md)；建议不等同于已排期或已交付功能。
 
-当前整合基线：远端 v4.3.6（Android versionCode 43，桌面源码 4.3.6）。本轮修复在 main 中交付，不覆盖已有 Release，也不增加版本号。原签名已找回并核对；设备覆盖升级与新版本发布另行验收。见 [Stage 457](docs/stages/stage-457-spec.md)。
+当前发布候选：v4.3.7（Android versionCode 44，桌面源码 4.3.7），基于已完成的 Stage 457 整合与安全修复。Android applicationId 和原签名保持不变；发布验收见 [v4.3.7 规格](docs/releases/v4.3.7-spec.md)。
