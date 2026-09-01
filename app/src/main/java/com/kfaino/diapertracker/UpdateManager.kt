@@ -351,8 +351,13 @@ object UpdateManager {
             binding.customBtnUpdate.text = "📦 全量 APK 更新"
         } else {
             binding.layoutHotPatchBanner.visibility = View.GONE
-            binding.customBtnHotPatch.visibility = View.GONE
-            binding.customBtnUpdate.text = "🚀 立即全量安装升级"
+            binding.customBtnHotPatch.visibility = View.VISIBLE
+            binding.customBtnHotPatch.text = "应用内下载（备用）"
+            binding.customBtnHotPatch.setOnClickListener {
+                dialog.dismiss()
+                startDownloadAndInstall(activity, release)
+            }
+            binding.customBtnUpdate.text = "用浏览器下载并安装"
         }
 
         // 2. 全量 APK 下载与秒装
@@ -369,12 +374,33 @@ object UpdateManager {
         } else {
             binding.customBtnUpdate.setOnClickListener {
                 dialog.dismiss()
-                startDownloadAndInstall(activity, release)
+                openOfficialDownload(activity, release)
             }
         }
 
         dialog.show()
     }
+
+    private fun openOfficialDownload(activity: Activity, release: ReleaseInfo) {
+        val officialUrl = resolveOfficialDownloadUrl(release.apkDownloadUrl, release.htmlUrl)
+        if (officialUrl.isNullOrBlank()) {
+            Toast.makeText(activity, "发布信息没有可用的 GitHub 官方下载地址", Toast.LENGTH_LONG).show()
+            return
+        }
+
+        Toast.makeText(activity, "正在打开系统浏览器，请下载完成后确认安装", Toast.LENGTH_LONG).show()
+        try {
+            val viewIntent = Intent(Intent.ACTION_VIEW, Uri.parse(officialUrl))
+            val chooser = Intent.createChooser(viewIntent, "选择浏览器下载 Collecter")
+            activity.startActivity(chooser)
+        } catch (e: Exception) {
+            android.util.Log.w(TAG, "无法打开系统浏览器下载官方 APK: url=$officialUrl", e)
+            Toast.makeText(activity, "无法打开浏览器，请访问 ${release.htmlUrl}", Toast.LENGTH_LONG).show()
+        }
+    }
+
+    internal fun resolveOfficialDownloadUrl(apkUrl: String, releaseUrl: String): String? =
+        apkUrl.takeIf(UpdateSource::isOfficial) ?: releaseUrl.takeIf(UpdateSource::isOfficial)
 
     /**
      * 定制现代极速下载与安装流程

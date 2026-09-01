@@ -1,6 +1,8 @@
 ﻿package com.kfaino.diapertracker
 
+import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
@@ -9,6 +11,15 @@ import org.junit.Test
  * 覆盖 UpdateManager.isNewerVersion 的边界与容错测试。
  */
 class VersionCompareTest {
+
+    @Test
+    fun `浏览器下载只接受 GitHub 官方地址并优先 APK`() {
+        val apk = "https://github.com/Workworks/Collector/releases/download/v4.3.8/app-release.apk"
+        val release = "https://github.com/Workworks/Collector/releases/tag/v4.3.8"
+        assertEquals(apk, UpdateManager.resolveOfficialDownloadUrl(apk, release))
+        assertEquals(release, UpdateManager.resolveOfficialDownloadUrl("https://example.com/app.apk", release))
+        assertNull(UpdateManager.resolveOfficialDownloadUrl("https://example.com/app.apk", "https://evil.example/release"))
+    }
 
     @Test
     fun `常规三段版本号升级判定`() {
