@@ -117,21 +117,15 @@ class ProfileFragment : Fragment() {
         binding.btnFloorplanManage.visibility = if (isSimple) View.GONE else View.VISIBLE
 
         setupClicks()
-        val workspaceBar = android.widget.LinearLayout(requireContext()).apply {
-            orientation = android.widget.LinearLayout.HORIZONTAL
-            setPadding(12, 0, 12, 0)
+        binding.btnCollectionWorkspace.setOnClickListener {
+            CollectionWorkspaceDialog.show(requireActivity())
         }
-        for ((label, open) in listOf<Pair<String, () -> Unit>>(
-            "收集箱" to { CollectionWorkspaceDialog.show(requireActivity()) },
-            "找回与关联" to { CollectionWorkspaceDialog.search(requireActivity()) },
-            "处理提醒" to { CollectionWorkspaceDialog.reminders(requireActivity()) })) {
-            workspaceBar.addView(com.google.android.material.button.MaterialButton(requireContext()).apply {
-                text = label
-                layoutParams = android.widget.LinearLayout.LayoutParams(0, android.view.ViewGroup.LayoutParams.WRAP_CONTENT, 1f)
-                setOnClickListener { open() }
-            })
+        binding.btnCollectionSearch.setOnClickListener {
+            CollectionWorkspaceDialog.search(requireActivity())
         }
-        (binding.root as android.widget.LinearLayout).addView(workspaceBar, 1)
+        binding.btnCollectionReminders.setOnClickListener {
+            CollectionWorkspaceDialog.reminders(requireActivity())
+        }
         if (arguments?.getBoolean("open_backup") == true) {
             arguments?.remove("open_backup")
             binding.root.post { if (isAdded) showBackupRestoreDialog() }
