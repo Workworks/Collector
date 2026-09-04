@@ -172,6 +172,10 @@ object NotificationHelper {
                 if(sendNotification(context,nm,key.hashCode(),"物品维护到期",com.kfaino.collecter.core.CollectionWorkbench.title(hit.record),key,due.toString())) notificationCount++
             }
         }
+        val inbox = CollectionWorkspace(context).records("inbox")
+        for (prompt in RecallPolicy.evaluate(entries, inbox, now)) {
+            if (sendNotification(context, nm, prompt.key.hashCode(), prompt.title, prompt.content, prompt.key, prompt.cycle)) notificationCount++
+        }
         return notificationCount
     }
 

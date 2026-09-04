@@ -1,7 +1,7 @@
-# 📦 Collecter (资产与收纳管家)
+# 📦 Collecter — 记得住、找得到、不过期
 
 <p align="center">
-  <b>轻量 · 极简 · 100% 离线私有 · 全生命周期个人资产与全维度空间收纳管家</b>
+  <b>随手记下物品和资料，需要时快速找到，在到期前及时处理</b>
 </p>
 
 <p align="center">
@@ -120,4 +120,4 @@ adb install -r app/build/outputs/apk/release/app-release.apk
 
 工程名已于 2026-08-30 统一为 `Collecter`，Android 安装标识仍为 `com.kfaino.diapertracker`。当前质量基线见 [baseline](docs/baseline.md)，后续需求建议见 [product-direction](docs/product-direction.md)；建议不等同于已排期或已交付功能。
 
-当前发布候选：v4.3.9（Android versionCode 46，Desktop 4.3.9），包含移动端更新反馈、“我的”页与收集箱 UI、工作台恢复/快捷键、后台隐私重锁及 Windows Native 交付。Android applicationId 和原签名保持不变；验收见 Stage 462 发布报告。
+当前正式版：v4.3.9（Android versionCode 46，Desktop 4.3.9）。源码已进入 Stage 463–465 开发阶段，包含受限网络下载兜底与低门槛产品化 P0–P3；尚未以新版本发布。Android applicationId 和原签名保持不变。

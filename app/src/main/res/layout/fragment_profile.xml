@@ -751,7 +751,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:gravity="center"
-                android:text="🔒 数据完全离线存储于本地设备沙盒中\nCollecter · 智能收纳与资产追踪"
+                android:text="🔒 数据完全离线存储于本地设备沙盒中\nCollecter · 记得住、找得到、不过期"
                 android:textSize="12sp"
                 android:textColor="@color/text_hint"
                 android:lineSpacingExtra="4dp"

@@ -52,6 +52,7 @@ class HomeFragment : Fragment() {
 
         setupAdapters()
         setupTopBarAndTabs()
+        setupLowFrictionActions()
         setupFilters()
         setupBackupBanner()
         refresh()
@@ -93,13 +94,8 @@ class HomeFragment : Fragment() {
         (binding.tabItems.parent as? View)?.visibility = if (isSimple) View.GONE else View.VISIBLE
         binding.btnFilterMapView.visibility = if (isSimple) View.GONE else View.VISIBLE
 
-        // 1. 多账本快速切换器
-        binding.layoutLedgerSwitcher.applyPressScaleAnimation(0.94f)
-        binding.layoutLedgerSwitcher.setOnClickListener {
-            LedgerManager.showLedgerPicker(requireActivity()) {
-                refresh()
-            }
-        }
+        binding.layoutLedgerSwitcher.isClickable = false
+        binding.tvHomeTitle.text = "我的物品"
 
         // 2. 搜索过滤
         binding.btnSearchItems.applyPressScaleAnimation(0.92f)
@@ -130,14 +126,7 @@ class HomeFragment : Fragment() {
         // 折叠 / 展开工具箱 (···)
         binding.btnToggleToolsTop.applyPressScaleAnimation(0.90f)
         binding.btnToggleToolsTop.setOnClickListener {
-            val isVisible = binding.layoutToolsBar.visibility == View.VISIBLE
-            if (isVisible) {
-                binding.layoutToolsBar.visibility = View.GONE
-                binding.btnToggleToolsTop.imageTintList = ContextCompat.getColorStateList(requireContext(), R.color.text_secondary)
-            } else {
-                binding.layoutToolsBar.visibility = View.VISIBLE
-                binding.btnToggleToolsTop.imageTintList = ContextCompat.getColorStateList(requireContext(), R.color.primary)
-            }
+            MoreFeaturesDialog.show(requireActivity(), store) { refresh() }
         }
 
         // 可折叠快捷工具箱按钮
@@ -377,15 +366,34 @@ class HomeFragment : Fragment() {
         }
     }
 
+    private fun setupLowFrictionActions() {
+        binding.cardHomeSearch.applyPressScaleAnimation(0.97f)
+        binding.cardHomeSearch.setOnClickListener { showSearchDialog() }
+        binding.btnHomeQuickAdd.applyPressScaleAnimation(0.94f)
+        binding.btnHomeQuickAdd.setOnClickListener {
+            LowFrictionEntry.showQuickAdd(requireActivity(), store) { refresh() }
+        }
+        binding.btnHomeInbox.applyPressScaleAnimation(0.94f)
+        binding.btnHomeInbox.setOnClickListener { CollectionWorkspaceDialog.show(requireActivity()) }
+    }
+
     private fun refreshTodayAlertsBanner() {
         try {
             val alerts = VaultAlertAggregator.getUrgentAlerts(requireContext(), store)
             if (alerts.isEmpty()) {
-                binding.cardTodayAlertsBanner.visibility = View.GONE
+                binding.cardTodayAlertsBanner.visibility = View.VISIBLE
+                binding.tvTodayAlertsTitle.text = "✅ 今天没有待处理事项"
+                binding.tvTodayAlertsBadge.text = "0 项"
+                binding.layoutTodayAlertsContainer.removeAllViews()
+                binding.tvTodayAlertsFooter.text = "保持轻松，需要时再添加提醒"
+                binding.cardTodayAlertsBanner.setOnClickListener {
+                    UniversalVaultCenterDialog.show(requireActivity(), store) { refresh() }
+                }
                 return
             }
 
             binding.cardTodayAlertsBanner.visibility = View.VISIBLE
+            binding.tvTodayAlertsTitle.text = "⏰ 今天需要处理"
             binding.tvTodayAlertsBadge.text = "${alerts.size} 项待处理"
             binding.layoutTodayAlertsContainer.removeAllViews()
 
@@ -657,12 +665,18 @@ class HomeFragment : Fragment() {
     }
 
     fun refresh() {
+        val inboxCount = try {
+            CollectionWorkspace(requireContext()).records("inbox").length()
+        } catch (e: Exception) {
+            android.util.Log.w("HomeFragment", "读取收集箱数量失败", e)
+            0
+        }
+        binding.btnHomeInbox.text = "📥 收集箱 · $inboxCount"
         if (_binding == null) return
         val allEntries = store.loadAll()
 
         // 0. 更新当前账本标题
-        val curLedger = LedgerManager.getCurrentLedger(requireContext())
-        binding.tvHomeTitle.text = "${curLedger.icon} ${curLedger.name}"
+        binding.tvHomeTitle.text = "我的物品"
 
         // 0.1 耗材安全库存预警与采购卡片控制
         val lowStock = store.getLowStockItems()
@@ -679,6 +693,7 @@ class HomeFragment : Fragment() {
 
         // 0.3 🔔 今日 12 馆时效待办与预警看板
         refreshTodayAlertsBanner()
+        refreshValueFeedback(allEntries)
 
         val isSimple = store.isSimpleMode()
 
@@ -828,6 +843,38 @@ class HomeFragment : Fragment() {
             subscriptionAdapter.submitList(sortedSubs)
             binding.layoutEmptyAssets.visibility = if (sortedSubs.isEmpty()) View.VISIBLE else View.GONE
             binding.tvEmptyText.text = "暂无订阅资产 (如 iCloud、宽带、ChatGPT)\n点击下方 + 新增订阅"
+        }
+    }
+
+    private fun refreshValueFeedback(entries: List<Entry>) {
+        val found = store.getRecentSearchHits().joinToString("、")
+        val recent = entries.sortedByDescending { it.ts }.take(3).joinToString("、") { it.brand }
+        binding.tvRecentItems.text = when {
+            found.isNotBlank() -> "最近找到：$found"
+            recent.isNotBlank() -> "最近记下：$recent"
+            else -> "最近找到：还没有记录"
+        }
+        try {
+            val workspace = CollectionWorkspace(requireContext())
+            val inbox = workspace.records("inbox")
+            var organized = 0
+            for (i in 0 until inbox.length()) if (inbox.getJSONObject(i).optString("status") == "organized") organized++
+            val pending = inbox.length() - organized
+            binding.tvOrganizationProgress.text = "已整理 $organized · 待整理 $pending · 连续完成提醒 ${store.getReminderStreak()} 天"
+            val reminders = workspace.records("reminders")
+            val monthStart = Calendar.getInstance().apply {
+                set(Calendar.DAY_OF_MONTH, 1); set(Calendar.HOUR_OF_DAY, 0); set(Calendar.MINUTE, 0); set(Calendar.SECOND, 0); set(Calendar.MILLISECOND, 0)
+            }.timeInMillis
+            var completed = 0
+            for (i in 0 until reminders.length()) {
+                val item = reminders.getJSONObject(i)
+                if (item.optBoolean("done") && item.optLong("completedAt", item.optLong("sentAt")) >= monthStart) completed++
+            }
+            binding.tvMonthlyValue.text = if (completed == 0) "本月还没有需要处理的风险" else "本月已及时处理 $completed 项到期或遗漏风险"
+        } catch (e: Exception) {
+            android.util.Log.w("HomeFragment", "刷新使用价值反馈失败", e)
+            binding.tvOrganizationProgress.text = "已记录 ${entries.size} 件物品"
+            binding.tvMonthlyValue.text = "需要时设置到期提醒，避免错过"
         }
     }
 

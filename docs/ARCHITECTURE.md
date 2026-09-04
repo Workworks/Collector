@@ -277,6 +277,12 @@ graph TD
 | `KnowledgeGraphDialog.kt` | 源码模块，参见同名 Kotlin 文件 |
 | `LocalMatterBridge.kt` | 🔌 Matter / Home Assistant 局域网协议本地直连桥接器 (Local Matter Bridge) |
 | `LocalPaxosConsensusEngine.kt` | 🏛️ 家庭局域网多机去中心化 Paxos/Raft 共识对撞引擎 (Local Paxos Consensus Engine) |
+| `LowFrictionEntry.kt` | Android 首次极简引导与仅名称快速保存入口，复用现有主库、收集箱和统一搜索。 |
+| `BulkImportDialog.kt` | Android 批量建库入口，统一承接相册、CSV、现有备份与连续扫码。 |
+| `MoreFeaturesDialog.kt` | Android 次级功能入口，将地图、多账本、巡检等能力从默认导航收纳到“更多功能”。 |
+| `RecallPolicy.kt` | 对待整理积压与长期未归位记录执行价值型通知判定，过滤无明确收益的召回。 |
+| `ScenarioTemplateDialog.kt` | Android 五类场景模板入口，以合并方式补充分类并保留用户已有分类。 |
+| `SimpleCsvImport.kt` | 解析中英文表头的轻量 CSV 导入，并为缺省字段应用兼容默认值。 |
 | `LoraPacketRadioHelper.kt` | 📻 LoRa / 业余无线电超远距离无网资产广播助手 (LoRa Packet Radio Helper) |
 | `MagneticAnomalyLocatorHelper.kt` | 🧲 空间环境地磁异常指纹寻物辅助助手 (Magnetic Anomaly Locator Helper) |
 | `ManualKnowledgeExtractor.kt` | 📖 物品使用说明书与保修卡智能知识提取器 (Manual Knowledge Extractor) |
@@ -297,6 +303,8 @@ graph TD
 | `PolymerHydrolysisModel.kt` | 🧪 高分子聚合物与橡胶水解老化动力学模型 (Polymer Hydrolysis Model) |
 | `PostQuantumCryptoVault.kt` | 🛡️ 全息物理空间抗量子密码学（PQC）硬化保险库 (Post-Quantum Crypto Vault) |
 | `PufHardwareKeyBinding.kt` | 🔒 物理防篡改物理不可克隆函数（PUF）硬件安全绑定助手 (PUF Hardware Key Binding) |
+| `QuickEntryFactory.kt` | 将非空名称转换为现有 `Entry` 的兼容默认记录；空白名称拒绝生成。 |
+| `FamilyInteropFixture.kt` | 仅用于 QA 的隔离桌面家庭服务夹具，为 Android 设备联调签发临时成员并在结束后清理。 |
 | `ResaleCardGenerator.kt` | 🏷️ 闲鱼/转转标准化二手商品长图卡片生成排版器 (Resale Card Generator) |
 | `RestockingPathPlanner.kt` | 🤖 自动化物品归位路径规划与 6-DoF 动作求解器 (Restocking Path Planner) |
 | `RigidBodyContactDeformation.kt` | 📦 空间物理碰撞干涉与受力形变应力模拟器 (Rigid Body Contact Deformation) |

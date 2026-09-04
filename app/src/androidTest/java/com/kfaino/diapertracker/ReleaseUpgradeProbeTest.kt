@@ -51,4 +51,5 @@ class ReleaseUpgradeProbeTest {
         assertEquals("保留升级数据-4.3.8-to-4.3.9", prefs.getString("sentinel", null))
         prefs.edit().clear().commit()
     }
+
 }

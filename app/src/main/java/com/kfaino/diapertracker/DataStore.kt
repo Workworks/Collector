@@ -214,6 +214,20 @@ class DataStore(private val ctx: Context) {
 
     fun setSimpleMode(enabled: Boolean) = settingsStore.setSimpleMode(enabled)
 
+    fun hasSeenQuickStart(): Boolean = settingsStore.hasSeenQuickStart()
+
+    fun markQuickStartSeen() = settingsStore.markQuickStartSeen()
+
+    fun consumeContextTip(tip: String): Boolean = settingsStore.consumeContextTip(tip)
+
+    fun recordReminderCompleted() = settingsStore.recordReminderCompleted()
+
+    fun getReminderStreak(): Int = settingsStore.getReminderStreak()
+
+    fun recordSearchHit(title: String) = settingsStore.recordSearchHit(title)
+
+    fun getRecentSearchHits(): List<String> = settingsStore.getRecentSearchHits()
+
     // ==================== 📸 截图无感自动收纳 ====================
 
     fun isScreenshotCaptureEnabled(): Boolean = settingsStore.isScreenshotCaptureEnabled()

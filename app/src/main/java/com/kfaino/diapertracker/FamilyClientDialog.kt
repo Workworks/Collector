@@ -10,9 +10,20 @@ import java.net.URL
 
 /** Explicit connection only; member secrets remain in this dialog session and never in backups. */
 object FamilyClientDialog {
-    fun show(activity:Activity) {
-        val address=EditText(activity).apply {hint="http://桌面IP:8848/api/v1/family"}
-        val secret=EditText(activity).apply {hint="桌面签发的成员密钥";inputType=android.text.InputType.TYPE_CLASS_TEXT or android.text.InputType.TYPE_TEXT_VARIATION_PASSWORD}
+    fun show(activity:Activity) = show(activity,"","")
+    fun showFromQr(activity:Activity,payload:String) {
+        try {
+            val uri=android.net.Uri.parse(payload)
+            require(uri.scheme=="collecter" && uri.host=="family") { "不是 Collecter 家庭配对码" }
+            show(activity,uri.getQueryParameter("url").orEmpty(),uri.getQueryParameter("token").orEmpty())
+        } catch(e:Exception) {
+            android.util.Log.w("FamilyClient","家庭配对码解析失败",e)
+            Toast.makeText(activity,"家庭配对码无效",Toast.LENGTH_LONG).show()
+        }
+    }
+    private fun show(activity:Activity,prefillAddress:String,prefillToken:String) {
+        val address=EditText(activity).apply {hint="http://桌面IP:8848/api/v1/family";setText(prefillAddress)}
+        val secret=EditText(activity).apply {hint="桌面签发的成员密钥";setText(prefillToken);inputType=android.text.InputType.TYPE_CLASS_TEXT or android.text.InputType.TYPE_TEXT_VARIATION_PASSWORD}
         val form=LinearLayout(activity).apply {orientation=LinearLayout.VERTICAL;addView(address);addView(secret)}
         MaterialAlertDialogBuilder(activity).setTitle("连接家庭工作台").setMessage("仅可信局域网使用 HTTP；不自动保存密钥。仅显示桌面端明确授权的非敏感记录。")
             .setView(form).setNegativeButton("取消",null).setPositiveButton("连接") { _,_->

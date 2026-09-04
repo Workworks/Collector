@@ -8,6 +8,7 @@ import org.json.JSONObject
 import java.awt.BorderLayout
 import java.awt.GridLayout
 import java.awt.datatransfer.DataFlavor
+import java.awt.image.BufferedImage
 import java.io.File
 import java.time.LocalDate
 import java.time.ZoneId
@@ -138,8 +139,11 @@ class DesktopWorkbench(private val store:DesktopDataStore,private val family:Fam
             val role=JOptionPane.showInputDialog(this,"viewer 只读；editor 可整理和记录维护/借还","角色",JOptionPane.PLAIN_MESSAGE,null,roles,roles[0]) as? String ?: return
             try {
                 val grant=family.issue(name,role)
-                val text=JTextArea("成员 ID：${grant.member.id}\n角色：$role\n接口：http://127.0.0.1:$port/api/v1/family\n访问密钥：${grant.token}\n跨设备请将地址替换为本机局域网 IP。先在记录中授权此成员 ID；不要分享所有者密钥。",8,70).apply { isEditable=false;lineWrap=true }
-                JOptionPane.showMessageDialog(this,JScrollPane(text),"仅在此显示成员密钥",JOptionPane.INFORMATION_MESSAGE)
+                val address=localFamilyAddress(port)
+                val payload="collecter://family?url="+java.net.URLEncoder.encode(address,"UTF-8")+"&token="+java.net.URLEncoder.encode(grant.token,"UTF-8")
+                val text=JTextArea("成员 ID：${grant.member.id}\n角色：$role\n接口：$address\n访问密钥：${grant.token}\n先在记录中授权此成员 ID；二维码和密钥仅交给该成员。",7,58).apply { isEditable=false;lineWrap=true;wrapStyleWord=true }
+                val panel=JPanel(BorderLayout(12,12)).apply { add(JLabel(ImageIcon(qrImage(payload,260))),BorderLayout.WEST);add(JScrollPane(text),BorderLayout.CENTER) }
+                JOptionPane.showMessageDialog(this,panel,"用 Collecter 扫码连接",JOptionPane.INFORMATION_MESSAGE)
             } catch(e:Exception) {showFailure(e)}
         } else if(option==1) {
             val members=family.members();if(members.isEmpty()) {JOptionPane.showMessageDialog(this,"没有有效成员");return}
@@ -154,6 +158,22 @@ class DesktopWorkbench(private val store:DesktopDataStore,private val family:Fam
         override fun done() { try { val value=get();if(isDisplayable) success(value) } catch(e:Exception) {showFailure(e)} }
     }.execute() }
     companion object {
+        internal fun localFamilyAddress(port:Int):String {
+            val ip=java.net.NetworkInterface.getNetworkInterfaces().toList().asSequence()
+                .filter { it.isUp && !it.isLoopback }
+                .flatMap { it.inetAddresses.toList().asSequence() }
+                .filterIsInstance<java.net.Inet4Address>()
+                .map { it.hostAddress }
+                .firstOrNull { it.startsWith("10.") || it.startsWith("192.168.") || Regex("172\\.(1[6-9]|2\\d|3[01])\\.").containsMatchIn(it) }
+                ?: "127.0.0.1"
+            return "http://$ip:$port/api/v1/family"
+        }
+        internal fun qrImage(text:String,size:Int):BufferedImage {
+            val matrix=com.google.zxing.MultiFormatWriter().encode(text,com.google.zxing.BarcodeFormat.QR_CODE,size,size)
+            return BufferedImage(size,size,BufferedImage.TYPE_INT_RGB).apply {
+                for(y in 0 until size) for(x in 0 until size) setRGB(x,y,if(matrix[x,y]) 0x000000 else 0xFFFFFF)
+            }
+        }
         fun importFiles(store:DesktopDataStore,files:List<File>) {
             require(files.size in 1..100)
             synchronized(store) {

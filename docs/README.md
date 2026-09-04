@@ -18,7 +18,7 @@
 - [本轮重新加载报告](stages/docs-refresh-20260831.md)、[Android 发布阻塞](releases/v4.3.3-report.md)。
 
 
-欢迎查阅 **Collecter (资产与收纳管家)** 的全景文档体系。
+欢迎查阅 **Collecter（记得住、找得到、不过期）** 的项目文档。
 本文提供文档导航；历史报告保留当时结论，当前状态请以上方入口为准。
 
 🌐 **[📦 点击打开全景功能能力地图与演化矩阵 (capability-map.html)](capability-map.html)**

@@ -38,6 +38,7 @@ class MainActivity : AppCompatActivity() {
     private val entries = mutableListOf<Entry>()
 
     private var currentTab = 0
+    private var scanResultToInbox = false
 
     // 图片选择回调
     private var onPhotoPickedCallback: ((String) -> Unit)? = null
@@ -71,6 +72,36 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    private val inboxPhotoLauncher = registerForActivityResult(ActivityResultContracts.GetContent()) { uri: Uri? ->
+        if (uri == null) return@registerForActivityResult
+        val filename = ImageVaultHelper.saveUriToVault(this, uri, prefix = "inbox")
+        if (filename == null) {
+            Toast.makeText(this, "图片保存失败，请重试", Toast.LENGTH_LONG).show()
+            return@registerForActivityResult
+        }
+        CollectionWorkspace(this).upsert("inbox", com.kfaino.collecter.core.WorkspaceRecords.inbox("", filename))
+        if (store.consumeContextTip("photo")) {
+            MaterialAlertDialogBuilder(this).setTitle("照片已经收好")
+                .setMessage("原图会留在收集箱。需要时再补名称、分类或提取文字，不必现在整理。")
+                .setPositiveButton("查看收集箱") { _, _ -> CollectionWorkspaceDialog.show(this) }
+                .setNegativeButton("知道了", null).show()
+        } else Toast.makeText(this, "照片已放入收集箱", Toast.LENGTH_SHORT).show()
+        refreshCurrentFragment()
+    }
+    private val inboxPhotosLauncher = registerForActivityResult(ActivityResultContracts.GetMultipleContents()) { uris ->
+        var saved = 0
+        val workspace = CollectionWorkspace(this)
+        uris.take(100).forEach { uri ->
+            val filename = ImageVaultHelper.saveUriToVault(this, uri, prefix = "inbox")
+            if (filename != null) {
+                workspace.upsert("inbox", com.kfaino.collecter.core.WorkspaceRecords.inbox("", filename))
+                saved++
+            }
+        }
+        Toast.makeText(this, "已将 $saved 张图片放入收集箱", Toast.LENGTH_LONG).show()
+        refreshCurrentFragment()
+    }
+
     private val scanQrLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
         if (result.resultCode == RESULT_OK) {
             val scanResult = com.journeyapps.barcodescanner.ScanIntentResult.parseActivityResult(result.resultCode, result.data)
@@ -78,7 +109,7 @@ class MainActivity : AppCompatActivity() {
             if (!scanned.isNullOrBlank()) {
                 handleScannedResult(scanned)
             }
-        }
+        } else scanResultToInbox = false
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -95,15 +126,11 @@ class MainActivity : AppCompatActivity() {
         if (savedInstanceState == null) {
             switchFragment(HomeFragment())
             selectTab(0)
+            binding.root.post { LowFrictionEntry.showFirstRunIfNeeded(this, store) }
         }
 
-        // 初始化通知渠道并请求权限 (Android 13+)
+        // 初始化通知渠道；权限在用户首次选择提醒时再请求，避免打断首次记录。
         NotificationHelper.createNotificationChannel(this)
-        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.TIRAMISU) {
-            if (!NotificationHelper.hasNotificationPermission(this)) {
-                requestPermissions(arrayOf(android.Manifest.permission.POST_NOTIFICATIONS), 1001)
-            }
-        }
         // 调度每日定时闹钟并在应用启动时后台核验一次提醒
         NotificationHelper.scheduleDailyReminder(this)
         java.util.concurrent.Executors.newSingleThreadExecutor().execute {
@@ -210,7 +237,48 @@ class MainActivity : AppCompatActivity() {
         scanQrLauncher.launch(intent)
     }
 
+    fun startInboxScanner() {
+        scanResultToInbox = true
+        startQrScanner()
+    }
+
+    fun collectPhotoToInbox() = inboxPhotoLauncher.launch("image/*")
+
+    fun collectPhotosToInbox() = inboxPhotosLauncher.launch("image/*")
+
+    fun requestReminderPermissionIfNeeded() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU && !NotificationHelper.hasNotificationPermission(this)) {
+            requestPermissions(arrayOf(android.Manifest.permission.POST_NOTIFICATIONS), 1001)
+        }
+    }
+
+    fun collectLinkToInbox() {
+        val input = EditText(this).apply { hint = "粘贴网页链接或一段文字"; minLines = 2 }
+        MaterialAlertDialogBuilder(this).setTitle("先收下，稍后整理").setView(input)
+            .setNegativeButton("取消", null).setPositiveButton("放进收集箱") { _, _ ->
+                val text = input.text.toString().trim()
+                if (text.isBlank()) Toast.makeText(this, "内容不能为空", Toast.LENGTH_SHORT).show()
+                else {
+                    CollectionWorkspace(this).addText(text)
+                    Toast.makeText(this, "已放入收集箱", Toast.LENGTH_SHORT).show()
+                    refreshCurrentFragment()
+                }
+            }.show()
+    }
+
     private fun handleScannedResult(scanned: String) {
+        if (scanned.startsWith("collecter://family")) {
+            FamilyClientDialog.showFromQr(this, scanned)
+            return
+        }
+        if (scanResultToInbox) {
+            scanResultToInbox = false
+            CollectionWorkspace(this).addText("扫码内容：$scanned")
+            Toast.makeText(this, "扫码内容已放入收集箱，可继续扫码", Toast.LENGTH_SHORT).show()
+            refreshCurrentFragment()
+            binding.root.postDelayed({ startInboxScanner() }, 600)
+            return
+        }
         if (scanned.startsWith("collecter://room")) {
             // 收纳箱/房间专属协议
             try {
@@ -249,19 +317,14 @@ class MainActivity : AppCompatActivity() {
         binding.navReport.applyPressScaleAnimation(0.92f)
         binding.navProfile.applyPressScaleAnimation(0.92f)
 
-        val isSimple = store.isSimpleMode()
-        if (isSimple) {
-            binding.navReport.visibility = View.GONE
-            binding.navHomeLabel.text = "仓库库存"
-            binding.navTimelineLabel.text = "出入流水"
-            binding.navProfileLabel.text = "系统设置"
-        } else {
-            binding.navReport.visibility = View.VISIBLE
-            binding.navHomeLabel.text = "资产"
-            binding.navTimelineLabel.text = "生活流"
-            binding.navReportLabel.text = "报表"
-            binding.navProfileLabel.text = "我的"
-        }
+        binding.navAddCenterSlot.visibility = View.GONE
+        binding.navReport.visibility = View.VISIBLE
+        binding.navHomeLabel.text = "资产"
+        binding.navTimelineLabel.text = "收集箱"
+        binding.navReportLabel.text = "提醒"
+        binding.navProfileLabel.text = "我的"
+        binding.navTimelineIcon.setImageResource(R.drawable.ic_inbox)
+        binding.navReportIcon.setImageResource(R.drawable.ic_notifications)
 
         binding.navHome.setOnClickListener {
             if (currentTab != 0) {
@@ -271,17 +334,11 @@ class MainActivity : AppCompatActivity() {
         }
 
         binding.navTimeline.setOnClickListener {
-            if (currentTab != 1) {
-                switchFragment(TimelineFragment())
-                selectTab(1)
-            }
+            CollectionWorkspaceDialog.show(this)
         }
 
         binding.navReport.setOnClickListener {
-            if (currentTab != 2) {
-                switchFragment(ReportFragment())
-                selectTab(2)
-            }
+            CollectionWorkspaceDialog.reminders(this)
         }
 
         binding.navProfile.setOnClickListener {
@@ -345,6 +402,11 @@ class MainActivity : AppCompatActivity() {
             switchFragment(fragment)
             selectTab(index)
         }
+    }
+
+    fun navigateToLegacyTab(index: Int) {
+        val fragment = if (index == 1) TimelineFragment() else ReportFragment()
+        switchFragment(fragment)
     }
 
     private fun switchFragment(fragment: Fragment) {

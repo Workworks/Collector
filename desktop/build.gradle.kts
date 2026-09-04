@@ -16,6 +16,7 @@ dependencies {
     implementation("org.json:json:20231013")
     implementation("com.formdev:flatlaf:3.4.1")
     implementation("com.formdev:flatlaf-extras:3.4.1")
+    implementation("com.google.zxing:core:3.5.3")
 
     testImplementation(kotlin("test"))
     testImplementation("junit:junit:4.13.2")
@@ -42,4 +43,12 @@ tasks.jar {
     archiveBaseName.set("Collecter-Desktop")
     archiveClassifier.set("")
     archiveVersion.set(project.version.toString())
+}
+
+tasks.register<JavaExec>("familyInteropFixture") {
+    group = "verification"
+    description = "启动隔离的桌面家庭服务，供 Android 设备联调。"
+    dependsOn(tasks.testClasses)
+    classpath = sourceSets.test.get().runtimeClasspath
+    mainClass.set("com.kfaino.collector.desktop.server.FamilyInteropFixture")
 }

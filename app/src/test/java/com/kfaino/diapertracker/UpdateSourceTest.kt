@@ -17,6 +17,8 @@ class UpdateSourceTest {
 
     private val officialApk =
         "https://github.com/Workworks/Collector/releases/download/v4.2.0/Collecter.apk"
+    private val assetApi =
+        "https://api.github.com/repos/Workworks/Collector/releases/assets/123"
 
     @Test
     fun `官方源必须排在候选列表第一位`() {
@@ -39,7 +41,7 @@ class UpdateSourceTest {
     fun `已失效证书代理不得保留在候选列表`() {
         val candidates = UpdateSource.candidates(officialApk)
         assertFalse(candidates.any { it.contains("ghfast.top") || it.contains("ghproxy") })
-        assertEquals(listOf("GitHub 官方"), candidates.map(UpdateSource::label))
+        assertEquals(listOf("GitHub 官方下载"), candidates.map(UpdateSource::label))
     }
 
     @Test
@@ -78,5 +80,32 @@ class UpdateSourceTest {
         assertTrue(UpdateSource.isOfficial(officialApk))
         assertFalse(UpdateSource.isOfficial("https://ghfast.top/$officialApk"))
         assertFalse(UpdateSource.isOfficial("https://evil.example.com/github.com/x.apk"))
+    }
+
+    @Test
+    fun `APK 下载按 API 官方与镜像顺序兜底`() {
+        assertEquals(
+            listOf(
+                assetApi,
+                officialApk,
+                "https://gh-proxy.com/$officialApk",
+                "https://gh.3w.pm/$officialApk"
+            ),
+            UpdateSource.downloadCandidates(assetApi, officialApk)
+        )
+    }
+
+    @Test
+    fun `非官方原始下载地址不得进入 APK 候选`() {
+        assertTrue(UpdateSource.downloadCandidates("https://evil.example/api", "https://evil.example/app.apk").isEmpty())
+    }
+
+    @Test
+    fun `API 资产请求头与来源标签可识别`() {
+        assertTrue(UpdateSource.requiresAssetAcceptHeader(assetApi))
+        assertFalse(UpdateSource.requiresAssetAcceptHeader(officialApk))
+        assertEquals("GitHub API 资产", UpdateSource.label(assetApi))
+        assertEquals("GitHub 官方下载", UpdateSource.label(officialApk))
+        assertEquals("镜像 gh-proxy.com", UpdateSource.label("https://gh-proxy.com/$officialApk"))
     }
 }

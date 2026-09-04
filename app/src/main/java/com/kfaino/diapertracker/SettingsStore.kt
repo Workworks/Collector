@@ -23,6 +23,7 @@ class SettingsStore(private val prefs: SharedPreferences) {
         const val KEY_WEBDAV_USER = "webdav_username"
         const val KEY_WEBDAV_PASS = "webdav_password"
         const val KEY_SIMPLE_MODE = "app_simple_mode_enabled"
+        const val KEY_QUICK_START_SEEN = "quick_start_seen_v1"
 
         const val DEFAULT_WEBDAV_URL = "https://dav.jianguoyun.com/dav/"
         const val DEFAULT_GITHUB_REPO = "Workworks/Collector"
@@ -124,6 +125,35 @@ class SettingsStore(private val prefs: SharedPreferences) {
     fun setSimpleMode(enabled: Boolean) {
         prefs.edit().putBoolean(KEY_SIMPLE_MODE, enabled).apply()
     }
+
+    fun hasSeenQuickStart(): Boolean = prefs.getBoolean(KEY_QUICK_START_SEEN, false)
+
+    fun markQuickStartSeen() {
+        prefs.edit().putBoolean(KEY_QUICK_START_SEEN, true).apply()
+    }
+
+    fun consumeContextTip(tip: String): Boolean {
+        val key = "context_tip_seen_$tip"
+        if (prefs.getBoolean(key, false)) return false
+        prefs.edit().putBoolean(key, true).apply()
+        return true
+    }
+
+    fun recordReminderCompleted(now: Long = System.currentTimeMillis()) {
+        val day = now / (24L * 60 * 60 * 1000)
+        val last = prefs.getLong("reminder_streak_last_day", -2L)
+        val streak = when (day - last) { 0L -> prefs.getInt("reminder_streak_days", 0); 1L -> prefs.getInt("reminder_streak_days", 0) + 1; else -> 1 }
+        prefs.edit().putLong("reminder_streak_last_day", day).putInt("reminder_streak_days", streak).apply()
+    }
+
+    fun getReminderStreak(): Int = prefs.getInt("reminder_streak_days", 0)
+
+    fun recordSearchHit(title: String) {
+        val current = prefs.getString("recent_search_hits", "").orEmpty().split("\u001F").filter(String::isNotBlank)
+        prefs.edit().putString("recent_search_hits", (listOf(title) + current.filter { it != title }).take(3).joinToString("\u001F")).apply()
+    }
+
+    fun getRecentSearchHits(): List<String> = prefs.getString("recent_search_hits", "").orEmpty().split("\u001F").filter(String::isNotBlank)
 
     // ==================== 📸 截图无感自动收纳与 OCR ====================
 

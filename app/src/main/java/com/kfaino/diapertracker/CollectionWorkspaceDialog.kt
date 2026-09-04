@@ -61,8 +61,19 @@ object CollectionWorkspaceDialog {
             MaterialAlertDialogBuilder(activity).setTitle("快速收集").setView(input).setNegativeButton("取消", null)
                 .setPositiveButton("保存") { _, _ -> safely(activity) { workspace.addText(input.text.toString()); show(activity) } }.show()
         }
+        binding.workspaceAddPhoto.setOnClickListener {
+            dialog.dismiss()
+            (activity as? MainActivity)?.collectPhotoToInbox()
+        }
+        binding.workspaceAddScan.setOnClickListener {
+            dialog.dismiss()
+            (activity as? MainActivity)?.startInboxScanner()
+        }
         binding.workspaceOpenWorkbench.setOnClickListener {
             dialog.dismiss()
+            if (DataStore(activity).consumeContextTip("organize")) {
+                Toast.makeText(activity, "先选一条记录，再补名称或标记已整理；原件不会自动删除", Toast.LENGTH_LONG).show()
+            }
             activity.startActivity(android.content.Intent(activity, WorkbenchActivity::class.java))
         }
         dialog.show()
@@ -188,6 +199,8 @@ object CollectionWorkspaceDialog {
                 val item = list[i]
                 MaterialAlertDialogBuilder(activity).setTitle(item.optString("title")).setItems(arrayOf("完成本周期", "延后一天", "关闭此事项", "重新启用")) { _, action ->
                     safely(activity) {
+                        if (action == 0) DataStore(activity).recordReminderCompleted()
+                        if (action == 0) item.put("completedAt", System.currentTimeMillis())
                         if(action==0 && item.optString("id").startsWith("workbench:")) {
                             WorkbenchRepository(activity).execute(JSONObject().put("op","life").put("refs",org.json.JSONArray(listOf(item.getString("id").removePrefix("workbench:"))))
                                 .put("action","maintenance").put("note","从到期提醒记录完成").put("nextAt",0))

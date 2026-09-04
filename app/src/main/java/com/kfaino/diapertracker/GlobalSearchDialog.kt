@@ -6,6 +6,7 @@ import android.graphics.drawable.ColorDrawable
 import android.view.Gravity
 import android.view.View
 import android.widget.Button
+import android.widget.EditText
 import android.widget.LinearLayout
 import android.widget.ScrollView
 import android.widget.TextView
@@ -29,7 +30,36 @@ object GlobalSearchDialog {
     )
 
     fun show(activity: Activity, store: DataStore, onFilterMainList: ((String) -> Unit)? = null) {
-        CollectionWorkspaceDialog.search(activity)
+        val input = EditText(activity).apply {
+            hint = "物品、位置、备注、证件、食材……"
+            setSingleLine(true)
+        }
+        val dialog = MaterialAlertDialogBuilder(activity)
+            .setTitle("搜索全部内容")
+            .setMessage("一次搜索资产主库和所有专业馆。")
+            .setView(input)
+            .setNegativeButton("取消", null)
+            .setPositiveButton("搜索", null)
+            .create()
+        dialog.setOnShowListener {
+            dialog.getButton(android.app.AlertDialog.BUTTON_POSITIVE).setOnClickListener {
+                val query = input.text.toString().trim()
+                if (query.isEmpty()) {
+                    input.error = "请输入搜索内容"
+                    return@setOnClickListener
+                }
+                val results = searchAll(store, query.lowercase())
+                dialog.dismiss()
+                if (results.isEmpty()) {
+                    Toast.makeText(activity, "没有找到与「$query」相关的内容", Toast.LENGTH_LONG).show()
+                } else {
+                    store.recordSearchHit(results.first().title)
+                    showResultsDialog(activity, query, results, onFilterMainList)
+                }
+            }
+            input.requestFocus()
+        }
+        dialog.show()
     }
 
     private fun searchAll(store: DataStore, q: String): List<SearchMatch> {
@@ -412,7 +442,7 @@ object GlobalSearchDialog {
         val scroll = ScrollView(activity).apply {
             val lp = LinearLayout.LayoutParams(
                 LinearLayout.LayoutParams.MATCH_PARENT,
-                dp(340)
+                dp(minOf(340, maxOf(92, results.size * 92)))
             )
             layoutParams = lp
             isVerticalScrollBarEnabled = true

@@ -53,7 +53,8 @@ object UpdateManager {
         val patchSize: Long = 0L,
         val patchVersion: String = "",
         val publishedAt: String,
-        val htmlUrl: String
+        val htmlUrl: String,
+        val apkApiUrl: String = ""
     )
 
     /** 获取本地应用当前 VersionName */
@@ -122,7 +123,7 @@ object UpdateManager {
 
                 val tempFile = File(saveDir, "Collecter_${release.versionName}.apk.tmp")
                 // 安全不变量：官方源优先，代理仅作 fallback（见 UpdateSource / GEMINI.md 铁律 3）
-                val urlsToTry = UpdateSource.candidates(release.apkDownloadUrl)
+                val urlsToTry = UpdateSource.downloadCandidates(release.apkApiUrl, release.apkDownloadUrl)
 
                 for (currentUrl in urlsToTry) {
                     try {
@@ -131,7 +132,11 @@ object UpdateManager {
                             requestMethod = "GET"
                             connectTimeout = 8000
                             readTimeout = 8000
+                            instanceFollowRedirects = true
                             setRequestProperty("User-Agent", "Mozilla/5.0 (Android; Mobile) CollecterApp")
+                            if (UpdateSource.requiresAssetAcceptHeader(currentUrl)) {
+                                setRequestProperty("Accept", "application/octet-stream")
+                            }
                         }
                         if (conn.responseCode in 200..299) {
                             conn.inputStream.use { input ->
@@ -261,6 +266,7 @@ object UpdateManager {
         val htmlUrl = json.optString("html_url", "https://github.com/$repo/releases")
 
         var apkUrl = ""
+        var apkApiUrl = ""
         var apkSize = 0L
         var apkSha256 = ""
         var patchUrl = ""
@@ -274,6 +280,7 @@ object UpdateManager {
                 val name = asset.optString("name", "")
                 if (name.endsWith(".apk", ignoreCase = true)) {
                     apkUrl = asset.optString("browser_download_url", "")
+                    apkApiUrl = asset.optString("url", "")
                     apkSize = asset.optLong("size", 0L)
                     apkSha256 = asset.optString("digest", "").removePrefix("sha256:")
                 } else if (name.contains("patch", ignoreCase = true) && name.endsWith(".zip", ignoreCase = true)) {
@@ -295,6 +302,7 @@ object UpdateManager {
             title = title,
             changelog = changelog,
             apkDownloadUrl = apkUrl,
+            apkApiUrl = apkApiUrl,
             apkSize = apkSize,
             apkSha256 = apkSha256,
             patchDownloadUrl = patchUrl,
@@ -430,7 +438,7 @@ object UpdateManager {
         val apkFile = File(saveDir, "Collecter_${release.versionName}.apk")
 
         // 安全不变量：官方源优先，代理仅作 fallback（见 UpdateSource / GEMINI.md 铁律 3）
-        val urlsToTry = UpdateSource.candidates(release.apkDownloadUrl)
+        val urlsToTry = UpdateSource.downloadCandidates(release.apkApiUrl, release.apkDownloadUrl)
 
         downloadThread = Thread {
             val failures = mutableListOf<String>()
@@ -444,7 +452,11 @@ object UpdateManager {
                         requestMethod = "GET"
                         connectTimeout = 8000
                         readTimeout = 8000
+                        instanceFollowRedirects = true
                         setRequestProperty("User-Agent", "Mozilla/5.0 (Android; Mobile) CollecterApp")
+                        if (UpdateSource.requiresAssetAcceptHeader(currentUrl)) {
+                            setRequestProperty("Accept", "application/octet-stream")
+                        }
                     }
 
                     val responseCode = conn.responseCode

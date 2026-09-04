@@ -14,9 +14,18 @@ package com.kfaino.diapertracker
 object UpdateSource {
 
     fun label(url: String): String = when {
+        url.startsWith("https://api.github.com/") && url.contains("/releases/assets/") -> "GitHub API 资产"
+        url.startsWith("https://github.com/") -> "GitHub 官方下载"
+        url.startsWith("https://gh-proxy.com/") -> "镜像 gh-proxy.com"
+        url.startsWith("https://gh.3w.pm/") -> "镜像 gh.3w.pm"
         isOfficial(url) -> "GitHub 官方"
         else -> "自定义源"
     }
+
+    private val MIRROR_PREFIXES = listOf(
+        "https://gh-proxy.com/",
+        "https://gh.3w.pm/"
+    )
 
     private val OFFICIAL_HOST_PREFIXES = listOf(
         "https://api.github.com/",
@@ -38,6 +47,21 @@ object UpdateSource {
         }
         return listOf(officialUrl)
     }
+
+    /** APK 下载顺序：GitHub API、GitHub 官方资源、经摘要校验保护的镜像兜底。 */
+    fun downloadCandidates(assetApiUrl: String, browserDownloadUrl: String): List<String> {
+        val official = listOf(assetApiUrl, browserDownloadUrl)
+            .filter { it.isNotBlank() && isOfficial(it) }
+            .distinct()
+        val mirrors = browserDownloadUrl
+            .takeIf { it.startsWith("https://github.com/") }
+            ?.let { original -> MIRROR_PREFIXES.map { prefix -> prefix + original } }
+            .orEmpty()
+        return official + mirrors
+    }
+
+    fun requiresAssetAcceptHeader(url: String): Boolean =
+        url.startsWith("https://api.github.com/") && url.contains("/releases/assets/")
 
     /** 判断该地址是否为 GitHub 官方域名 */
     fun isOfficial(url: String): Boolean =
