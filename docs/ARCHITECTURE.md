@@ -305,6 +305,8 @@ graph TD
 | `PufHardwareKeyBinding.kt` | 🔒 物理防篡改物理不可克隆函数（PUF）硬件安全绑定助手 (PUF Hardware Key Binding) |
 | `QuickEntryFactory.kt` | 将非空名称转换为现有 `Entry` 的兼容默认记录；空白名称拒绝生成。 |
 | `FamilyInteropFixture.kt` | 仅用于 QA 的隔离桌面家庭服务夹具，为 Android 设备联调签发临时成员并在结束后清理。 |
+| `FindBackSummary.kt` | 从备份文档聚合搜索找回卡所需的位置、附件和双向关联摘要。 |
+| `SearchResultDetailDialog.kt` | Android 搜索结果的可操作找回卡，可打开私有照片、发票和关联资料。 |
 | `ResaleCardGenerator.kt` | 🏷️ 闲鱼/转转标准化二手商品长图卡片生成排版器 (Resale Card Generator) |
 | `RestockingPathPlanner.kt` | 🤖 自动化物品归位路径规划与 6-DoF 动作求解器 (Restocking Path Planner) |
 | `RigidBodyContactDeformation.kt` | 📦 空间物理碰撞干涉与受力形变应力模拟器 (Rigid Body Contact Deformation) |

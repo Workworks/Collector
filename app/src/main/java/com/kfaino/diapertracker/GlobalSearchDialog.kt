@@ -26,7 +26,8 @@ object GlobalSearchDialog {
         val vaultName: String,
         val title: String,
         val subtitle: String,
-        val detail: String
+        val detail: String,
+        val reference: String? = null
     )
 
     fun show(activity: Activity, store: DataStore, onFilterMainList: ((String) -> Unit)? = null) {
@@ -82,7 +83,8 @@ object GlobalSearchDialog {
                         detail = listOfNotNull(
                             if (e.location.isNotBlank()) "位置: ${e.location}" else null,
                             if (e.notes.isNotBlank()) "备注: ${e.notes}" else null
-                        ).joinToString(" | ")
+                        ).joinToString(" | "),
+                        reference = "entries:${e.id}"
                     ))
                 }
             }
@@ -532,6 +534,14 @@ object GlobalSearchDialog {
             }
 
             card.addView(cardLayout)
+            match.reference?.let { reference ->
+                card.isClickable = true
+                card.isFocusable = true
+                card.contentDescription = "打开${match.title}找回卡"
+                card.applyPressScaleAnimation(0.97f)
+                card.setOnClickListener { SearchResultDetailDialog.show(activity, reference) }
+                tagTv.text = "${match.emoji} ${match.vaultName}  ·  点击找回"
+            }
             listContainer.addView(card)
         }
 
