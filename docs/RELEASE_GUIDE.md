@@ -100,8 +100,10 @@ gh release create v2.6.0 "app\build\outputs\apk\release\app-release.apk#Collecte
    - 打开 App -> 切换到底栏【我的】-> 点击【检查新版本 (GitHub)】。
 2. **版本号比对规则**：
    - 自动获取 Release 中的 `tag_name`，剔除 `v`/`V` 前缀后与手机当前运行的 `versionName` 逐位对比。
-3. **镜像加速下载**：
-   - 仅使用 GitHub 官方下载地址；应用内失败时可转系统浏览器打开官方下载页。
+3. **受限网络下载顺序**：
+   - 应用内依次尝试 GitHub API 资产、GitHub 官方下载地址和内置镜像；官方源始终优先；
+   - 所有来源下载后都必须通过 Release 声明的文件大小和 SHA-256，校验失败立即删除并拒绝安装；
+   - 应用内全部失败时，可交给系统浏览器打开 GitHub 官方下载页。
 4. **自动安装与权限**：
    - 下载完成后通过 Android `FileProvider` 自动拉起系统安装器；
    - Android 8.0+ 首次安装会引导开启“允许安装未知应用”权限。

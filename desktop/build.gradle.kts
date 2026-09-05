@@ -4,7 +4,7 @@ plugins {
 }
 
 group = "com.kfaino.collector"
-version = "4.3.9"
+version = "4.3.10"
 
 application {
     mainClass.set("com.kfaino.collector.desktop.MainKt")
