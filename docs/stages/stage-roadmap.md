@@ -1,6 +1,6 @@
 # 阶段演化路线图 (Stage Roadmap)
 
-最新：Stage 457 源码整合、安全与 WebDAV 修复，见 [交付报告](stage-457-report.md)。不创建新版本；远端新增模块保留，但不沿用“全部生产验收完成”的历史声明。
+最新：Stage 468 全局弹框视觉统一已完成，见 [实施与验收](stage-468-unified-dialog-design.md)。正式版仍为 v4.3.9，Stage 463–468 待后续统一发布。
 
 
 ---

@@ -1,7 +1,6 @@
 package com.kfaino.diapertracker
 
 import android.app.Activity
-import android.app.ProgressDialog
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.widget.Toast
@@ -100,16 +99,7 @@ object StorageCleanupDialog {
             return
         }
 
-        @Suppress("DEPRECATION")
-        val progress = ProgressDialog(activity).apply {
-            setTitle("批量重压缩中...")
-            setMessage("正在处理 0 / ${allFiles.size}")
-            setProgressStyle(ProgressDialog.STYLE_HORIZONTAL)
-            max = allFiles.size
-            isIndeterminate = false
-            setCancelable(false)
-            show()
-        }
+        val progress = ModernDialogHelper.showProgressDialog(activity, "批量重压缩", allFiles.size)
 
         Thread {
             var savedKb = 0L
@@ -147,8 +137,7 @@ object StorageCleanupDialog {
                 }
 
                 activity.runOnUiThread {
-                    progress.progress = idx + 1
-                    progress.setMessage("正在处理 ${idx + 1} / ${allFiles.size}")
+                    progress.update(idx + 1)
                 }
             }
 

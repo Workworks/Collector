@@ -10,6 +10,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.widget.Button
 import android.widget.LinearLayout
+import android.widget.ProgressBar
 import android.widget.ScrollView
 import android.widget.TextView
 import androidx.appcompat.app.AlertDialog
@@ -26,6 +27,55 @@ import com.kfaino.diapertracker.databinding.DialogModernInputBinding
  * - 淘汰粗陋的原生系统 Alert，全量升级为高颜值沉浸式弹窗
  */
 object ModernDialogHelper {
+
+    class ProgressHandle internal constructor(
+        private val dialog: AlertDialog,
+        private val progress: ProgressBar,
+        private val message: TextView,
+        private val total: Int
+    ) {
+        fun update(value: Int) {
+            progress.progress = value.coerceIn(0, total)
+            message.text = "正在处理 ${value.coerceIn(0, total)} / $total"
+        }
+        fun dismiss() = dialog.dismiss()
+    }
+
+    /** 非阻塞进度弹框；替代已弃用且不受 Material 主题控制的 ProgressDialog。 */
+    fun showProgressDialog(context: Context, title: String, total: Int): ProgressHandle {
+        val dp = { value: Int -> (value * context.resources.displayMetrics.density + .5f).toInt() }
+        val root = LinearLayout(context).apply {
+            orientation = LinearLayout.VERTICAL
+            background = ContextCompat.getDrawable(context, R.drawable.bg_dialog_card)
+            setPadding(dp(24), dp(22), dp(24), dp(22))
+        }
+        root.addView(TextView(context).apply {
+            text = title
+            textSize = 19f
+            paint.isFakeBoldText = true
+            setTextColor(ContextCompat.getColor(context, R.color.text_primary))
+        })
+        val message = TextView(context).apply {
+            text = "正在处理 0 / $total"
+            textSize = 14f
+            setTextColor(ContextCompat.getColor(context, R.color.text_secondary))
+            setPadding(0, dp(8), 0, dp(16))
+        }
+        root.addView(message)
+        val progress = ProgressBar(context, null, android.R.attr.progressBarStyleHorizontal).apply {
+            isIndeterminate = false
+            max = total.coerceAtLeast(1)
+            progressTintList = ContextCompat.getColorStateList(context, R.color.primary)
+            progressBackgroundTintList = ContextCompat.getColorStateList(context, R.color.input_bg)
+        }
+        root.addView(progress, LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, dp(8)))
+        val dialog = MaterialAlertDialogBuilder(context).setView(root).setCancelable(false).create().apply {
+            window?.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
+            window?.attributes?.windowAnimations = R.style.CustomDialogAnimation
+            show()
+        }
+        return ProgressHandle(dialog, progress, message, total.coerceAtLeast(1))
+    }
 
     /** 统一现代化确认/取消弹窗 */
     fun showConfirmDialog(

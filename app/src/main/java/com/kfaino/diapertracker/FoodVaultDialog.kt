@@ -1,7 +1,6 @@
 package com.kfaino.diapertracker
 
 import android.app.Activity
-import android.app.DatePickerDialog
 import android.graphics.Color
 import android.graphics.drawable.ColorDrawable
 import android.text.Editable

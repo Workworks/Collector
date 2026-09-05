@@ -1,0 +1,66 @@
+# Collecter 弹框风格静态审计
+
+- 弹框相关 Kotlin 文件：55
+- MaterialAlertDialogBuilder 调用：189
+- 深浅主题统一入口：PASS
+- 统一淡入缩放动画：PASS
+- 标题/正文样式保留 Material 布局属性：PASS
+- 原生旧式 Alert/DatePicker/ProgressDialog：0，PASS
+
+## 已检查文件
+
+- `AddEntryDialog.kt`
+- `AiConciergeHelper.kt`
+- `BeverageTeaDialog.kt`
+- `BookVaultDialog.kt`
+- `BoxQrCodeDialog.kt`
+- `BulkImportDialog.kt`
+- `CategoryManagerDialog.kt`
+- `ClippingVaultDialog.kt`
+- `CollectionWorkspaceDialog.kt`
+- `DigitalAssetManagerDialog.kt`
+- `EmergencyVaultDialog.kt`
+- `FamilyClientDialog.kt`
+- `FamilyMedicineDialog.kt`
+- `FamilyVaultDialog.kt`
+- `FloorPlanDialog.kt`
+- `FoodVaultDialog.kt`
+- `GlobalSearchDialog.kt`
+- `HomeFragment.kt`
+- `HonorVaultDialog.kt`
+- `HotUpdateDialog.kt`
+- `IdeaVaultDialog.kt`
+- `InventoryAuditDialog.kt`
+- `KitManager.kt`
+- `LanSyncHelper.kt`
+- `LedgerManager.kt`
+- `LendingManagerDialog.kt`
+- `LifeCapsuleDialog.kt`
+- `LocationHistoryDialog.kt`
+- `LowFrictionEntry.kt`
+- `MainActivity.kt`
+- `MaintenanceManagerDialog.kt`
+- `ModernDatePickerDialog.kt`
+- `ModernDialogHelper.kt`
+- `MoreFeaturesDialog.kt`
+- `NfcHelper.kt`
+- `PetCareDialog.kt`
+- `PhotoPreviewDialog.kt`
+- `PlantCareDialog.kt`
+- `ProfileFragment.kt`
+- `ReportFragment.kt`
+- `ResaleCopilotHelper.kt`
+- `RoomManagerDialog.kt`
+- `ScenarioTemplateDialog.kt`
+- `SearchResultDetailDialog.kt`
+- `StorageCleanupDialog.kt`
+- `SubscriptionManagerDialog.kt`
+- `TimelineFragment.kt`
+- `ToolMaintenanceDialog.kt`
+- `TutorialDialog.kt`
+- `UniversalVaultCenterDialog.kt`
+- `UpdateManager.kt`
+- `VaultUiHelper.kt`
+- `VoucherVaultDialog.kt`
+- `WardrobeVaultDialog.kt`
+- `WorkbenchActivity.kt`

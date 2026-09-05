@@ -9,6 +9,34 @@
         <item name="android:windowLightStatusBar">false</item>
         <item name="android:navigationBarColor">@color/card</item>
         <item name="android:windowLightNavigationBar">true</item>
+        <item name="materialAlertDialogTheme">@style/ThemeOverlay.Collecter.AlertDialog</item>
+    </style>
+
+    <style name="ThemeOverlay.Collecter.AlertDialog" parent="ThemeOverlay.Material3.MaterialAlertDialog">
+        <item name="colorSurface">@color/card_elevated</item>
+        <item name="colorOnSurface">@color/text_primary</item>
+        <item name="colorOnSurfaceVariant">@color/text_secondary</item>
+        <item name="shapeAppearanceOverlay">@style/ShapeAppearance.Collecter.Dialog</item>
+        <item name="materialAlertDialogTitleTextStyle">@style/TextAppearance.Collecter.Dialog.Title</item>
+        <item name="materialAlertDialogBodyTextStyle">@style/TextAppearance.Collecter.Dialog.Body</item>
+        <item name="android:windowAnimationStyle">@style/CustomDialogAnimation</item>
+        <item name="android:backgroundDimAmount">0.42</item>
+    </style>
+
+    <style name="ShapeAppearance.Collecter.Dialog" parent="ShapeAppearance.Material3.Corner.ExtraLarge">
+        <item name="cornerSize">28dp</item>
+    </style>
+
+    <style name="TextAppearance.Collecter.Dialog.Title" parent="MaterialAlertDialog.Material3.Title.Text">
+        <item name="android:textSize">20sp</item>
+        <item name="android:fontFamily">sans-serif-medium</item>
+        <item name="android:textColor">@color/text_primary</item>
+    </style>
+
+    <style name="TextAppearance.Collecter.Dialog.Body" parent="MaterialAlertDialog.Material3.Body.Text">
+        <item name="android:textSize">15sp</item>
+        <item name="android:lineSpacingExtra">3dp</item>
+        <item name="android:textColor">@color/text_secondary</item>
     </style>
 
     <!-- FAB 圆形 -->

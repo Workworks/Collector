@@ -1,7 +1,6 @@
 ﻿package com.kfaino.diapertracker
 
 import android.app.Activity
-import android.app.DatePickerDialog
 import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context

@@ -1,7 +1,6 @@
 package com.kfaino.diapertracker
 
 import android.app.Activity
-import android.app.DatePickerDialog
 import android.graphics.Color
 import android.graphics.drawable.ColorDrawable
 import android.view.LayoutInflater
@@ -91,19 +90,10 @@ object SubscriptionManagerDialog {
         }
 
         btnPickNextBilling.setOnClickListener {
-            val cal = Calendar.getInstance()
-            cal.timeInMillis = selectedNextBillingDate
-            DatePickerDialog(
-                activity,
-                { _, y, m, d ->
-                    val pickCal = Calendar.getInstance().apply { set(y, m, d, 12, 0, 0) }
-                    selectedNextBillingDate = pickCal.timeInMillis
-                    updateBillingDateUi()
-                },
-                cal.get(Calendar.YEAR),
-                cal.get(Calendar.MONTH),
-                cal.get(Calendar.DAY_OF_MONTH)
-            ).show()
+            ModernDatePickerDialog.show(activity, selectedNextBillingDate, "选择下次扣费日期") { picked ->
+                selectedNextBillingDate = picked
+                updateBillingDateUi()
+            }
         }
 
         btnClose.setOnClickListener { dialog.dismiss() }

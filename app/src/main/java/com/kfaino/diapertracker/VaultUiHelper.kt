@@ -1,7 +1,6 @@
 package com.kfaino.diapertracker
 
 import android.app.Activity
-import android.app.DatePickerDialog
 import android.app.Dialog
 import android.content.ClipData
 import android.content.ClipboardManager
@@ -67,23 +66,8 @@ object VaultUiHelper {
         initialTimeMillis: Long = System.currentTimeMillis(),
         onDateSelected: (Long, String) -> Unit
     ) {
-        val cal = Calendar.getInstance()
-        if (initialTimeMillis > 0L) {
-            cal.timeInMillis = initialTimeMillis
+        ModernDatePickerDialog.show(activity, initialTimeMillis, "选择日期") { picked ->
+            onDateSelected(picked, standardDateFormat.format(Date(picked)))
         }
-        DatePickerDialog(
-            activity,
-            { _, year, month, dayOfMonth ->
-                val pickedCal = Calendar.getInstance().apply {
-                    set(year, month, dayOfMonth, 0, 0, 0)
-                    set(Calendar.MILLISECOND, 0)
-                }
-                val formatted = standardDateFormat.format(Date(pickedCal.timeInMillis))
-                onDateSelected(pickedCal.timeInMillis, formatted)
-            },
-            cal.get(Calendar.YEAR),
-            cal.get(Calendar.MONTH),
-            cal.get(Calendar.DAY_OF_MONTH)
-        ).show()
     }
 }

@@ -9,6 +9,7 @@
         <item name="android:windowLightStatusBar">false</item>
         <item name="android:navigationBarColor">@color/card</item>
         <item name="android:windowLightNavigationBar">false</item>
+        <item name="materialAlertDialogTheme">@style/ThemeOverlay.Collecter.AlertDialog</item>
     </style>
 
     <!-- FAB 圆形 -->
