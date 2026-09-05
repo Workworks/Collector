@@ -1,0 +1,6 @@
+Checked: 2026-09-05T22:20:59.7811142+08:00
+Active physical Android devices after QA: 0
+API 34 QA emulator: upgrade verification completed, then stopped
+User code-signing certificates: 0
+WebDAV runtime URL type: temporary Quick Tunnel
+Fixed managed domain ownership: not available in workspace

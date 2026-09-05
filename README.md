@@ -120,4 +120,4 @@ adb install -r app/build/outputs/apk/release/app-release.apk
 
 工程名已于 2026-08-30 统一为 `Collecter`，Android 安装标识仍为 `com.kfaino.diapertracker`。当前质量基线见 [baseline](docs/baseline.md)，后续需求建议见 [product-direction](docs/product-direction.md)；建议不等同于已排期或已交付功能。
 
-当前发布候选：v4.3.10（Android versionCode 47，Desktop 4.3.10）。包含 Stage 463–468 的受限网络下载兜底、低门槛产品化、家庭协作联调、搜索找回卡和统一弹框 UI；正式发布回执见 `docs/releases/v4.3.10-report.md`。Android applicationId 和原签名保持不变。
+当前正式版：v4.3.10（Android versionCode 47，Desktop 4.3.10）。包含 Stage 463–468 的受限网络下载兜底、低门槛产品化、家庭协作联调、搜索找回卡和统一弹框 UI；发布回执见 `docs/releases/v4.3.10-report.md`。Android applicationId 和原签名保持不变。

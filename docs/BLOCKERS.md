@@ -1,11 +1,11 @@
 # 外部阻塞项清单 (Blockers)
 
-## 最新关键阻塞（2026-09-01）
+## 最新关键阻塞（2026-09-05）
 
 | 编号 | 阻塞与解除条件 | 证据 |
 | --- | --- | --- |
-| BLK-04 | 旧签名缺失已解除：F:\LANShare\debug.keystore 与发布证书一致；仍需物理设备覆盖升级及新版本发布验收，不得卸载绕过 | [发布报告](releases/v4.3.3-report.md) |
-| BLK-05 | 本轮重新构建仍缺 MSVC x64，当前会话非管理员，未安装系统工具链；需工具链及干净安装/升级环境 | [最新原生失败记录](stages/evidence-454/native-build.log) |
+| BLK-04 | 旧签名缺失及新版本发布已解除：v4.3.9 → v4.3.10 模拟器原签名覆盖升级通过；仍需物理设备覆盖升级和蜂窝网络验收 | [v4.3.10 报告](releases/v4.3.10-report.md) |
+| BLK-05 | MSVC x64 已恢复，v4.3.10 Native 构建及本机 smoke 通过；仍缺第二台干净 Windows 和受信代码签名证书 | [v4.3.10 报告](releases/v4.3.10-report.md) |
 | BLK-06 | 固定公网域名需账户、域名及受管隧道配置；临时 Quick Tunnel 不能提供固定地址承诺 | [WebDAV 联调](stages/webdav-integration-report.md) |
 
 以上不能因为 HTTP 联调通过而关闭；以下为已有平台与签名约束。

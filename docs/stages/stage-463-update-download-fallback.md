@@ -21,13 +21,15 @@
 
 ## 完成标准
 
-- [ ] AC-01：候选列表严格为 GitHub API、GitHub 官方、镜像，且不接收非官方原始地址。
-- [ ] AC-02：API 资产请求携带 `Accept: application/octet-stream`，下载后大小和 SHA-256 校验不可绕过。
-- [ ] AC-03：两个内置镜像可下载当前发布 APK 的有效字节范围，失败信息能区分来源。
-- [ ] AC-04：Android 单测、Release 构建与 `tools/selfcheck.ps1` 通过。
-- [ ] AC-05：以原签名从 v4.3.9 覆盖升级到新补丁，数据探针保留。
-- [ ] AC-06：GitHub Release 附件回读哈希一致；旧版用户有可用的局域网安装入口。
+- [x] AC-01：候选列表严格为 GitHub API、GitHub 官方、镜像，且不接收非官方原始地址。
+- [x] AC-02：API 资产请求携带 `Accept: application/octet-stream`，下载后大小和 SHA-256 校验不可绕过。
+- [x] AC-03：两个内置镜像可下载当前发布 APK 的有效字节范围，失败信息能区分来源。
+- [x] AC-04：Android 单测、Release 构建与 `tools/selfcheck.ps1` 通过。
+- [x] AC-05：以原签名从 v4.3.9 覆盖升级到 v4.3.10，数据探针保留。
+- [ ] AC-06（`PARTIAL`）：GitHub Release 三项附件回读哈希一致；官方/API/两个镜像均可用。没有实体手机和常驻局域网分发主机，因此不虚构局域网手机安装验收。
 
 ## 验收证据
 
-实施与发布后回填。
+- v4.3.10 已发布：[发布报告](../releases/v4.3.10-report.md)。
+- 下载源当前 Range 实测与 Release API 元数据：[download-sources.json](../releases/evidence-4.3.10/download-sources.json)。
+- 模拟器原签名覆盖升级与数据保留：[upgrade-verify.log](../releases/evidence-4.3.10/upgrade-verify.log)。

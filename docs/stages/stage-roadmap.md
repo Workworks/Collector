@@ -1,6 +1,6 @@
 # 阶段演化路线图 (Stage Roadmap)
 
-最新：Stage 468 全局弹框视觉统一已完成，见 [实施与验收](stage-468-unified-dialog-design.md)。正式版仍为 v4.3.9，Stage 463–468 待后续统一发布。
+最新：v4.3.10 已发布 Stage 463–468；Stage 469 的 14 天低门槛使用验证正在进行，见 [观察计划](stage-469-low-friction-observation.md)。外部门禁按 [Stage 470](stage-470-external-gates-readiness.md) 推进。
 
 
 ---

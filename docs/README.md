@@ -107,6 +107,8 @@ graph LR
 | **Stage 453 交付报告** | [`stages/stage-453-delivery-report.md`](stages/stage-453-delivery-report.md) | 完整实施记录、73 项测试与门禁验证证据 |
 | **Stage 453 真机冒烟记录** | [`stages/evidence-453/android-smoke-notes.md`](stages/evidence-453/android-smoke-notes.md) | Android 真机分享/OCR/关联/取消恢复实测 |
 | **Stage 468 全局弹框视觉统一** | [`stages/stage-468-unified-dialog-design.md`](stages/stage-468-unified-dialog-design.md) | 全局 Material 弹框主题、圆角排版、优雅动效与模拟器视觉证据 |
+| **Stage 469 低门槛使用验证** | [`stages/stage-469-low-friction-observation.md`](stages/stage-469-low-friction-observation.md) | v4.3.10 发布后 14 天真实使用指标、阈值与每日证据 |
+| **v4.3.10 发布报告** | [`releases/v4.3.10-report.md`](releases/v4.3.10-report.md) | 原签名覆盖升级、三端产物、下载源和 Release 回读证据 |
 | **Stage 440 桌面立项 Spec** | [`stages/stage-440-desktop.md`](stages/stage-440-desktop.md) | 桌面单机版 Native WebView2 独立立项报告 |
 | **Stage 431 交付报告** | [`stages/stage-431.md`](stages/stage-431.md) | Stage 431 核心功能与修复记录 |
 | **v4.3.2 发布说明** | [`releases/v4.3.2.md`](releases/v4.3.2.md) | v4.3.2 正式发布报告 |

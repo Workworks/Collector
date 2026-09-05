@@ -1,0 +1,20 @@
+{
+  "tag": "v4.3.10",
+  "releaseUrl": "https://github.com/Workworks/Collector/releases/tag/v4.3.10",
+  "apkApiUrl": "https://api.github.com/repos/Workworks/Collector/releases/assets/545905048",
+  "apkBrowserUrl": "https://github.com/Workworks/Collector/releases/download/v4.3.10/app-release.apk",
+  "apkBytes": 48240299,
+  "apkDigest": "sha256:2a92a38d8ae5983353891fa6472041774fc6b5854bcc4647a9b7c3f78fa15cad",
+  "candidateOrder": [
+    "https://api.github.com/repos/Workworks/Collector/releases/assets/545905048",
+    "https://github.com/Workworks/Collector/releases/download/v4.3.10/app-release.apk",
+    "https://gh-proxy.com/https://github.com/Workworks/Collector/releases/download/v4.3.10/app-release.apk",
+    "https://gh.3w.pm/https://github.com/Workworks/Collector/releases/download/v4.3.10/app-release.apk"
+  ],
+  "rangeChecks": [
+    "GitHub API: HTTP 206, 1024 bytes, APK magic 504B0304",
+    "GitHub official: HTTP 206, 1024 bytes, APK magic 504B0304",
+    "gh-proxy.com: HTTP 206, 1024 bytes, APK magic 504B0304",
+    "gh.3w.pm: HTTP 206, 1024 bytes, APK magic 504B0304"
+  ]
+}
