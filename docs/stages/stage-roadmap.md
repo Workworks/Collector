@@ -1,6 +1,6 @@
 # 阶段演化路线图 (Stage Roadmap)
 
-最新：v4.3.10 已发布 Stage 463–468；Stage 469 的 14 天低门槛使用验证正在进行，见 [观察计划](stage-469-low-friction-observation.md)。外部门禁按 [Stage 470](stage-470-external-gates-readiness.md) 推进。
+最新：v4.3.10 已发布 Stage 463–468；Stage 469 的 14 天观察已结束，因没有真实使用样本而选择调整验证方式，见 [观察结论](stage-469-low-friction-observation.md)。外部门禁按 [Stage 470](stage-470-external-gates-readiness.md) 推进。
 
 
 ---
