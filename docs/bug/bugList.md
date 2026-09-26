@@ -6,6 +6,12 @@
 
 ## 缺陷记录
 
+15. **[已修复 2026-09-26] Stage 471 账单列表适配器编译可见性错误**
+   - 现象：`:app:compileReleaseKotlin` 报告 `public function exposes its private-in-class parameter type Row`。
+   - 根因：`BillAdapter.ViewHolder.bind` 默认为公开方法，但参数 `Row` 是适配器私有类型。
+   - 修复：将行类型与绑定方法统一收窄为模块内可见，仅供适配器内部协作，不暴露到公共 API。
+   - 验证：继续执行 `testReleaseUnitTest`、`assembleRelease` 与整体 selfcheck；最终结果回填 Stage 471。
+
 14. **[已发布 2026-09-05 v4.3.10] 部分手机网络无法连接 GitHub 官方 APK 域名**
    - 现象：v4.3.8 应用内下载连接 `github.com:443` 8 秒超时，版本无法升级。
    - 根因：Release 解析只保留 `browser_download_url`，应用内下载没有使用 asset API 地址，也没有受摘要校验保护的镜像兜底。

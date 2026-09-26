@@ -24,7 +24,7 @@ class CompleteBackupStore(private val context: Context, private val entriesKey: 
             "plants" to "vault_plants_care_v1", "pets" to "vault_pets_care_v1", "books" to "vault_books_v1",
             "beverages" to "vault_beverage_tea_v1", "ideas" to "vault_ideas_v1", "clippings" to "vault_clippings_v1",
             "inbox" to "collection_inbox_v1", "links" to "collection_links_v1", "reminders" to "collection_reminders_v1",
-            "saved_searches" to "collection_saved_searches_v1")
+            "bills" to BillStore.KEY, "saved_searches" to "collection_saved_searches_v1")
     }
 
     fun exportJson(): String = synchronized(transactionLock) {

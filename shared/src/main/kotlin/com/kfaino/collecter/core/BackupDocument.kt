@@ -16,7 +16,7 @@ object BackupDocument {
     const val MAX_ASSET_BYTES = 16 * 1024 * 1024
     val collections = listOf("entries", "houses", "vouchers", "identity_docs", "medicines", "foods",
         "honors", "wardrobe", "emergency", "tools", "plants", "pets", "books", "beverages",
-        "ideas", "clippings", "inbox", "links", "reminders", "ledgers", "kits", "saved_searches")
+        "ideas", "clippings", "inbox", "links", "reminders", "bills", "ledgers", "kits", "saved_searches")
     private val pathKeys = setOf("img_p", "rec_p", "photo", "photoPath", "receiptPath", "f_photo", "b_photo",
         "frontPhotoPath", "backPhotoPath", "local_path", "localPath", "local_file", "localFilePath", "filePath", "images", "localImagePaths", "voice", "voiceMemoPath", "cover", "coverPath")
 

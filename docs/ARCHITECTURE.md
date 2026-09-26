@@ -109,6 +109,12 @@ graph TD
 | `TimelineFragment.kt` | 「生活流」明细流水：按时间逆序展示出入库历史记录，支持快捷增删改 | Adapter, DateFormat |
 | `ReportFragment.kt` | 「报表」统计中心：资产分类交互式环形图 (`DonutChartView`)、闲置资产与断舍离健康雷达、品牌价值 Top 5 | Custom Canvas 渲染, 健康度评分算法 |
 | `ProfileFragment.kt` | 「我的」设置面板：分类管理、空间平面图、深浅主题、触感震动、生物识别锁、WebDAV 云同步与 GitHub 热更新 | MaterialSwitch, WebDAV, Dialog |
+| `BillFragment.kt` | 「账单」核心页：按月展示收支和待入账汇总，提供快速文本、手动记账、编辑删除及原资产报表入口 | Fragment, ViewBinding, YearMonth, BillStore |
+| `BillAdapter.kt` | 账单日期分组与明细列表适配器：金额右对齐、币种/收支/周期展示，并分发编辑、删除和待入账确认 | RecyclerView.Adapter, 多 viewType, BillRecord |
+| `BillEntryDialog.kt` | 单笔账单新增与编辑弹框：项目和金额为必填项，日期、分类、币种、状态、周期与备注使用安全默认值 | MaterialAlertDialog, ViewBinding, BigDecimal |
+| `BillQuickEntryDialog.kt` | 手账文本批量入口：粘贴后调用共享解析器生成预览，明确排除错误行并一次原子保存有效记录 | ClipboardManager, BillQuickInputParser, BillStore |
+| `BillRecord.kt` | 账单领域模型与 JSON 编解码：金额按最小货币单位整数保存，校验标识/枚举/时间并保留未来未知字段 | Kotlin Data Class, org.json, BigDecimal |
+| `BillStore.kt` | Android 账单仓储：原子批量写入、增改删、待入账确认、按月查询及分币种汇总，并共享完整备份事务锁 | SharedPreferences, JSONArray, CompleteBackupStore |
 | `DataStore.kt` | 数据访问对象（DAO），封装所有物品、空间房屋、分类、配置项的持久化与备份 JSON 生成，广播桌面小组件刷新 | SharedPreferences, JSON, AppWidgetBroadcast |
 | `DataModels.kt` | 核心数据实体定义：`Entry`、`HouseSpace`、`HouseRoom`、`LocationMovement`、`CustomCategory` | Kotlin Data Class |
 | `BoxQrCodeDialog.kt` | 智能收纳便签工坊：支持箱盒清单、食材保鲜、药箱对症、线缆规格、防丢联系 5 大多模态便签生成与 1080P 高清相册导出 | ZXing QRCodeWriter, Canvas, MediaStore, ViewBinding |
@@ -237,7 +243,7 @@ graph TD
 | `CollectionWorkspaceDialog.kt` | 收集、找回、关联、OCR 重试、提醒处理界面 |
 | `CollectShareActivity.kt` | Android 分享文字与照片，先保存原件 |
 
-共享模块 `shared`：`BackupDocument.kt` 管理 JSON/附件边界；`WireAliases.kt` 统一两端历史字段；`SnapshotSync.kt` 实现合并；`LanHttp.kt` 处理鉴权和有界请求；`WorkspaceRecords.kt` 管理关联及提醒规则。
+共享模块 `shared`：`BackupDocument.kt` 管理 JSON/附件边界；`WireAliases.kt` 统一两端历史字段；`SnapshotSync.kt` 实现合并；`LanHttp.kt` 处理鉴权和有界请求；`WorkspaceRecords.kt` 管理关联及提醒规则；`BillQuickInputParser.kt` 解析推荐账单格式与历史手账兼容写法，并输出可预览的有效记录和错误行。
 
 ## Stage 457：远端模块整合索引
 

@@ -77,6 +77,7 @@ graph LR
 | **全功能权威使用手册** | [`manuals/20-user-guide.md`](manuals/20-user-guide.md) | 46 大功能特性操作步骤与高级技巧详解 |
 | **全景手把手互动教学** | [`manuals/25-tutorial-dialog-guide.md`](manuals/25-tutorial-dialog-guide.md) | 新手图文教程与单项跟手演练系统指引 |
 | **快速上手用户手册** | [`USER_MANUAL.md`](USER_MANUAL.md) | 核心功能快速查阅与常见操作 |
+| **账单与快速文本记账** | [`manuals/billing-quick-entry.md`](manuals/billing-quick-entry.md) | 账单入口、推荐文本格式、旧手账兼容与数据说明 |
 | **产品演化建议分析** | [`product-direction.md`](product-direction.md) | 需求第一性原理分析与未来阶段演化建议 |
 | **演化偏好与负向清单** | [`EVOLUTION_PREFERENCES.md`](EVOLUTION_PREFERENCES.md) | 演进核心偏好与明确否决的负向禁令清单 |
 | **AI 决策原理与逻辑** | [`GEMINI_RATIONALE.md`](GEMINI_RATIONALE.md) | AI 助手决策背景、思考链路与架构选择 |
@@ -108,6 +109,7 @@ graph LR
 | **Stage 453 真机冒烟记录** | [`stages/evidence-453/android-smoke-notes.md`](stages/evidence-453/android-smoke-notes.md) | Android 真机分享/OCR/关联/取消恢复实测 |
 | **Stage 468 全局弹框视觉统一** | [`stages/stage-468-unified-dialog-design.md`](stages/stage-468-unified-dialog-design.md) | 全局 Material 弹框主题、圆角排版、优雅动效与模拟器视觉证据 |
 | **Stage 469 低门槛使用验证** | [`stages/stage-469-low-friction-observation.md`](stages/stage-469-low-friction-observation.md) | v4.3.10 发布后 14 天真实使用指标、阈值与每日证据 |
+| **Stage 471 账单记账模块** | [`stages/stage-471-billing-ledger.md`](stages/stage-471-billing-ledger.md) | 独立账单、快速文本解析、备份兼容与 Android 验收规格 |
 | **v4.3.10 发布报告** | [`releases/v4.3.10-report.md`](releases/v4.3.10-report.md) | 原签名覆盖升级、三端产物、下载源和 Release 回读证据 |
 | **Stage 440 桌面立项 Spec** | [`stages/stage-440-desktop.md`](stages/stage-440-desktop.md) | 桌面单机版 Native WebView2 独立立项报告 |
 | **Stage 431 交付报告** | [`stages/stage-431.md`](stages/stage-431.md) | Stage 431 核心功能与修复记录 |

@@ -847,7 +847,7 @@ object SingleFeatureTours {
             }
 
             "chart_radar" -> {
-                activity.navigateToTab(2)
+                activity.navigateToLegacyTab(2)
                 activity.binding.root.postDelayed({
                     val target = activity.findViewById<View>(R.id.overview_donut_chart) ?: activity.binding.navReport
                     overlay.showStep(

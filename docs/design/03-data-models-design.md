@@ -43,6 +43,30 @@ data class Entry(
 )
 ```
 
+### 1.2 独立账单实体 (`BillRecord`)
+
+账单不复用资产 `Entry`，避免把“支出/收入、入账状态、币种”与“入库/出库、库存、折旧”混为一体。
+
+```kotlin
+data class BillRecord(
+    val id: String,
+    val title: String,
+    val amountMinor: Long,       // 最小货币单位整数，例如 14.42 元 = 1442
+    val currency: String,        // CNY / USD；不同币种不自动换算
+    val direction: String,       // expense / income
+    val category: String,
+    val status: String,          // posted / pending
+    val recurrence: String,      // none / weekly / monthly / yearly
+    val occurredAt: Long,
+    val note: String,
+    val sourceText: String,
+    val createdAt: Long,
+    val updatedAt: Long
+)
+```
+
+Android 持久化键为 `bills_v1`，完整备份集合名为 `bills`。更新已知字段时必须保留未知 JSON 字段，保证新版/桌面端扩展字段不会因旧端编辑而丢失。
+
 ---
 
 ## 2. 12 大收纳馆模型清单

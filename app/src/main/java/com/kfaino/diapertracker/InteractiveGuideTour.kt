@@ -184,7 +184,7 @@ object InteractiveGuideTour {
             }
 
             6 -> {
-                activity.navigateToTab(2) // 报表
+                activity.navigateToLegacyTab(2) // 报表
                 activity.binding.root.postDelayed({
                     val target = activity.findViewById<View>(R.id.overview_donut_chart) ?: activity.binding.navReport
                     overlay.showStep(

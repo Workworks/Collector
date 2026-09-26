@@ -7,6 +7,8 @@ import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TemporaryFolder
 import java.io.File
+import org.json.JSONArray
+import org.json.JSONObject
 
 class DesktopDataStoreTest {
 
@@ -148,6 +150,20 @@ class DesktopDataStoreTest {
         val csv = store.exportCsv()
         assertTrue("CSV must start with UTF-8 BOM", csv.startsWith("\uFEFF"))
         assertTrue("CSV contains item brand", csv.contains("机械键盘"))
+    }
+
+    @Test
+    fun billsRemainLosslessWhenDesktopEditsOtherData() {
+        val bill = JSONObject().put("id", "bill-1").put("title", "汽车加油")
+            .put("amount_minor", 5000).put("currency", "CNY").put("future", "保留")
+        val incoming = JSONObject(store.exportJson()).put("bills", JSONArray().put(bill)).toString()
+        assertTrue(store.importJson(incoming))
+
+        store.addEntry(Entry(brand = "不影响账单的资产", category = "测试"))
+
+        val exported = JSONObject(store.exportJson()).getJSONArray("bills").getJSONObject(0)
+        assertEquals(5000L, exported.getLong("amount_minor"))
+        assertEquals("保留", exported.getString("future"))
     }
 
     @Test

@@ -321,10 +321,10 @@ class MainActivity : AppCompatActivity() {
         binding.navReport.visibility = View.VISIBLE
         binding.navHomeLabel.text = "资产"
         binding.navTimelineLabel.text = "收集箱"
-        binding.navReportLabel.text = "提醒"
+        binding.navReportLabel.text = "账单"
         binding.navProfileLabel.text = "我的"
         binding.navTimelineIcon.setImageResource(R.drawable.ic_inbox)
-        binding.navReportIcon.setImageResource(R.drawable.ic_notifications)
+        binding.navReportIcon.setImageResource(R.drawable.ic_receipt)
 
         binding.navHome.setOnClickListener {
             if (currentTab != 0) {
@@ -338,7 +338,11 @@ class MainActivity : AppCompatActivity() {
         }
 
         binding.navReport.setOnClickListener {
-            CollectionWorkspaceDialog.reminders(this)
+            val current = supportFragmentManager.findFragmentById(R.id.fragment_container)
+            if (current !is BillFragment) {
+                switchFragment(BillFragment())
+                selectTab(2)
+            }
         }
 
         binding.navProfile.setOnClickListener {
@@ -366,8 +370,11 @@ class MainActivity : AppCompatActivity() {
                         .setInterpolator(android.view.animation.OvershootInterpolator(2.2f))
                         .start()
 
-                    val homeFragment = supportFragmentManager.findFragmentById(R.id.fragment_container) as? HomeFragment
-                    if (homeFragment != null) {
+                    val currentFragment = supportFragmentManager.findFragmentById(R.id.fragment_container)
+                    val homeFragment = currentFragment as? HomeFragment
+                    if (currentFragment is BillFragment) {
+                        currentFragment.openManualEntry()
+                    } else if (homeFragment != null) {
                         when (homeFragment.getSelectedTab()) {
                             1 -> {
                                 SubscriptionManagerDialog.showAddOrEditSubscriptionDialog(this, store, null) {
@@ -396,7 +403,7 @@ class MainActivity : AppCompatActivity() {
             val fragment = when (index) {
                 0 -> HomeFragment()
                 1 -> TimelineFragment()
-                2 -> ReportFragment()
+                2 -> BillFragment()
                 else -> ProfileFragment()
             }
             switchFragment(fragment)
@@ -407,6 +414,7 @@ class MainActivity : AppCompatActivity() {
     fun navigateToLegacyTab(index: Int) {
         val fragment = if (index == 1) TimelineFragment() else ReportFragment()
         switchFragment(fragment)
+        if (index != 1) selectTab(2)
     }
 
     private fun switchFragment(fragment: Fragment) {
@@ -526,6 +534,7 @@ class MainActivity : AppCompatActivity() {
             is HomeFragment -> current.refresh()
             is TimelineFragment -> current.refresh()
             is ReportFragment -> current.refresh()
+            is BillFragment -> current.refresh()
         }
     }
 }
