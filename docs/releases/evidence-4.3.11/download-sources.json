@@ -1,0 +1,34 @@
+[
+  {
+    "source": "GitHub API",
+    "url": "https://api.github.com/repos/Workworks/Collector/releases/assets/592621825",
+    "http": 206,
+    "bytes": 1024,
+    "prefixHex": "504B0304",
+    "passed": true
+  },
+  {
+    "source": "GitHub official",
+    "url": "https://github.com/Workworks/Collector/releases/download/v4.3.11/app-release.apk",
+    "http": 206,
+    "bytes": 1024,
+    "prefixHex": "504B0304",
+    "passed": true
+  },
+  {
+    "source": "gh-proxy.com",
+    "url": "https://gh-proxy.com/https://github.com/Workworks/Collector/releases/download/v4.3.11/app-release.apk",
+    "http": 206,
+    "bytes": 1024,
+    "prefixHex": "504B0304",
+    "passed": true
+  },
+  {
+    "source": "gh.3w.pm",
+    "url": "https://gh.3w.pm/https://github.com/Workworks/Collector/releases/download/v4.3.11/app-release.apk",
+    "http": 206,
+    "bytes": 1024,
+    "prefixHex": "504B0304",
+    "passed": true
+  }
+]

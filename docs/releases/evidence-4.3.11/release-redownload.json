@@ -1,0 +1,32 @@
+[
+  {
+    "name": "app-release.apk",
+    "localBytes": 48286191,
+    "downloadBytes": 48286191,
+    "localSha256": "C965039F30B931567B91F28020B6841C3DD0DFD7031DE4D48B129B7F5ABDAB0E",
+    "downloadSha256": "C965039F30B931567B91F28020B6841C3DD0DFD7031DE4D48B129B7F5ABDAB0E",
+    "apiDigest": "sha256:c965039f30b931567b91f28020b6841c3dd0dfd7031de4d48b129b7f5abdab0e",
+    "bytesMatch": true,
+    "sha256Match": true
+  },
+  {
+    "name": "Collecter-Desktop-Universal.jar",
+    "localBytes": 4466149,
+    "downloadBytes": 4466149,
+    "localSha256": "1D2A2E009E010DD1F294244DF5BB5C99B3C9E6B46C5B4E140494E6F9C8FE44D2",
+    "downloadSha256": "1D2A2E009E010DD1F294244DF5BB5C99B3C9E6B46C5B4E140494E6F9C8FE44D2",
+    "apiDigest": "sha256:1d2a2e009e010dd1f294244df5bb5c99b3c9e6b46c5b4e140494e6f9c8fe44d2",
+    "bytesMatch": true,
+    "sha256Match": true
+  },
+  {
+    "name": "Collecter-Windows-Native-v4.3.11.zip",
+    "localBytes": 4249682,
+    "downloadBytes": 4249682,
+    "localSha256": "DC8CF066774CD9E5531638424E96234E4668F7B91FB4D41B181F09FE8E8591B8",
+    "downloadSha256": "DC8CF066774CD9E5531638424E96234E4668F7B91FB4D41B181F09FE8E8591B8",
+    "apiDigest": "sha256:dc8cf066774cd9e5531638424e96234e4668f7b91fb4d41b181f09fe8e8591b8",
+    "bytesMatch": true,
+    "sha256Match": true
+  }
+]

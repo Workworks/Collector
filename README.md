@@ -120,4 +120,4 @@ adb install -r app/build/outputs/apk/release/app-release.apk
 
 工程名已于 2026-08-30 统一为 `Collecter`，Android 安装标识仍为 `com.kfaino.diapertracker`。当前质量基线见 [baseline](docs/baseline.md)，后续需求建议见 [product-direction](docs/product-direction.md)；建议不等同于已排期或已交付功能。
 
-当前发布候选：v4.3.11（Android versionCode 48，Desktop 4.3.11）。新增 Android 账单模块、手动记账、快速手账文本解析、月度汇总与完整备份；桌面端本版负责无损保留账单数据，暂不提供账单编辑界面。发布完成后以 `docs/releases/v4.3.11-report.md` 为回执。Android applicationId 和原签名保持不变。
+当前正式版：v4.3.11（Android versionCode 48，Desktop 4.3.11）。新增 Android 账单模块、手动记账、快速手账文本解析、月度汇总与完整备份；桌面端本版负责无损保留账单数据，暂不提供账单编辑界面。发布回执见 `docs/releases/v4.3.11-report.md`。Android applicationId 和原签名保持不变。
