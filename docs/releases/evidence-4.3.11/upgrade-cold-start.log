@@ -1,0 +1,10 @@
+Starting: Intent { cmp=com.kfaino.diapertracker/.MainActivity }
+Status: ok
+LaunchState: COLD
+Activity: com.kfaino.diapertracker/.MainActivity
+TotalTime: 1845
+WaitTime: 1849
+Complete
+versionCode=48 minSdk=26 targetSdk=34
+versionName=4.3.11
+AndroidRuntime fatal lines: 0

@@ -1,6 +1,6 @@
 # 阶段演化路线图 (Stage Roadmap)
 
-最新：v4.3.10 已发布 Stage 463–468；Stage 471 账单模块已完成源码和自动化验收，但未发布。Stage 469 因没有真实使用样本而选择调整验证方式，外部门禁按 [Stage 470](stage-470-external-gates-readiness.md) 推进。
+最新：v4.3.11 发布候选正在执行，计划交付 Stage 471 账单模块；线上正式版在 GitHub Release 完成前仍为 v4.3.10。发布门禁见 [Stage 472](stage-472-v4311-release.md)，外部门禁按 [Stage 470](stage-470-external-gates-readiness.md) 推进。
 
 
 ---
@@ -18,4 +18,5 @@
 | **441** | v4.4.0-M1 | 桌面单机版 `%LOCALAPPDATA%` 数据隔离、12 馆全量模型对齐与往返测试 | `NOT_STARTED` | [stage-440-desktop.md](stage-440-desktop.md) |
 | **442** | v4.4.0-M2 | 桌面单机版 Native WebView2 C++ 宿主外壳、系统托盘与 NSIS 一键安装包 | `NOT_STARTED` | [stage-440-desktop.md](stage-440-desktop.md) |
 | **443** | v4.4.0-M3 | 局域网 P2P 双机直接发现与对撞增量合并协议 | `NOT_STARTED` | - |
-| **471** | 未指定 / 源码 | 账单手动录入、快速文本解析、月度汇总与完整备份保真 | `COMPLETED（未发布）` | [stage-471-billing-ledger.md](stage-471-billing-ledger.md) |
+| **471** | v4.3.11 | 账单手动录入、快速文本解析、月度汇总与完整备份保真 | `COMPLETED（发布候选）` | [stage-471-billing-ledger.md](stage-471-billing-ledger.md) |
+| **472** | v4.3.11 | 原签名覆盖升级、Android/Desktop 产物与 GitHub Release 回验 | `IN_PROGRESS` | [stage-472-v4311-release.md](stage-472-v4311-release.md) |

@@ -1,0 +1,6 @@
+2026-09-27
+BLOCKED: no physical Android phone; cellular network, OEM background limits, credential UI and real keyboard combinations were not tested.
+BLOCKED: no second clean Windows host and no trusted Windows code-signing certificate; portable Native ZIP is unsigned.
+BLOCKED: no fixed managed public WebDAV domain; temporary Quick Tunnel is not production availability.
+PASS: API 34 emulator original-signature v4.3.10 -> v4.3.11 in-place upgrade, sentinel retention, cold start and BillStoreDeviceTest.
+PASS: local Windows full-backend Native smoke via java -jar Collecter-Desktop.jar --native --smoke-test.
