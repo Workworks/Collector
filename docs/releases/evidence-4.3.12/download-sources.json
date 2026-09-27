@@ -1,0 +1,54 @@
+[
+  {
+    "name": "github-api",
+    "url": "https://api.github.com/repos/Workworks/Collector/releases/assets/592889674",
+    "curlExit": 0,
+    "bytes": 1024,
+    "magic": "504B0304",
+    "http": [
+      "HTTP/1.1 200 Connection established",
+      "HTTP/1.1 302 Found",
+      "HTTP/1.1 200 Connection established",
+      "HTTP/1.1 206 Partial Content"
+    ],
+    "pass": true
+  },
+  {
+    "name": "github-official",
+    "url": "https://github.com/Workworks/Collector/releases/download/v4.3.12/app-release.apk",
+    "curlExit": 0,
+    "bytes": 1024,
+    "magic": "504B0304",
+    "http": [
+      "HTTP/1.1 200 Connection established",
+      "HTTP/1.1 302 Found",
+      "HTTP/1.1 200 Connection established",
+      "HTTP/1.1 206 Partial Content"
+    ],
+    "pass": true
+  },
+  {
+    "name": "mirror-gh-proxy",
+    "url": "https://gh-proxy.com/https://github.com/Workworks/Collector/releases/download/v4.3.12/app-release.apk",
+    "curlExit": 0,
+    "bytes": 1024,
+    "magic": "504B0304",
+    "http": [
+      "HTTP/1.1 200 Connection established",
+      "HTTP/1.1 206 Partial Content"
+    ],
+    "pass": true
+  },
+  {
+    "name": "mirror-gh-3w",
+    "url": "https://gh.3w.pm/https://github.com/Workworks/Collector/releases/download/v4.3.12/app-release.apk",
+    "curlExit": 0,
+    "bytes": 1024,
+    "magic": "504B0304",
+    "http": [
+      "HTTP/1.1 200 Connection established",
+      "HTTP/1.1 206 Partial Content"
+    ],
+    "pass": true
+  }
+]

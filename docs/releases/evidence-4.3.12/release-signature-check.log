@@ -1,0 +1,3 @@
+Previous SHA256 certificate: 03d73e71eb13c82a820dc50f4ef780630aa698591944693ff6b7c1c3c3bb013a
+Candidate SHA256 certificate: 03d73e71eb13c82a820dc50f4ef780630aa698591944693ff6b7c1c3c3bb013a
+签名一致。仍需包名、版本号、真实覆盖升级和发布验收；此脚本不会发布。

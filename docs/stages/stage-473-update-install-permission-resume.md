@@ -1,5 +1,7 @@
 # Stage 473：应用内更新授权后续装与 v4.3.12 热修复 Spec
 
+状态：`COMPLETED`。日期：2026-09-27。
+
 ## 1. 目标
 
 当用户首次使用应用内更新且尚未授予“安装未知应用”权限时，Collecter 打开系统授权页；用户授权并返回后，应用必须继续拉起 Android 系统安装确认页，不再停留在“我的”页且没有反馈。
@@ -41,7 +43,7 @@
 - [x] AC-03：过期、越界、缺失或摘要不符的待安装请求不会进入安装器。
 - [x] AC-04：Android 单测、Release 构建和整体 selfcheck 全绿。
 - [x] AC-05：v4.3.11 → v4.3.12 原签名覆盖升级和数据保留验证通过。
-- [ ] AC-06：v4.3.12 Release 发布并完成远端附件回读验证。
+- [x] AC-06：v4.3.12 Release 发布并完成远端附件回读验证。
 
 ## 6. 当前复现证据
 
@@ -56,4 +58,4 @@
 - AC-03 `PASS`：`UpdateInstallRequestTest` 覆盖十分钟时效、未来时间、私有目录、越界路径和非 APK 扩展名；进入安装器前再次执行大小与 SHA-256 校验。
 - AC-04 `PASS`：Android 89 项、Desktop 24 项均 0 失败；签名 Release 构建成功；selfcheck 6/6 通过。
 - AC-05 `PASS`：正式 v4.3.11 → 候选 v4.3.12 `adb install -r` 成功，中文数据哨兵保留，冷启动 AndroidRuntime fatal 为 0。
-- AC-06 `PENDING`：候选及三项附件已生成，等待创建 GitHub Release 并回下载核验。
+- AC-06 `PASS`：注释 tag 与 Release 指向提交 `aa03d1801a0eda7ca552145180e377afc97fc9d3`；三项附件回下载后大小和 SHA-256 与候选全部一致，APK 原签名复核通过；四条下载路径均返回 1024 字节 APK 文件头。
