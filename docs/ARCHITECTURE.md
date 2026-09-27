@@ -132,6 +132,7 @@ graph TD
 | `ExportManager.kt` | 数据导出引擎：生成带 UTF-8 BOM 的 Excel 兼容 CSV 资产总表与流水表，支持系统级分享 | FileProvider, Intent.ACTION_SEND |
 | `UpdateManager.kt` | GitHub Releases 在线热更新引擎：官方源优先的多通道下载、后台静默预缓存与 0 秒秒级安装 | HttpURLConnection, PackageInstaller, UpdateSource |
 | `UpdateArtifactVerifier.kt` | APK 更新产物完整性校验：按 GitHub Release 声明的文件大小与 SHA-256 摘要执行 fail-closed 校验，缓存与前台下载共用 | MessageDigest, GitHub asset digest |
+| `UpdateInstallRequest.kt` | 应用内更新授权续装请求：保存短时有效的 APK 路径、大小与摘要，并限制文件只能来自应用私有缓存或下载目录 | Activity Result, SharedPreferences, canonical path |
 | `HotPatchEngine.kt` | 🔐 动态热补丁与沙盒资源加载引擎：补丁沙盒管理、崩溃熔断自动回滚；**动态 dex 必须通过 SHA256withRSA 验签才允许加载（fail-closed）** | DexClassLoader, Signature, PatchArchive |
 | `HotUpdateManager.kt` | 热补丁检查与下载调度：解析 Release 资产中的 `*patch*.zip`、下载进度回调与应用落地 | HttpURLConnection, UpdateSource |
 | `ViewExt.kt` | UI 交互动效与触感震动扩展：按压回弹微缩放动效 (`applyPressScaleAnimation`) 与统一马达震动 (`performAppHapticFeedback`) | ObjectAnimator, HapticFeedbackConstants |

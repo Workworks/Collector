@@ -1,0 +1,17 @@
+[
+  {
+    "name": "app-release.apk",
+    "size": 48286191,
+    "sha256": "11F1AED064DB2BCAACE8F5CCD458BF9088043BCC64C3FADA7DE1F59F4B371A53"
+  },
+  {
+    "name": "Collecter-Desktop-Universal.jar",
+    "size": 4466149,
+    "sha256": "3D40E5323DEED68DAA85A937516CEDF2C287B5A11252DCD69A408B6390F900F3"
+  },
+  {
+    "name": "Collecter-Windows-Native-v4.3.12.zip",
+    "size": 4249685,
+    "sha256": "25CA1D37FB0BBD931D43E7FE3F0F707714D362AEA7D6C5D386DAB4A2314A8943"
+  }
+]

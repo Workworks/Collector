@@ -38,6 +38,8 @@ import java.util.concurrent.Executors
 object UpdateManager {
 
     private const val TAG = "UpdateManager"
+    private const val INSTALL_REQUEST_PREFS = "collecter_update_install"
+    private const val INSTALL_REQUEST_KEY = "pending_request"
     private val executor = Executors.newSingleThreadExecutor()
     private val mainHandler = Handler(Looper.getMainLooper())
 
@@ -377,7 +379,7 @@ object UpdateManager {
             binding.customBtnUpdate.text = "⚡ 安装包已就绪，立即秒装"
             binding.customBtnUpdate.setOnClickListener {
                 dialog.dismiss()
-                installApk(activity, apkFile)
+                installApk(activity, apkFile, release.apkSize, release.apkSha256)
             }
         } else {
             binding.customBtnUpdate.setOnClickListener {
@@ -522,7 +524,7 @@ object UpdateManager {
                 progressDialog.dismiss()
 
                 if (success && apkFile.exists() && apkFile.length() > 0) {
-                    installApk(activity, apkFile)
+                    installApk(activity, apkFile, release.apkSize, release.apkSha256)
                 } else if (!isCanceled) {
                     showDownloadFailure(activity, release, failures)
                 }
@@ -582,9 +584,22 @@ object UpdateManager {
         dialog.show()
     }
 
-    /** 调起系统安装器安装 APK */
-    fun installApk(context: Context, apkFile: File) {
+    /** 调起系统安装器安装 APK；首次授权返回后由 MainActivity 继续本次安装。 */
+    fun installApk(
+        context: Activity,
+        apkFile: File,
+        expectedSize: Long = apkFile.length(),
+        expectedSha256: String = ""
+    ) {
         try {
+            if (!isAllowedInstallFile(context, apkFile) ||
+                !UpdateArtifactVerifier.verify(apkFile, expectedSize, expectedSha256)
+            ) {
+                android.util.Log.w(TAG, "拒绝安装未通过边界或摘要校验的 APK: ${apkFile.absolutePath}")
+                Toast.makeText(context, "安装包校验失败，请重新下载", Toast.LENGTH_LONG).show()
+                return
+            }
+
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                 val hasInstallPermission = context.packageManager.canRequestPackageInstalls()
                 if (!hasInstallPermission) {
@@ -600,32 +615,110 @@ object UpdateManager {
                     binding.resultBtnConfirm.text = "前往开启"
                     binding.resultBtnConfirm.setOnClickListener {
                         dialog.dismiss()
+                        savePendingInstall(context, apkFile, expectedSize, expectedSha256)
                         val intent = Intent(Settings.ACTION_MANAGE_UNKNOWN_APP_SOURCES).apply {
                             data = Uri.parse("package:${context.packageName}")
-                            addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
                         }
-                        context.startActivity(intent)
+                        if (context is MainActivity) {
+                            context.requestUpdateInstallPermission(intent)
+                        } else {
+                            clearPendingInstall(context)
+                            android.util.Log.e(TAG, "当前 Activity 无法接收安装权限返回结果: ${context.javaClass.name}")
+                            Toast.makeText(context, "无法打开安装授权页，请稍后重试", Toast.LENGTH_LONG).show()
+                        }
                     }
                     dialog.show()
                     return
                 }
             }
-
-            val apkUri = FileProvider.getUriForFile(
-                context,
-                "${context.packageName}.fileprovider",
-                apkFile
-            )
-
-            val installIntent = Intent(Intent.ACTION_VIEW).apply {
-                setDataAndType(apkUri, "application/vnd.android.package-archive")
-                addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
-                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-            }
-            context.startActivity(installIntent)
+            launchSystemInstaller(context, apkFile)
         } catch (e: Exception) {
+            android.util.Log.e(TAG, "调起 APK 安装失败: ${apkFile.absolutePath}", e)
             Toast.makeText(context, "调起安装失败: ${e.message}", Toast.LENGTH_LONG).show()
         }
+    }
+
+    fun resumePendingInstall(activity: Activity): Boolean {
+        val pending = loadPendingInstall(activity) ?: return false
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O &&
+            !activity.packageManager.canRequestPackageInstalls()
+        ) {
+            clearPendingInstall(activity)
+            Toast.makeText(activity, "未开启安装权限，可再次点击更新重试", Toast.LENGTH_LONG).show()
+            return false
+        }
+
+        val apkFile = File(pending.apkPath)
+        val isValid = UpdateInstallRequest.isFresh(pending, System.currentTimeMillis()) &&
+            isAllowedInstallFile(activity, apkFile) &&
+            UpdateArtifactVerifier.verify(apkFile, pending.expectedSize, pending.expectedSha256)
+        clearPendingInstall(activity)
+        if (!isValid) {
+            android.util.Log.w(TAG, "待安装请求已过期或 APK 复核失败: ${pending.apkPath}")
+            Toast.makeText(activity, "安装请求已失效，请重新下载更新", Toast.LENGTH_LONG).show()
+            return false
+        }
+
+        return try {
+            launchSystemInstaller(activity, apkFile)
+            true
+        } catch (e: Exception) {
+            android.util.Log.e(TAG, "授权后继续安装失败: ${pending.apkPath}", e)
+            Toast.makeText(activity, "调起安装失败: ${e.message}", Toast.LENGTH_LONG).show()
+            false
+        }
+    }
+
+    private fun savePendingInstall(
+        context: Context,
+        apkFile: File,
+        expectedSize: Long,
+        expectedSha256: String
+    ) {
+        val pending = UpdateInstallRequest.Pending(
+            apkPath = apkFile.canonicalPath,
+            expectedSize = expectedSize,
+            expectedSha256 = expectedSha256,
+            requestedAt = System.currentTimeMillis()
+        )
+        context.getSharedPreferences(INSTALL_REQUEST_PREFS, Context.MODE_PRIVATE)
+            .edit()
+            .putString(INSTALL_REQUEST_KEY, UpdateInstallRequest.encode(pending))
+            .apply()
+    }
+
+    private fun loadPendingInstall(context: Context): UpdateInstallRequest.Pending? =
+        UpdateInstallRequest.decode(
+            context.getSharedPreferences(INSTALL_REQUEST_PREFS, Context.MODE_PRIVATE)
+                .getString(INSTALL_REQUEST_KEY, null)
+        )
+
+    private fun clearPendingInstall(context: Context) {
+        context.getSharedPreferences(INSTALL_REQUEST_PREFS, Context.MODE_PRIVATE)
+            .edit()
+            .remove(INSTALL_REQUEST_KEY)
+            .apply()
+    }
+
+    private fun isAllowedInstallFile(context: Context, apkFile: File): Boolean {
+        val roots = buildList {
+            context.getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS)?.let(::add)
+            add(context.cacheDir)
+        }
+        return UpdateInstallRequest.isAllowedApk(apkFile, roots)
+    }
+
+    private fun launchSystemInstaller(context: Context, apkFile: File) {
+        val apkUri = FileProvider.getUriForFile(
+            context,
+            "${context.packageName}.fileprovider",
+            apkFile
+        )
+        val installIntent = Intent(Intent.ACTION_VIEW).apply {
+            setDataAndType(apkUri, "application/vnd.android.package-archive")
+            addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+        }
+        context.startActivity(installIntent)
     }
 
     private fun formatFileSize(bytes: Long): String {

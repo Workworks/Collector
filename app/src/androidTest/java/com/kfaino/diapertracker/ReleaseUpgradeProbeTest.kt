@@ -86,4 +86,21 @@ class ReleaseUpgradeProbeTest {
         assertTrue(prefs.edit().clear().commit())
     }
 
+    @Test fun seedOnReleased4311() {
+        val info = context.packageManager.getPackageInfo(context.packageName, 0)
+        assertEquals("4.3.11", info.versionName)
+        assertTrue(context.getSharedPreferences("release_upgrade_probe", 0).edit()
+            .putString("sentinel", "保留升级数据-4.3.11-to-4.3.12").commit())
+    }
+
+    @Test fun verifyAfterUpgradeTo4312AndCleanup() {
+        val info = context.packageManager.getPackageInfo(context.packageName, 0)
+        assertEquals("4.3.12", info.versionName)
+        @Suppress("DEPRECATION") val code = info.versionCode
+        assertEquals(49, code)
+        val prefs = context.getSharedPreferences("release_upgrade_probe", 0)
+        assertEquals("保留升级数据-4.3.11-to-4.3.12", prefs.getString("sentinel", null))
+        assertTrue(prefs.edit().clear().commit())
+    }
+
 }

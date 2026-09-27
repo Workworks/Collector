@@ -40,6 +40,11 @@ class MainActivity : AppCompatActivity() {
     private var currentTab = 0
     private var scanResultToInbox = false
 
+    private val updateInstallPermissionLauncher =
+        registerForActivityResult(ActivityResultContracts.StartActivityForResult()) {
+            UpdateManager.resumePendingInstall(this)
+        }
+
     // 图片选择回调
     private var onPhotoPickedCallback: ((String) -> Unit)? = null
 
@@ -52,6 +57,10 @@ class MainActivity : AppCompatActivity() {
                 Toast.makeText(this, "图片处理失败，请重试", Toast.LENGTH_SHORT).show()
             }
         }
+    }
+
+    internal fun requestUpdateInstallPermission(intent: Intent) {
+        updateInstallPermissionLauncher.launch(intent)
     }
 
     private val pickReceiptLauncher = registerForActivityResult(ActivityResultContracts.GetContent()) { uri: Uri? ->
